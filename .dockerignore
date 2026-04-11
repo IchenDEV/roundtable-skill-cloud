@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build output
+.next
+out
+coverage
+
+# Git
+.git
+.gitignore
+
+# Environment (secrets)
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode
+.cursor
+.idea
+*.swp
+*.swo
+
+# Generated
+.generated
+tsconfig.tsbuildinfo
+
+# Vercel
+.vercel
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Tests
+tests
+vitest.config.ts
+
+# Husky
+.husky

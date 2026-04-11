@@ -8,16 +8,15 @@ vi.mock("@/lib/llm/stream-chat", () => ({
 }));
 
 import {
-  streamModeratorOpening,
+  streamModeratorTurn,
   streamModeratorSynthesis,
-  streamModeratorWrap,
   summarizeModeratorMemory,
 } from "@/lib/orchestrator/agents/moderator-agent";
 
 describe("moderator-agent", () => {
-  it("streamModeratorOpening completes", async () => {
+  it("streamModeratorTurn (opening) completes", async () => {
     const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
-    const gen = streamModeratorOpening(runtime, "m", "sys", "user blob");
+    const gen = streamModeratorTurn(runtime, "m", "sys", "user blob");
     const evs = [];
     let n = await gen.next();
     while (!n.done) {
@@ -27,9 +26,9 @@ describe("moderator-agent", () => {
     expect(evs.some((e) => e.type === "turn_complete")).toBe(true);
   });
 
-  it("streamModeratorWrap completes", async () => {
+  it("streamModeratorTurn (wrap) completes", async () => {
     const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
-    const gen = streamModeratorWrap(runtime, "m", "sys", "wrap blob");
+    const gen = streamModeratorTurn(runtime, "m", "sys", "wrap blob");
     let n = await gen.next();
     while (!n.done) {
       n = await gen.next();

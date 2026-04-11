@@ -3,19 +3,8 @@ import { chatComplete } from "../../llm/stream-chat";
 import type { StreamEvent } from "../../spec/schema";
 import { streamLlmTurn } from "./llm-stream";
 
-export async function* streamModeratorOpening(
-  runtime: LlmRuntime,
-  model: string,
-  modPrompt: string,
-  userContent: string
-): AsyncGenerator<StreamEvent> {
-  yield* streamLlmTurn(runtime, model, "moderator", undefined, [
-    { role: "system", content: modPrompt },
-    { role: "user", content: userContent },
-  ]);
-}
-
-export async function* streamModeratorWrap(
+/** 主持人流式发言（开场 / 收束，讨论与辩论共用；差异由调用方 prompt 决定） */
+export async function* streamModeratorTurn(
   runtime: LlmRuntime,
   model: string,
   modPrompt: string,

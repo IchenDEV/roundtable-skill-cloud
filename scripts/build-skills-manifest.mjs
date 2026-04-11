@@ -11,10 +11,19 @@ const skillsDir = path.join(root, "skills");
 const outDir = path.join(root, ".generated");
 const outFile = path.join(outDir, "skills-manifest.json");
 
-const MAX_PROMPT_CHARS = 12000;
-
-function hashContent(s) {
-  return crypto.createHash("sha256").update(s, "utf8").digest("hex").slice(0, 16);
+function hashDir(dirPath) {
+  const h = crypto.createHash("sha256");
+  const files = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) walk(full);
+      else files.push(full);
+    }
+  })(dirPath);
+  files.sort();
+  for (const f of files) h.update(fs.readFileSync(f));
+  return h.digest("hex").slice(0, 16);
 }
 
 function walkSkillDirs() {
@@ -24,15 +33,9 @@ function walkSkillDirs() {
   const result = [];
   for (const id of dirs) {
     const md = path.join(skillsDir, id, "SKILL.md");
-    if (fs.existsSync(md)) result.push({ skillId: id, file: md });
+    if (fs.existsSync(md)) result.push({ skillId: id, dir: path.join(skillsDir, id), file: md });
   }
   return result;
-}
-
-function compilePrompt(body) {
-  const t = body.trim();
-  if (t.length <= MAX_PROMPT_CHARS) return t;
-  return `${t.slice(0, MAX_PROMPT_CHARS)}\n\n[…truncated for token budget…]`;
 }
 
 function main() {
@@ -40,10 +43,10 @@ function main() {
   const items = walkSkillDirs();
   const skills = [];
 
-  for (const { skillId, file } of items) {
+  for (const { skillId, dir, file } of items) {
     const raw = fs.readFileSync(file, "utf8");
-    const { data, content } = matter(raw);
-    const contentHash = hashContent(raw);
+    const { data } = matter(raw);
+    const contentHash = hashDir(dir);
     const name = typeof data.name === "string" ? data.name : skillId;
     const description = typeof data.description === "string" ? data.description : "";
     skills.push({
@@ -51,8 +54,8 @@ function main() {
       name,
       description,
       contentHash,
-      compiledPrompt: compilePrompt(content),
-      rawPath: path.relative(root, file),
+      dirPath: path.relative(root, dir),
+      entryPath: path.relative(root, file),
     });
   }
 

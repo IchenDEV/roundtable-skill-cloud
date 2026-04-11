@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "../supabase/server";
 import { decryptSecret } from "../crypto/byok-crypto";
-import { DEFAULT_ANTHROPIC_MODEL, DEFAULT_OPENAI_MODEL, defaultApiBaseUrl, type ByokProvider } from "../spec/constants";
+import { DEFAULT_MODEL_BY_PROVIDER, defaultApiBaseUrl, type ByokProvider } from "../spec/constants";
 import type { ResolvedLlm } from "../llm/types";
 
 /**
@@ -11,10 +11,7 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
   if (process.env.NODE_ENV === "development" && dev?.trim()) {
     const prov = (process.env.DEV_LLM_PROVIDER as ByokProvider) || "openai";
     const customBase = process.env.DEV_LLM_BASE_URL?.trim();
-    const model =
-      prov === "anthropic"
-        ? process.env.DEFAULT_ANTHROPIC_MODEL?.trim() || DEFAULT_ANTHROPIC_MODEL
-        : process.env.DEFAULT_OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+    const model = process.env.DEV_LLM_MODEL?.trim() || DEFAULT_MODEL_BY_PROVIDER[prov];
     if (prov === "anthropic") {
       return {
         runtime: { kind: "anthropic", apiKey: dev.trim(), provider: "anthropic" },
@@ -60,8 +57,7 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
     throw new Error("凭据无法解读，请联系站点维护者。");
   }
 
-  const model =
-    settings?.default_model?.trim() || (active === "anthropic" ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_OPENAI_MODEL);
+  const model = settings?.default_model?.trim() || DEFAULT_MODEL_BY_PROVIDER[active];
 
   if (active === "anthropic") {
     return {

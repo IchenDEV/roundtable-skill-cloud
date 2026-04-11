@@ -1,0 +1,119 @@
+# ---------------------------------------------------------
+# 圆桌 Skill 云 — 本地开发 Docker Compose
+# 仅用于本地开发与测试，生产环境部署于 Vercel + Supabase Cloud。
+# 使用方式：
+#   1. 复制 .env.example 为 .env.local 并填写密钥
+#   2. docker compose up --build
+#   3. 访问 http://localhost:3000（应用）
+#          http://localhost:54323（Supabase Studio）
+# ---------------------------------------------------------
+
+services:
+  # ── Next.js 应用 ─────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: http://supabase-kong:8000
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      KEY_ENCRYPTION_SECRET: ${KEY_ENCRYPTION_SECRET}
+      DEV_LLM_API_KEY: ${DEV_LLM_API_KEY}
+      DEV_LLM_PROVIDER: ${DEV_LLM_PROVIDER:-openai}
+      DEFAULT_OPENAI_MODEL: ${DEFAULT_OPENAI_MODEL:-gpt-4o-mini}
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-auth:
+        condition: service_started
+      supabase-rest:
+        condition: service_started
+
+  # ── Supabase Postgres ────────────────────────────────
+  supabase-db:
+    image: supabase/postgres:15.8.1.060
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: supabase
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d supabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Supabase Auth (GoTrue) ──────────────────────────
+  supabase-auth:
+    image: supabase/gotrue:v2.167.0
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:8000
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@supabase-db:5432/supabase?sslmode=disable
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: http://localhost:3000/**
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_DISABLE_SIGNUP: "false"
+
+  # ── Supabase REST (PostgREST) ───────────────────────
+  supabase-rest:
+    image: postgrest/postgrest:v12.2.3
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@supabase-db:5432/supabase
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  # ── Supabase Kong (API 网关) ────────────────────────
+  supabase-kong:
+    image: kong:3.8.0
+    ports:
+      - "8000:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./docker/kong.yml:/etc/kong/kong.yml:ro
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+
+  # ── Supabase Studio（可选，本地数据库管理 UI）────────
+  supabase-studio:
+    image: supabase/studio:20241028-a018990
+    ports:
+      - "54323:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-rest:3000
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_REST_URL: http://supabase-rest:3000
+      SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+    depends_on:
+      - supabase-rest
+
+volumes:
+  supabase-db-data:

@@ -8,8 +8,8 @@ const manifestJson = JSON.stringify({
       name: "N",
       description: "",
       contentHash: "h",
-      compiledPrompt: "p",
-      rawPath: "/x",
+      dirPath: "skills/s1",
+      entryPath: "skills/s1/SKILL.md",
     },
   ],
 });

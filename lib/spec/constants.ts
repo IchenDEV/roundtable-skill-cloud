@@ -1,15 +1,27 @@
 /** 圆桌与平台自保上限（与规划 M0 对齐，可调） */
 export const MAX_ROUND_ROUNDS = 8;
-export const MAX_SPEAKERS_PER_ROUND_PARALLEL = 1;
-export const MAX_DAILY_REQUESTS_PER_USER = 500;
 export const MAX_CONCURRENT_STREAMS_PER_USER = 2;
+
+/** 辩论模式：单轮发言上限 = 列席数 × 此系数 */
+export const MAX_DEBATE_TURNS_FACTOR = 2;
+
+/** API 请求体与圆桌状态字段上限（防 DoS / 异常大上下文） */
+export const MAX_JSON_BODY_BYTES = 1_800_000;
+export const MAX_TOPIC_LENGTH = 4_000;
+export const MAX_MODERATOR_MEMORY_CHARS = 48_000;
+export const MAX_SYNTHESIS_CHARS = 200_000;
+export const MAX_ERROR_STRING_CHARS = 8_000;
+export const MAX_TRANSCRIPT_ENTRIES = 400;
+export const MAX_TRANSCRIPT_ENTRY_CHARS = 80_000;
+export const MAX_CONTENT_HASH_SNAPSHOT_CHARS = 128;
+export const MAX_PARTICIPANT_SKILL_IDS = 24;
+export const MAX_SKILL_ID_LENGTH = 160;
+export const MAX_SKILL_NAMES_IN_SHARE = 64;
+export const MAX_SKILL_NAME_VALUE_CHARS = 120;
 
 /** BYOK：支持的执笔后端（与 DB check、砚台 UI 同步） */
 export const BYOK_PROVIDERS = ["openai", "openrouter", "anthropic", "minimax", "kimi", "doubao"] as const;
 export type ByokProvider = (typeof BYOK_PROVIDERS)[number];
-
-/** 使用 OpenAI 兼容 HTTP 形态（OpenAI SDK + baseURL） */
-export const OPENAI_COMPAT_PROVIDERS: ByokProvider[] = ["openai", "openrouter", "minimax", "kimi", "doubao"];
 
 export function isOpenAiCompatibleProvider(p: ByokProvider): boolean {
   return p !== "anthropic";
@@ -45,18 +57,15 @@ export const PROVIDER_LABEL: Record<ByokProvider, string> = {
   doubao: "豆包（火山方舟）",
 };
 
-export const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
-export const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
+export const DEFAULT_OPENAI_MODEL = "gpt-5.4";
+export const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6-20250217";
 
-/** 动效：必选（状态变化）vs 可选（装饰）；reduced-motion 时仅保留必选 */
-export const MOTION_REQUIRED = ["focus-ring", "loading-spinner", "route-fade"] as const;
-export const MOTION_OPTIONAL = [
-  "ink-reveal",
-  "lane-stagger",
-  "seal-stamp",
-  "sidebar-slide",
-  "scroll-parallax",
-] as const;
-
-/** 数据生命周期：MVP 直至用户删除；预留自动过期 */
-export const DEFAULT_RETENTION_DAYS: number | null = null;
+/** 各 BYOK 后端的默认旗舰模型（用户未指定时使用） */
+export const DEFAULT_MODEL_BY_PROVIDER: Record<ByokProvider, string> = {
+  openai: DEFAULT_OPENAI_MODEL,
+  anthropic: DEFAULT_ANTHROPIC_MODEL,
+  openrouter: "anthropic/claude-sonnet-4-6",
+  minimax: "MiniMax-M2.7",
+  kimi: "kimi-k2.5",
+  doubao: "doubao-2.0-pro",
+};

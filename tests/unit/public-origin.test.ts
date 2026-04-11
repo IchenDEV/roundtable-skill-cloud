@@ -8,15 +8,21 @@ import { headers } from "next/headers";
 import { resolvePublicOrigin } from "@/lib/server/public-origin";
 
 describe("resolvePublicOrigin", () => {
-  const prev = process.env.NEXT_PUBLIC_SITE_URL;
+  const prevSite = process.env.NEXT_PUBLIC_SITE_URL;
+  const prevVercel = process.env.VERCEL_URL;
+  const prevNode = process.env.NODE_ENV;
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.VERCEL_URL;
+    process.env.NODE_ENV = "test";
     vi.mocked(headers).mockReset();
   });
 
   afterEach(() => {
-    process.env.NEXT_PUBLIC_SITE_URL = prev;
+    process.env.NEXT_PUBLIC_SITE_URL = prevSite;
+    process.env.VERCEL_URL = prevVercel;
+    process.env.NODE_ENV = prevNode;
   });
 
   it("prefers NEXT_PUBLIC_SITE_URL", async () => {
@@ -24,12 +30,30 @@ describe("resolvePublicOrigin", () => {
     expect(await resolvePublicOrigin()).toBe("https://fixed.example");
   });
 
-  it("builds from forwarded headers", async () => {
+  it("builds from forwarded headers when host matches VERCEL_URL", async () => {
+    process.env.VERCEL_URL = "app.example";
     const h = new Headers();
     h.set("x-forwarded-host", "app.example");
     h.set("x-forwarded-proto", "https");
     vi.mocked(headers).mockResolvedValue(h as never);
     expect(await resolvePublicOrigin()).toBe("https://app.example");
+  });
+
+  it("rejects host not in allowlist (production)", async () => {
+    process.env.NODE_ENV = "production";
+    const h = new Headers();
+    h.set("x-forwarded-host", "evil.example");
+    h.set("x-forwarded-proto", "https");
+    vi.mocked(headers).mockResolvedValue(h as never);
+    expect(await resolvePublicOrigin()).toBeNull();
+  });
+
+  it("allows localhost in development", async () => {
+    process.env.NODE_ENV = "development";
+    const h = new Headers();
+    h.set("host", "localhost:3000");
+    vi.mocked(headers).mockResolvedValue(h as never);
+    expect(await resolvePublicOrigin()).toBe("http://localhost:3000");
   });
 
   it("returns null without host", async () => {

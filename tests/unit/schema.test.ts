@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_ROUND_ROUNDS } from "@/lib/spec/constants";
 import { roundtableStateSchema, streamEventSchema, userCredentialInputSchema } from "@/lib/spec/schema";
 
 describe("roundtableStateSchema", () => {
@@ -13,6 +14,20 @@ describe("roundtableStateSchema", () => {
       moderatorMemory: "",
     };
     expect(roundtableStateSchema.safeParse(s).success).toBe(true);
+  });
+
+  it("rejects maxRounds above platform cap", () => {
+    expect(
+      roundtableStateSchema.safeParse({
+        topic: "t",
+        round: 0,
+        maxRounds: MAX_ROUND_ROUNDS + 1,
+        phase: "idle",
+        participantSkillIds: [],
+        transcript: [],
+        moderatorMemory: "",
+      }).success
+    ).toBe(false);
   });
 
   it("rejects negative round", () => {

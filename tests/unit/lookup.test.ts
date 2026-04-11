@@ -11,8 +11,8 @@ describe("getSkillById", () => {
         name: "One",
         description: "",
         contentHash: "h",
-        compiledPrompt: "p",
-        rawPath: "/",
+        dirPath: "skills/one",
+        entryPath: "skills/one/SKILL.md",
       },
     ],
   };

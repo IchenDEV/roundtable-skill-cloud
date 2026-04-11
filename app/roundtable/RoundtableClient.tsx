@@ -17,6 +17,7 @@ import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtab
 import type { SharePayload } from "@/lib/spec/share-payload";
 import { MAX_ROUND_ROUNDS } from "@/lib/spec/constants";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
+import { getSkillDisplay } from "@/lib/skills/skill-display";
 
 type SkillOpt = {
   skillId: string;
@@ -24,9 +25,18 @@ type SkillOpt = {
   description: string;
 };
 
-function emptyState(topic: string, ids: string[], maxRounds: number, sessionId: string): RoundtableState {
+type RoundtableMode = "discussion" | "debate";
+
+function emptyState(
+  topic: string,
+  ids: string[],
+  maxRounds: number,
+  sessionId: string,
+  mode: RoundtableMode
+): RoundtableState {
   return {
     sessionId,
+    mode,
     topic,
     round: 0,
     maxRounds,
@@ -65,6 +75,7 @@ export function RoundtableClient({
   const [maxRounds, setMaxRounds] = useState(() =>
     initialMaxRounds ? Math.min(initialMaxRounds, MAX_ROUND_ROUNDS) : 3
   );
+  const [mode, setMode] = useState<RoundtableMode>("discussion");
   const [userDraft, setUserDraft] = useState("");
   const [state, setState] = useState<RoundtableState | null>(null);
   const [live, setLive] = useState<{
@@ -98,6 +109,7 @@ export function RoundtableClient({
       if (!res.ok || !data.state) {
         setState({
           sessionId: resumeSessionId,
+          mode: "discussion",
           topic: "（未能载入旧席）",
           round: 0,
           maxRounds: 3,
@@ -141,6 +153,7 @@ export function RoundtableClient({
       if (!res.ok || !data.payload) {
         setState({
           sessionId: crypto.randomUUID(),
+          mode: "discussion",
           topic: "（分享无效）",
           round: 0,
           maxRounds: 3,
@@ -200,11 +213,11 @@ export function RoundtableClient({
 
   const startFresh = () => {
     if (!topic.trim() || selected.length === 0) return;
-    const s = emptyState(topic.trim(), selected, Math.min(maxRounds, MAX_ROUND_ROUNDS), crypto.randomUUID());
+    const s = emptyState(topic.trim(), selected, Math.min(maxRounds, MAX_ROUND_ROUNDS), crypto.randomUUID(), mode);
     setState(s);
     setEventsLog([]);
     setLive(null);
-    void runStream(s, "graph", {
+    void runStream(s, {
       onEvent: handleEvent,
       onDone: setState,
       onError: recoverFromStreamFailure,
@@ -219,7 +232,7 @@ export function RoundtableClient({
       userCommand: undefined,
     };
     setLive(null);
-    void runStream(s, "graph", {
+    void runStream(s, {
       onEvent: handleEvent,
       onDone: setState,
       onError: recoverFromStreamFailure,
@@ -234,7 +247,7 @@ export function RoundtableClient({
       phase: "running",
     };
     setLive(null);
-    void runStream(s, "graph", {
+    void runStream(s, {
       onEvent: handleEvent,
       onDone: setState,
       onError: recoverFromStreamFailure,
@@ -243,8 +256,8 @@ export function RoundtableClient({
 
   const exportMd = useMemo(() => {
     if (!state) return "";
-    return buildRoundtableMarkdown(state, (id) => skills.find((x) => x.skillId === id)?.name ?? "列席");
-  }, [state, skills]);
+    return buildRoundtableMarkdown(state, (id) => (id ? getSkillDisplay(id).label : "列席"));
+  }, [state]);
 
   const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
 
@@ -257,12 +270,6 @@ export function RoundtableClient({
     });
     setUserDraft("");
   };
-
-  useEffect(() => {
-    if (state?.phase === "done" && state.synthesis) {
-      /* 钤印感：可扩展 toast */
-    }
-  }, [state]);
 
   return (
     <FadeIn>
@@ -317,23 +324,26 @@ export function RoundtableClient({
           <div>
             <span className="text-sm text-ink-900">请哪些视角入席</span>
             <div className="mt-2 flex flex-wrap gap-2">
-              {skills.map((s) => (
-                <Button
-                  key={s.skillId}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  title={s.description || s.name}
-                  onClick={() => toggle(s.skillId)}
-                  className={cn(
-                    "font-sans transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
-                    selected.includes(s.skillId) &&
-                      "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
-                  )}
-                >
-                  {s.name}
-                </Button>
-              ))}
+              {skills.map((s) => {
+                const d = getSkillDisplay(s.skillId);
+                return (
+                  <Button
+                    key={s.skillId}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    title={d.brief}
+                    onClick={() => toggle(s.skillId)}
+                    className={cn(
+                      "font-sans transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
+                      selected.includes(s.skillId) &&
+                        "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
+                    )}
+                  >
+                    {d.label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -348,6 +358,21 @@ export function RoundtableClient({
                 className="w-16 border border-ink-200/60 bg-paper-50 px-2 py-1"
               />
             </label>
+            <div className="flex items-center gap-1 rounded-sm border border-ink-200/60 p-0.5">
+              {(["discussion", "debate"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={cn(
+                    "rounded-sm px-3 py-1 text-xs transition-colors",
+                    mode === m ? "bg-ink-900 text-paper-50" : "text-ink-600 hover:bg-ink-100"
+                  )}
+                >
+                  {m === "discussion" ? "讨论" : "辩论"}
+                </button>
+              ))}
+            </div>
           </div>
           {streaming && (
             <p className="mb-2 flex items-center gap-2 font-sans text-sm text-ink-600" aria-live="polite">
@@ -471,7 +496,7 @@ export function RoundtableClient({
           <SwimLanes
             transcript={state.transcript}
             participantIds={state.participantSkillIds}
-            skillTitle={(id) => skills.find((s) => s.skillId === id)?.name ?? "列席"}
+            skillTitle={(id) => getSkillDisplay(id).label}
             liveTokens={live}
           />
         )}

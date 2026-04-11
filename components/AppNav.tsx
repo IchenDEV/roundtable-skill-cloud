@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FadeIn } from "./MotionRoot";
+import { InkMark } from "@/components/brand/ink-mark";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NavUser } from "./NavUser";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,10 @@ export async function AppNav() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <Link
             href="/"
-            className="font-serif text-lg tracking-widest text-ink-900 transition-opacity duration-150 hover:opacity-80"
+            className="flex items-center gap-2.5 font-serif text-lg tracking-widest text-ink-900 transition-opacity duration-150 hover:opacity-80"
           >
-            圆桌
+            <InkMark className="size-9 text-ink-800" />
+            <span>圆桌</span>
           </Link>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/" className={navClass}>

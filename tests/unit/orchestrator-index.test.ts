@@ -18,27 +18,8 @@ const graphMock = vi.hoisted(() =>
   })
 );
 
-const deepMock = vi.hoisted(() =>
-  vi.fn(async function* () {
-    yield { type: "done" as const };
-    return {
-      topic: "deep",
-      round: 0,
-      maxRounds: 1,
-      phase: "done" as const,
-      participantSkillIds: [],
-      transcript: [],
-      moderatorMemory: "",
-    } satisfies RoundtableState;
-  })
-);
-
 vi.mock("@/lib/orchestrator/run-roundtable-graph", () => ({
   runRoundtableGraph: graphMock,
-}));
-
-vi.mock("@/lib/orchestrator/run-roundtable-deepagent", () => ({
-  runRoundtableDeepAgent: deepMock,
 }));
 
 import { runRoundtableStream } from "@/lib/orchestrator";
@@ -57,12 +38,11 @@ describe("runRoundtableStream", () => {
     moderatorMemory: "",
   });
 
-  it("delegates to graph by default", async () => {
+  it("delegates to graph", async () => {
     graphMock.mockClear();
     const params: RunRoundtableParams = {
       state: baseState(),
       manifest,
-      moderatorPrompt: "",
       resolveLlm,
     };
     const gen = runRoundtableStream(params);
@@ -71,42 +51,5 @@ describe("runRoundtableStream", () => {
     const done = await gen.next();
     expect(done.done).toBe(true);
     expect(graphMock).toHaveBeenCalled();
-  });
-
-  it("uses deepagent path when mode deepagent and not stop-like", async () => {
-    deepMock.mockClear();
-    graphMock.mockClear();
-    const params: RunRoundtableParams = {
-      state: baseState(),
-      manifest,
-      moderatorPrompt: "",
-      resolveLlm,
-      mode: "deepagent",
-    };
-    const gen = runRoundtableStream(params);
-    while (true) {
-      const n = await gen.next();
-      if (n.done) break;
-    }
-    expect(deepMock).toHaveBeenCalled();
-  });
-
-  it("uses graph when stop-like even in deepagent mode", async () => {
-    graphMock.mockClear();
-    deepMock.mockClear();
-    const params: RunRoundtableParams = {
-      state: { ...baseState(), userCommand: "stop" },
-      manifest,
-      moderatorPrompt: "",
-      resolveLlm,
-      mode: "deepagent",
-    };
-    const gen = runRoundtableStream(params);
-    while (true) {
-      const n = await gen.next();
-      if (n.done) break;
-    }
-    expect(graphMock).toHaveBeenCalled();
-    expect(deepMock).not.toHaveBeenCalled();
   });
 });

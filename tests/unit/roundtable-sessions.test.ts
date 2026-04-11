@@ -47,11 +47,15 @@ function mockClient(over: {
       return {
         select: () => ({
           eq: () => ({
-            maybeSingle: () => Promise.resolve({ data: over.sessionRow, error: over.sessionErr ?? null }),
+            eq: () => ({
+              maybeSingle: () => Promise.resolve({ data: over.sessionRow, error: over.sessionErr ?? null }),
+            }),
           }),
         }),
         delete: () => ({
-          eq: () => Promise.resolve({ error: over.delErr ?? null }),
+          eq: () => ({
+            eq: () => Promise.resolve({ error: over.delErr ?? null }),
+          }),
         }),
       };
     }

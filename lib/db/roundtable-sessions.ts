@@ -82,6 +82,7 @@ export async function getRoundtableSessionState(sessionId: string): Promise<Roun
     .from("roundtable_sessions")
     .select("id, topic, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis")
     .eq("id", sessionId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (sErr || !sess) {
@@ -102,6 +103,7 @@ export async function getRoundtableSessionState(sessionId: string): Promise<Roun
 
   return {
     sessionId: sess.id,
+    mode: (sess as Record<string, unknown>).mode === "debate" ? ("debate" as const) : ("discussion" as const),
     topic: sess.topic,
     round: sess.current_round,
     maxRounds: sess.max_rounds,
@@ -121,7 +123,7 @@ export async function deleteRoundtableSession(sessionId: string): Promise<boolea
   } = await supabase.auth.getUser();
   if (!user) return false;
 
-  const { error } = await supabase.from("roundtable_sessions").delete().eq("id", sessionId);
+  const { error } = await supabase.from("roundtable_sessions").delete().eq("id", sessionId).eq("user_id", user.id);
   if (error) {
     console.error("delete session", error.message);
     return false;

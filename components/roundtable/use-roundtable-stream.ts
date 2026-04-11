@@ -12,7 +12,6 @@ export function useRoundtableStream() {
   const runStream = useCallback(
     async (
       state: RoundtableState,
-      mode: "graph" | "deepagent",
       handlers: {
         onEvent: (e: StreamEvent) => void;
         onDone: (s: RoundtableState) => void;
@@ -25,7 +24,7 @@ export function useRoundtableStream() {
         const res = await fetch("/api/roundtable/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state, mode }),
+          body: JSON.stringify({ state }),
         });
         if (!res.ok) {
           const t = await res.text();

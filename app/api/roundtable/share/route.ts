@@ -1,8 +1,10 @@
 import { insertShareSnapshot } from "@/lib/db/share-snapshot";
 import { resolvePublicOrigin } from "@/lib/server/public-origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { sharePayloadSchema } from "@/lib/spec/share-payload";
+import { skillNamesSchema } from "@/lib/spec/share-payload";
 import { roundtableStateSchema } from "@/lib/spec/schema";
+import { parseJsonBody } from "@/lib/server/parse-json-body";
+import type { SharePayload } from "@/lib/spec/share-payload";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -10,22 +12,16 @@ export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
   state: roundtableStateSchema,
-  skillNames: z.record(z.string(), z.string()).optional(),
+  skillNames: skillNamesSchema.optional(),
 });
 
 export async function POST(req: Request) {
-  let json: unknown;
-  try {
-    json = await req.json();
-  } catch {
-    return NextResponse.json({ error: "请求体无效。" }, { status: 400 });
-  }
-  const parsed = bodySchema.safeParse(json);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "状态格式不对。" }, { status: 400 });
+  const body = await parseJsonBody(req, bodySchema);
+  if (!body.ok) {
+    return NextResponse.json({ error: body.error }, { status: body.status });
   }
 
-  const { state, skillNames } = parsed.data;
+  const { state, skillNames } = body.data;
   const supabase = await createSupabaseServerClient();
   let ownerId: string | null = null;
   if (supabase) {
@@ -37,11 +33,11 @@ export async function POST(req: Request) {
 
   const stateRest = { ...state };
   delete stateRest.sessionId;
-  const payload = sharePayloadSchema.parse({
+  const payload: SharePayload = {
     v: 1,
     state: stateRest,
     skillNames: skillNames ?? {},
-  });
+  };
 
   const token = await insertShareSnapshot(payload, ownerId);
   if (!token) {

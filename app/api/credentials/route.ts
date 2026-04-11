@@ -74,34 +74,42 @@ export async function POST(req: Request) {
 
   const apiBase = parsed.data.apiBaseUrl?.trim() || null;
 
-  const { error: credErr } = await supabase.from("user_provider_credentials").upsert(
-    {
-      user_id: user.id,
-      provider: parsed.data.provider,
-      ciphertext,
-      label: parsed.data.label ?? null,
-      api_base_url: apiBase,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,provider" }
-  );
+  const { error: credErr } = await supabase
+    .from("user_provider_credentials")
+    .upsert(
+      {
+        user_id: user.id,
+        provider: parsed.data.provider,
+        ciphertext,
+        label: parsed.data.label ?? null,
+        api_base_url: apiBase,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,provider" }
+    )
+    .select("id");
 
   if (credErr) {
-    return Response.json({ error: "未能写入，请稍后再试。" }, { status: 500 });
+    console.error("credentials upsert", credErr.code, credErr.message, credErr.details);
+    return Response.json({ error: `未能写入：${credErr.message}` }, { status: 500 });
   }
 
-  const { error: setErr } = await supabase.from("user_llm_settings").upsert(
-    {
-      user_id: user.id,
-      active_provider: parsed.data.provider,
-      default_model: parsed.data.defaultModel?.trim() || null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" }
-  );
+  const { error: setErr } = await supabase
+    .from("user_llm_settings")
+    .upsert(
+      {
+        user_id: user.id,
+        active_provider: parsed.data.provider,
+        default_model: parsed.data.defaultModel?.trim() || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    )
+    .select("user_id");
 
   if (setErr) {
-    return Response.json({ error: "未能保存当前选用设置，请稍后再试。" }, { status: 500 });
+    console.error("llm_settings upsert", setErr.code, setErr.message, setErr.details);
+    return Response.json({ error: `未能保存选用设置：${setErr.message}` }, { status: 500 });
   }
 
   return Response.json({ ok: true });

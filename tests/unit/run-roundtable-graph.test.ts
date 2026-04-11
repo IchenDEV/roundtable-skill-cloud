@@ -7,20 +7,17 @@ vi.mock("@/lib/orchestrator/moderator-load", () => ({
 }));
 
 vi.mock("@/lib/orchestrator/agents/moderator-agent", () => ({
-  streamModeratorOpening: vi.fn(async function* () {
+  streamModeratorTurn: vi.fn(async function* () {
     yield { type: "turn_complete" as const, role: "moderator" as const, fullText: "open" };
   }),
   streamModeratorSynthesis: vi.fn(async function* () {
     yield { type: "turn_complete" as const, role: "moderator" as const, fullText: "syn" };
   }),
-  streamModeratorWrap: vi.fn(async function* () {
-    yield { type: "turn_complete" as const, role: "moderator" as const, fullText: "wrap" };
-  }),
   summarizeModeratorMemory: vi.fn(async () => "memory"),
 }));
 
-vi.mock("@/lib/orchestrator/agents/participant-agent", () => ({
-  streamParticipantSkillAgent: vi.fn(async function* () {
+vi.mock("@/lib/orchestrator/agents/participant-deepagent", () => ({
+  streamParticipantDeepAgent: vi.fn(async function* () {
     yield { type: "turn_complete" as const, role: "speaker" as const, skillId: "sk1", fullText: "spoke" };
   }),
 }));
@@ -36,8 +33,8 @@ describe("runRoundtableGraph", () => {
         name: "S",
         description: "",
         contentHash: "h",
-        compiledPrompt: "p",
-        rawPath: "/",
+        dirPath: "skills/sk1",
+        entryPath: "skills/sk1/SKILL.md",
       },
     ],
   };
@@ -54,6 +51,7 @@ describe("runRoundtableGraph", () => {
   it("runs synthesis path when userCommand is stop", async () => {
     const params: RunRoundtableParams = {
       state: {
+        mode: "discussion",
         topic: "T",
         round: 0,
         maxRounds: 3,
@@ -64,7 +62,6 @@ describe("runRoundtableGraph", () => {
         userCommand: "stop",
       },
       manifest,
-      moderatorPrompt: "",
       resolveLlm,
     };
     const gen = runRoundtableGraph(params);
@@ -83,6 +80,7 @@ describe("runRoundtableGraph", () => {
   it("runs one round with participants then await_user", async () => {
     const params: RunRoundtableParams = {
       state: {
+        mode: "discussion",
         topic: "T",
         round: 0,
         maxRounds: 3,
@@ -92,7 +90,6 @@ describe("runRoundtableGraph", () => {
         moderatorMemory: "",
       },
       manifest,
-      moderatorPrompt: "",
       resolveLlm,
     };
     const gen = runRoundtableGraph(params);
@@ -109,6 +106,7 @@ describe("runRoundtableGraph", () => {
   it("errors on unknown skill", async () => {
     const params: RunRoundtableParams = {
       state: {
+        mode: "discussion",
         topic: "T",
         round: 0,
         maxRounds: 3,
@@ -118,7 +116,6 @@ describe("runRoundtableGraph", () => {
         moderatorMemory: "",
       },
       manifest,
-      moderatorPrompt: "",
       resolveLlm,
     };
     const gen = runRoundtableGraph(params);

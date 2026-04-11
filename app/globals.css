@@ -43,6 +43,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* 宣纸肌理 + 极淡云气（data URL，无外链） */
+  --ink-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+  --ink-mist-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%231c1914' stroke-opacity='0.055' stroke-width='0.55' stroke-linecap='round'%3E%3Cpath d='M-10 70 Q35 48 70 70 T150 68'/%3E%3Cpath d='M-10 95 Q45 118 90 95 T160 102'/%3E%3Cpath d='M20 -5 Q55 25 90 5 T150 20'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -101,6 +104,27 @@
   box-shadow: inset 0 0 80px rgba(28, 25, 20, 0.04);
 }
 
+/* 全页水墨底纹层（fixed，不挡交互） */
+.ink-page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(ellipse 130% 55% at 50% -18%, rgba(255, 255, 255, 0.55), transparent 52%),
+    radial-gradient(circle at 88% 8%, rgba(28, 25, 20, 0.035), transparent 38%),
+    radial-gradient(circle at 6% 72%, rgba(182, 160, 110, 0.06), transparent 45%), var(--ink-paper-grain),
+    var(--ink-mist-pattern);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+  background-size:
+    100% 320px,
+    100% 100%,
+    100% 100%,
+    180px 180px,
+    140px 140px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -149,8 +173,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    background-color: var(--paper);
+  }
   body {
-    @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.35) 0, transparent 45%);
+    @apply text-foreground;
+    background-color: transparent;
   }
 }

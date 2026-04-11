@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Noto_Serif_SC, Geist } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "@/components/AppNav";
+import { AppFooter } from "@/components/AppFooter";
 import { cn } from "@/lib/utils";
+import { PageTransition } from "@/components/PageTransition";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -25,8 +27,14 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className={cn(geist.variable, notoSerif.variable)}>
       <body className={cn("min-h-screen font-serif antialiased")}>
-        <AppNav />
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <div className="ink-page-bg" aria-hidden />
+        <div className="relative z-[1] flex min-h-screen flex-col">
+          <AppNav />
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <AppFooter />
+        </div>
       </body>
     </html>
   );

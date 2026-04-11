@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { safeRedirectPath } from "@/lib/server/safe-redirect";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/roundtable";
+  const next = safeRedirectPath(url.searchParams.get("next"), "/roundtable");
 
   if (!code) {
     return NextResponse.redirect(new URL("/login", request.url));
