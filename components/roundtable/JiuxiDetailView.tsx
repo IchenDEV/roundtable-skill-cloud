@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
-import { SynthesisColumns } from "@/components/roundtable/SynthesisColumns";
-import { SwimLanes } from "@/components/roundtable/SwimLanes";
+import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
+import { Timeline } from "@/components/roundtable/Timeline";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import type { RoundtableState } from "@/lib/spec/schema";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
@@ -94,16 +94,18 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
         <p className="mb-4 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">主持手记：{state.moderatorMemory}</p>
       ) : null}
 
-      <SwimLanes
+      <Timeline
         transcript={state.transcript}
         participantIds={state.participantSkillIds}
         skillTitle={(i) => skills.find((x) => x.skillId === i)?.name ?? "列席"}
         liveTokens={null}
+        round={state.round}
+        maxRounds={state.maxRounds}
       />
 
       {state.synthesis ? (
         <div className="mt-8">
-          <SynthesisColumns content={state.synthesis} />
+          <SynthesisDialog content={state.synthesis} />
         </div>
       ) : null}
     </>

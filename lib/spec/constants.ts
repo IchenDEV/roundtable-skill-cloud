@@ -1,6 +1,6 @@
 /** 圆桌与平台自保上限（与规划 M0 对齐，可调） */
 export const MAX_ROUND_ROUNDS = 8;
-export const MAX_CONCURRENT_STREAMS_PER_USER = 2;
+export const MAX_CONCURRENT_STREAMS_PER_USER = 1;
 
 /** 辩论模式：单轮发言上限 = 列席数 × 此系数 */
 export const MAX_DEBATE_TURNS_FACTOR = 2;

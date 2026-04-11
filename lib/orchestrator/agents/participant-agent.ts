@@ -9,6 +9,11 @@ import { createSkillTools } from "./skill-tools";
 
 type SkillRow = SkillManifest["skills"][0];
 
+function isAbortError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  return err.name === "AbortError" || /abort/i.test(err.message);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Skill 目录解析（沙箱在 skills/ 下）                                 */
 /* ------------------------------------------------------------------ */
@@ -27,21 +32,29 @@ function resolveSkillDir(dirPath: string): string {
 /* ------------------------------------------------------------------ */
 
 function buildSystemPrompt(displayName: string): string {
-  return `你是圆桌中的独立代理，席名「${displayName}」。
-你只能代表本席发言，不得冒充主持或其他列席。
+  return `# 身份锁定（不可违反）
+
+你是「${displayName}」，且只能是「${displayName}」。
+你的一切发言必须以「${displayName}」的第一人称视角输出。
+绝对禁止：冒充主持人、冒充其他列席、以第三人称谈论自己、使用其他人物的口吻。
+如果你不确定自己是谁，答案永远是：「${displayName}」。
+
+# 工作目录
 
 你的工作目录中有本席的思维框架文件：
 - SKILL.md — 核心心智模型与表达 DNA（务必先阅读）
 - references/research/* — 深度调研材料（按需查阅）
 
-**工作流程**：
+# 工作流程
+
 1. 用 list_files 查看目录结构
 2. 用 read_file 阅读 SKILL.md（必须完整阅读）
 3. 按需查阅 references 中的材料补充论据
 4. 以「${displayName}」的第一人称视角发言
 
-**输出要求**：
-- 完全以该人物的语气、风格和思维方式回应
+# 输出要求
+
+- 完全以「${displayName}」的语气、风格和思维方式回应
 - 必须承接全文记录（含席上用户插话）
 - 只输出本席正式发言内容，不要暴露工具使用、文件路径或规划过程
 - 末行必须是：**简言之**：一句话概括`;
@@ -51,7 +64,7 @@ function buildUserMessage(formattedTranscript: string, displayName: string): str
   return `【当前全文记录】
 ${formattedTranscript}
 
-请以「${displayName}」的第一人称视角发言（承接上文与席上插话）。`;
+你是「${displayName}」。请以「${displayName}」的第一人称视角发言（承接上文与席上插话）。记住：你只能是「${displayName}」。`;
 }
 
 function buildDebateUserMessage(
@@ -73,7 +86,7 @@ function buildDebateUserMessage(
   return `【当前全文记录】
 ${formattedTranscript}${rebuttal}
 
-以「${displayName}」的第一人称视角，${prompt}`;
+你是「${displayName}」。以「${displayName}」的第一人称视角，${prompt}记住：你只能是「${displayName}」。`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -85,7 +98,8 @@ async function* streamReactAgent(
   model: string,
   skill: SkillRow,
   userContent: string,
-  displayName: string
+  displayName: string,
+  signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   const llm = toLangChainModel(runtime, model);
   const absDir = resolveSkillDir(skill.dirPath);
@@ -102,7 +116,7 @@ async function* streamReactAgent(
   try {
     const stream = await agent.stream(
       { messages: [{ role: "user" as const, content: userContent }] },
-      { streamMode: "messages", recursionLimit: 20 }
+      { streamMode: "messages", recursionLimit: 20, signal }
     );
 
     for await (const chunk of stream) {
@@ -118,8 +132,11 @@ async function* streamReactAgent(
       }
     }
   } catch (err) {
+    if (signal?.aborted || isAbortError(err)) {
+      return;
+    }
     const message = err instanceof Error ? err.message : "Agent execution failed";
-    yield { type: "error", message: `[${skill.skillId}] ${message}` };
+    throw new Error(`[${skill.skillId}] ${message}`);
   }
 
   yield {
@@ -140,10 +157,11 @@ export async function* streamParticipantTurn(
   model: string,
   skill: SkillRow,
   formattedTranscript: string,
-  displayName: string
+  displayName: string,
+  signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   const userContent = buildUserMessage(formattedTranscript, displayName);
-  yield* streamReactAgent(runtime, model, skill, userContent, displayName);
+  yield* streamReactAgent(runtime, model, skill, userContent, displayName, signal);
 }
 
 /** 辩论模式列席代理 */
@@ -154,8 +172,9 @@ export async function* streamDebateParticipantTurn(
   formattedTranscript: string,
   displayName: string,
   target?: string,
-  directive?: string
+  directive?: string,
+  signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   const userContent = buildDebateUserMessage(formattedTranscript, displayName, target, directive);
-  yield* streamReactAgent(runtime, model, skill, userContent, displayName);
+  yield* streamReactAgent(runtime, model, skill, userContent, displayName, signal);
 }

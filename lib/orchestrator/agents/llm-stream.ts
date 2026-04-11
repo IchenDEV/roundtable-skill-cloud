@@ -10,10 +10,11 @@ export async function* streamLlmTurn(
   model: string,
   role: "moderator" | "speaker",
   skillId: string | undefined,
-  messages: ChatMsg[]
+  messages: ChatMsg[],
+  signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   let full = "";
-  for await (const t of streamChat(runtime, model, messages)) {
+  for await (const t of streamChat(runtime, model, messages, signal)) {
     full += t;
     yield { type: "token", role, skillId, text: t };
   }

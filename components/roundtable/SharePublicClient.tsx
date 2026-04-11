@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { SwimLanes } from "@/components/roundtable/SwimLanes";
-import { SynthesisColumns } from "@/components/roundtable/SynthesisColumns";
+import { Timeline } from "@/components/roundtable/Timeline";
+import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
 import type { SharePayload } from "@/lib/spec/share-payload";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
@@ -83,16 +83,18 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
         <p className="mb-4 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">主持手记：{state.moderatorMemory}</p>
       ) : null}
 
-      <SwimLanes
+      <Timeline
         transcript={state.transcript}
         participantIds={state.participantSkillIds}
         skillTitle={title}
         liveTokens={null}
+        round={state.round}
+        maxRounds={state.maxRounds}
       />
 
       {state.synthesis ? (
         <div className="mt-8">
-          <SynthesisColumns content={state.synthesis} />
+          <SynthesisDialog content={state.synthesis} />
         </div>
       ) : null}
     </>

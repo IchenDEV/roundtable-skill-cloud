@@ -80,6 +80,51 @@ export const streamEventSchema = z.discriminatedUnion("type", [
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;
 
+export const turnStepSchema = z.enum(["moderator_open", "participant", "moderator_wrap", "synthesis"]);
+
+export type TurnStep = z.infer<typeof turnStepSchema>;
+
+export const turnRequestSchema = z.object({
+  state: roundtableStateSchema,
+  step: turnStepSchema,
+  skillId: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
+  target: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
+  directive: z.string().max(1000).optional(),
+});
+
+export type TurnRequest = z.infer<typeof turnRequestSchema>;
+
+export const turnResponseEventSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("token"),
+    role: z.enum(["moderator", "speaker"]),
+    skillId: z.string().optional(),
+    text: z.string(),
+  }),
+  z.object({
+    type: z.literal("turn_complete"),
+    role: z.enum(["moderator", "speaker"]),
+    skillId: z.string().optional(),
+    fullText: z.string(),
+  }),
+  z.object({
+    type: z.literal("dispatch"),
+    steps: z.array(
+      z.object({
+        skillId: z.string(),
+        target: z.string().optional(),
+        directive: z.string().optional(),
+      })
+    ),
+  }),
+  z.object({ type: z.literal("memory"), text: z.string() }),
+  z.object({ type: z.literal("synthesis_complete"), text: z.string() }),
+  z.object({ type: z.literal("error"), message: z.string() }),
+  z.object({ type: z.literal("done") }),
+]);
+
+export type TurnResponseEvent = z.infer<typeof turnResponseEventSchema>;
+
 export const userCredentialInputSchema = z.object({
   provider: byokProviderSchema,
   apiKey: z.string().min(8),

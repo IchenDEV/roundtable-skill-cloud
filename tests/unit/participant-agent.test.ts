@@ -1,40 +1,100 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SkillManifest } from "@/lib/skills/types";
 
-vi.mock("@/lib/llm/stream-chat", () => ({
-  streamChat: vi.fn(async function* () {
-    yield "p";
-  }),
+const createReactAgent = vi.hoisted(() => vi.fn());
+const createSkillTools = vi.hoisted(() => vi.fn(() => []));
+const toLangChainModel = vi.hoisted(() => vi.fn(() => ({ tag: "model" })));
+
+vi.mock("@langchain/langgraph/prebuilt", () => ({
+  createReactAgent,
 }));
 
-import { buildParticipantSystemPrompt, streamParticipantSkillAgent } from "@/lib/orchestrator/agents/participant-agent";
+vi.mock("@langchain/core/messages", () => ({
+  AIMessageChunk: class AIMessageChunk {
+    content: string;
+    tool_call_chunks: unknown[];
+
+    constructor(content: string, toolCallChunks: unknown[] = []) {
+      this.content = content;
+      this.tool_call_chunks = toolCallChunks;
+    }
+  },
+}));
+
+vi.mock("@/lib/llm/to-langchain-model", () => ({
+  toLangChainModel,
+}));
+
+vi.mock("@/lib/orchestrator/agents/skill-tools", () => ({
+  createSkillTools,
+}));
+
+import { streamDebateParticipantTurn, streamParticipantTurn } from "@/lib/orchestrator/agents/participant-agent";
+
+async function drain(gen: AsyncGenerator<unknown, unknown>) {
+  const out: unknown[] = [];
+  let n = await gen.next();
+  while (!n.done) {
+    out.push(n.value);
+    n = await gen.next();
+  }
+  return { events: out, final: n.value };
+}
 
 describe("participant-agent", () => {
-  const skill: SkillManifest["skills"][0] = {
-    skillId: "sk",
-    name: "视角名",
+  const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "https://x", provider: "openai" as const };
+  const skill = {
+    skillId: "sk1",
+    name: "甲",
     description: "",
     contentHash: "h",
-    compiledPrompt: "PROMPT",
-    rawPath: "/",
+    dirPath: "skills/paul-graham-perspective",
+    entryPath: "skills/paul-graham-perspective/SKILL.md",
   };
 
-  it("buildParticipantSystemPrompt embeds skill and transcript", () => {
-    const s = buildParticipantSystemPrompt(skill, "【记录】");
-    expect(s).toContain("PROMPT");
-    expect(s).toContain("视角名");
-    expect(s).toContain("【记录】");
+  it("streams visible assistant text and forwards the abort signal", async () => {
+    const { AIMessageChunk } = await import("@langchain/core/messages");
+    const stream = vi.fn().mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield [new AIMessageChunk("hidden", [{}])];
+        yield [new AIMessageChunk("你")];
+        yield [new AIMessageChunk("好")];
+      },
+    });
+    createReactAgent.mockReturnValue({ stream });
+
+    const signal = new AbortController().signal;
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", signal));
+
+    expect(toLangChainModel).toHaveBeenCalledWith(runtime, "gpt");
+    expect(createSkillTools).toHaveBeenCalled();
+    expect(stream).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ signal }));
+    expect(events.filter((e) => (e as { type?: string }).type === "token")).toHaveLength(2);
+    expect(events[events.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk1",
+      fullText: "你好",
+    });
   });
 
-  it("streamParticipantSkillAgent yields completion", async () => {
-    const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
-    const gen = streamParticipantSkillAgent(runtime, "m", skill, "ctx");
-    const evs = [];
-    let n = await gen.next();
-    while (!n.done) {
-      evs.push(n.value);
-      n = await gen.next();
-    }
-    expect(evs.some((e) => e.type === "turn_complete")).toBe(true);
+  it("throws a skill-scoped error on non-abort failures", async () => {
+    createReactAgent.mockReturnValue({
+      stream: vi.fn().mockRejectedValue(new Error("boom")),
+    });
+
+    await expect(
+      drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "乙", "驳其前提"))
+    ).rejects.toThrow("[sk1] boom");
+  });
+
+  it("stops quietly on abort", async () => {
+    createReactAgent.mockReturnValue({
+      stream: vi.fn().mockRejectedValue(Object.assign(new Error("aborted"), { name: "AbortError" })),
+    });
+
+    const controller = new AbortController();
+    controller.abort();
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", controller.signal));
+    expect(events).toEqual([]);
   });
 });

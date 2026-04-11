@@ -3,8 +3,8 @@
   "framework": "nextjs",
   "regions": ["hnd1"],
   "functions": {
-    "app/api/roundtable/stream/route.ts": {
-      "maxDuration": 300
+    "app/api/roundtable/turn/route.ts": {
+      "maxDuration": 120
     }
   }
 }

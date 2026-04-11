@@ -39,10 +39,12 @@ describe("streamChat", () => {
     });
     const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
     const chunks: string[] = [];
-    for await (const t of streamChat(runtime, "m", [{ role: "user", content: "u" }])) {
+    const signal = new AbortController().signal;
+    for await (const t of streamChat(runtime, "m", [{ role: "user", content: "u" }], signal)) {
       chunks.push(t);
     }
     expect(chunks.join("")).toBe("hi");
+    expect(openAiCreate).toHaveBeenCalledWith(expect.objectContaining({ signal }));
   });
 
   it("streams anthropic text deltas", async () => {
@@ -53,13 +55,20 @@ describe("streamChat", () => {
     });
     const runtime = { kind: "anthropic" as const, apiKey: "k", provider: "anthropic" as const };
     const chunks: string[] = [];
-    for await (const t of streamChat(runtime, "m", [
-      { role: "system", content: "sys" },
-      { role: "user", content: "u" },
-    ])) {
+    const signal = new AbortController().signal;
+    for await (const t of streamChat(
+      runtime,
+      "m",
+      [
+        { role: "system", content: "sys" },
+        { role: "user", content: "u" },
+      ],
+      signal
+    )) {
       chunks.push(t);
     }
     expect(chunks.join("")).toBe("a");
+    expect(anthropicStream).toHaveBeenCalledWith(expect.objectContaining({ signal }));
   });
 });
 
@@ -69,8 +78,10 @@ describe("chatComplete", () => {
       choices: [{ message: { content: "full" } }],
     });
     const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
-    const text = await chatComplete(runtime, "m", [{ role: "user", content: "u" }]);
+    const signal = new AbortController().signal;
+    const text = await chatComplete(runtime, "m", [{ role: "user", content: "u" }], signal);
     expect(text).toBe("full");
+    expect(openAiCreate).toHaveBeenCalledWith(expect.objectContaining({ signal }));
   });
 
   it("returns anthropic text block", async () => {
@@ -78,7 +89,9 @@ describe("chatComplete", () => {
       content: [{ type: "text", text: "ant" }],
     });
     const runtime = { kind: "anthropic" as const, apiKey: "k", provider: "anthropic" as const };
-    const text = await chatComplete(runtime, "m", [{ role: "user", content: "u" }]);
+    const signal = new AbortController().signal;
+    const text = await chatComplete(runtime, "m", [{ role: "user", content: "u" }], signal);
     expect(text).toBe("ant");
+    expect(anthropicCreate).toHaveBeenCalledWith(expect.objectContaining({ signal }));
   });
 });
