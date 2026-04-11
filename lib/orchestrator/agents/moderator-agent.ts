@@ -25,6 +25,13 @@ export async function* streamModeratorSynthesis(
   yield* streamLlmTurn(runtime, model, "moderator", undefined, [{ role: "user", content: synUserBlob }]);
 }
 
+function stripThinkTags(text: string): string {
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/g, "")
+    .replace(/<think>[\s\S]*$/, "")
+    .trim();
+}
+
 export async function summarizeModeratorMemory(runtime: LlmRuntime, model: string, wrap: string): Promise<string> {
   const one = await chatComplete(runtime, model, [
     {
@@ -32,5 +39,5 @@ export async function summarizeModeratorMemory(runtime: LlmRuntime, model: strin
       content: `将下列主持人轮末总结压缩为不超过 400 字的「记忆卡片」，只保留争点与待追问：\n\n${wrap}`,
     },
   ]);
-  return one.slice(0, 600);
+  return stripThinkTags(one).slice(0, 600);
 }

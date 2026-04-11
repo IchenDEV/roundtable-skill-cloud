@@ -32,8 +32,8 @@ export function AppFooter() {
             <Link href="/settings" className={footLink}>
               砚台
             </Link>
-            <Link href="/login" className={footLink}>
-              登入
+            <Link href="/credits" className={footLink}>
+              致谢
             </Link>
           </nav>
         </div>

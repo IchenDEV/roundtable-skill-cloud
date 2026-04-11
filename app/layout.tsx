@@ -30,7 +30,7 @@ export default function RootLayout({
         <div className="ink-page-bg" aria-hidden />
         <div className="relative z-[1] flex min-h-screen flex-col">
           <AppNav />
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
             <PageTransition>{children}</PageTransition>
           </main>
           <AppFooter />

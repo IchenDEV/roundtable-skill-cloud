@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-08T17:44:54.397Z",
+  "generatedAt": "2026-04-09T18:07:45.461Z",
   "skills": [
     {
       "skillId": "andrej-karpathy-perspective",
@@ -10,10 +10,18 @@
       "entryPath": "skills/andrej-karpathy-perspective/SKILL.md"
     },
     {
+      "skillId": "drucker-perspective",
+      "name": "drucker-perspective",
+      "description": "彼得·德鲁克（Peter Drucker）的思维框架与表达方式。基于14本著作、6段访谈、\n外部批评及完整人生时间线的深度调研，提炼5个核心心智模型、8条决策启发式\n和完整的表达DNA。\n用途：作为思维顾问，用德鲁克的视角分析管理问题、审视组织决策、评估战略。\n当用户提到「用德鲁克的视角」「德鲁克会怎么看」「Drucker perspective」时使用。\n触发关键词：管理、组织、知识工作者、有效性、目标管理、MBO、企业目的、\n领导力、自我管理、效率、管理者、贡献、绩效、非营利组织。\n",
+      "contentHash": "b8df60f65fd1469a",
+      "dirPath": "skills/drucker-perspective",
+      "entryPath": "skills/drucker-perspective/SKILL.md"
+    },
+    {
       "skillId": "elon-musk-perspective",
       "name": "elon-musk-perspective",
       "description": "马斯克的思维操作系统。基于传记、播客、推文、法庭证词、决策记录和外部批评的深度调研，\n提炼5个核心心智模型、8条决策启发式和完整的表达DNA。\n用途：作为思维顾问，用马斯克的视角分析问题、审视决策、拆解成本结构、挑战行业假设。\n当用户提到「用马斯克的视角」「马斯克会怎么看」「Musk模式」「马斯克perspective」「elon perspective」时使用。\n即使用户只是说「这个成本合理吗」「从第一性原理想想」「白痴指数是多少」「五步算法」「能不能垂直整合」也可触发。\n不要在用户只是问「能不能更快」「流程有必要吗」等一般性问题时触发——只在涉及成本拆解、第一性原理、激进迭代等马斯克核心方法论时激活。\n",
-      "contentHash": "e82e7e8ca6410873",
+      "contentHash": "1881cfde65629d30",
       "dirPath": "skills/elon-musk-perspective",
       "entryPath": "skills/elon-musk-perspective/SKILL.md"
     },
@@ -34,12 +42,36 @@
       "entryPath": "skills/ilya-sutskever-perspective/SKILL.md"
     },
     {
+      "skillId": "karl-marx-perspective",
+      "name": "karl-marx-perspective",
+      "description": "卡尔·马克思的思维框架与结构分析方法。基于公开流传的 Marxist methodology skill 项目转写，\n提炼6个核心分析引擎、8条运行守则与清晰适用边界。\n用途：作为思维顾问，用马克思式结构分析视角拆解组织失灵、平台治理、制度惯性、劳动激励、AI采用等问题。\n当用户提到「用马克思的视角」「马克思会怎么看」「马克思方法」「marx perspective」「karl marx perspective」时使用。\n即使用户只是说「看结构矛盾」「别只看表象」「找再生产机制」「找真正杠杆点」也可触发。\n不在纯数学、纯技术debug、临床诊断、法律解释等弱适配场景强行激活。\n",
+      "contentHash": "d1ce22e9ad01c15b",
+      "dirPath": "skills/karl-marx-perspective",
+      "entryPath": "skills/karl-marx-perspective/SKILL.md"
+    },
+    {
+      "skillId": "laozi-perspective",
+      "name": "laozi-perspective",
+      "description": "老子（Laozi）的思维框架与表达方式。基于《道德经》81章全文、《庄子》《史记》等先秦典籍、\n王弼/河上公/陈鼓应等历代注疏、葛瑞汉/史华兹/安乐哲等现代学术著作的深度调研，\n提炼6个核心心智模型、8条决策启发式和完整的表达DNA。\n用途：作为思维顾问，用老子的视角分析问题、审视决策、提供反馈。\n当用户提到「用老子的视角」「老子会怎么看」「道家视角」「laozi perspective」「用道的眼光」时使用。\n即使用户只是说「换个老子的角度想想」「道法自然地看这个问题」「无为地处理这件事」也应触发。\n",
+      "contentHash": "aae7ae603c8c686c",
+      "dirPath": "skills/laozi-perspective",
+      "entryPath": "skills/laozi-perspective/SKILL.md"
+    },
+    {
       "skillId": "legalist-perspective",
       "name": "legalist-perspective",
       "description": "法家式「信赏必罚、术势结合」视角，强调规则与激励结构。",
       "contentHash": "5e5038c964dff547",
       "dirPath": "skills/legalist-perspective",
       "entryPath": "skills/legalist-perspective/SKILL.md"
+    },
+    {
+      "skillId": "miyamoto-perspective",
+      "name": "miyamoto-perspective",
+      "description": "宫本茂思维框架。基于GDC演讲、Iwata Asks系列、shmuplations古早访谈、学术分析等多维调研，提炼5个核心心智模型、8条决策启发式。触发词：宫本茂、Miyamoto、游戏设计、玩法体验、Nintendo、手感、关卡设计、交互设计、产品体验。",
+      "contentHash": "577b17437a22c7a0",
+      "dirPath": "skills/miyamoto-perspective",
+      "entryPath": "skills/miyamoto-perspective/SKILL.md"
     },
     {
       "skillId": "mrbeast-perspective",
@@ -77,7 +109,7 @@
       "skillId": "sage-perspective",
       "name": "sage-perspective",
       "description": "道家式「无为、反身、守柔」视角，强调过度干预的风险与顺势。",
-      "contentHash": "5487aea1905702ef",
+      "contentHash": "6681747b2415c628",
       "dirPath": "skills/sage-perspective",
       "entryPath": "skills/sage-perspective/SKILL.md"
     },
@@ -104,6 +136,22 @@
       "contentHash": "e29a87f3042ee65c",
       "dirPath": "skills/trump-perspective",
       "entryPath": "skills/trump-perspective/SKILL.md"
+    },
+    {
+      "skillId": "wangyangming-perspective",
+      "name": "wangyangming-perspective",
+      "description": "王阳明（Wang Yangming）的思维框架与表达方式。基于《传习录》《大学问》《王文成公全书》\n等一手文献及牟宗三、陈来、余英时、杜维明等学术研究的深度调研，\n提炼6个核心心智模型、8条决策启发式和完整的表达DNA。\n用途：作为思维顾问，用王阳明的视角分析问题、审视决策、提供反馈。\n当用户提到「用王阳明的视角」「阳明会怎么看」「心学视角」「知行合一」「致良知」\n「用阳明的眼睛看」「王阳明模式」「Wang Yangming perspective」时使用。\n即使用户只是说「帮我用阳明的角度想想」「如果王阳明在这里」「切换到阳明」也应触发。\n",
+      "contentHash": "0182dd164682e93f",
+      "dirPath": "skills/wangyangming-perspective",
+      "entryPath": "skills/wangyangming-perspective/SKILL.md"
+    },
+    {
+      "skillId": "warren-buffett-perspective",
+      "name": "warren-buffett-perspective",
+      "description": "沃伦·巴菲特的思维框架与表达方式。基于股东信、股东大会记录、深度采访、授权传记等公开材料转写，\n提炼6个核心心智模型、8条决策启发式和清晰的能力圈边界。\n用途：作为思维顾问，用巴菲特的视角分析投资、商业质量、管理层判断、长期决策与风险控制。\n当用户提到「用巴菲特的视角」「巴菲特会怎么看」「巴菲特模式」「buffett perspective」「warren buffett perspective」时使用。\n即使用户只是说「能力圈」「护城河」「安全边际」「市场先生」「太难篮子」也可触发。\n不在纯交易择时、短线投机、复杂衍生品炫技、超出其能力圈太远的议题上强行激活。\n",
+      "contentHash": "124037f102b94c3e",
+      "dirPath": "skills/warren-buffett-perspective",
+      "entryPath": "skills/warren-buffett-perspective/SKILL.md"
     },
     {
       "skillId": "zhang-yiming-perspective",

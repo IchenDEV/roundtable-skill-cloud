@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SwimLanes } from "@/components/roundtable/SwimLanes";
+import { SynthesisColumns } from "@/components/roundtable/SynthesisColumns";
 import type { SharePayload } from "@/lib/spec/share-payload";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
@@ -90,10 +91,9 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
       />
 
       {state.synthesis ? (
-        <section className="mt-8 scroll-paper border border-cinnabar-600/30 bg-paper-100/50 p-4">
-          <h2 className="mb-2 text-lg font-semibold text-cinnabar-700">结案提要</h2>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">{state.synthesis}</div>
-        </section>
+        <div className="mt-8">
+          <SynthesisColumns content={state.synthesis} />
+        </div>
       ) : null}
     </>
   );

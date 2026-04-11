@@ -1,13 +1,17 @@
 import type { TranscriptEntry } from "../spec/schema";
 
-export function formatTranscript(entries: TranscriptEntry[], maxChars = 24000): string {
+export function formatTranscript(
+  entries: TranscriptEntry[],
+  skillNames?: Record<string, string>,
+  maxChars = 24000
+): string {
   if (entries.length === 0) return "（尚无发言）";
   const lines = entries.map((e) => {
     const who =
       e.role === "moderator"
         ? "【主持】"
         : e.role === "speaker"
-          ? `【${e.skillId ?? "发言者"}】`
+          ? `【${(e.skillId && skillNames?.[e.skillId]) || e.skillId || "发言者"}】`
           : e.role === "user"
             ? "【席上你我】"
             : "【系统】";

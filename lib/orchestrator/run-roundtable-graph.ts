@@ -18,12 +18,18 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
 
   let state: RoundtableState = { ...input, error: undefined };
 
+  const skillNames: Record<string, string> = {};
+  for (const id of state.participantSkillIds) {
+    const sk = getSkillById(manifest, id);
+    if (sk) skillNames[id] = sk.name;
+  }
+
   if (state.userCommand === "stop" || state.round >= state.maxRounds) {
-    return yield* runSynthesisPhase(runtime, m, modPrompt, state);
+    return yield* runSynthesisPhase(runtime, m, modPrompt, state, skillNames);
   }
 
   const roundLabel = state.round + 1;
-  const ctx = formatTranscript(state.transcript);
+  const ctx = formatTranscript(state.transcript, skillNames);
 
   const openUser =
     state.transcript.length === 0
@@ -48,7 +54,7 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
       state = { ...state, phase: "error", error: `Unknown skill: ${skillId}` };
       return state;
     }
-    const tctx = formatTranscript(state.transcript);
+    const tctx = formatTranscript(state.transcript, skillNames);
     let spoke = "";
     for await (const ev of streamParticipantDeepAgent(runtime, m, sk, tctx)) {
       if (ev.type === "turn_complete") spoke = ev.fullText;
@@ -64,7 +70,7 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
     state = { ...state, transcript: [...state.transcript, entry] };
   }
 
-  const wrapCtx = formatTranscript(state.transcript);
+  const wrapCtx = formatTranscript(state.transcript, skillNames);
   const wrapUser = `本轮发言已齐。请：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。记录中含席上用户插话须一并考虑。`;
 
   let wrap = "";

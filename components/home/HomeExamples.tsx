@@ -8,7 +8,7 @@ const EXAMPLES = [
 
 export function HomeExamples() {
   return (
-    <section className="mx-auto mt-16 max-w-2xl border-t border-ink-200/40 pt-10">
+    <section className="mx-auto mt-16 max-w-3xl border-t border-ink-200/40 pt-10">
       <h2 className="font-serif text-lg tracking-[0.15em] text-ink-900">可试议题</h2>
       <p className="mt-2 text-sm text-ink-700">点选一则，带入圆桌；仍可在席间改写。</p>
       <ul className="mt-6 space-y-3 text-left text-sm">

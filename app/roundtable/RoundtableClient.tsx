@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { FadeIn, InkReveal } from "@/components/MotionRoot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MarkdownContent } from "@/components/roundtable/MarkdownContent";
+import { SynthesisColumns } from "@/components/roundtable/SynthesisColumns";
 import { SwimLanes } from "@/components/roundtable/SwimLanes";
 import { RoundtableReadinessBanner } from "@/components/roundtable/RoundtableReadinessBanner";
 import { useRoundtableReadiness } from "@/components/roundtable/use-roundtable-readiness";
@@ -84,6 +86,7 @@ export function RoundtableClient({
     text: string;
   } | null>(null);
   const [eventsLog, setEventsLog] = useState<StreamEvent[]>([]);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialTopic?.trim()) setTopic(initialTopic.trim());
@@ -94,6 +97,15 @@ export function RoundtableClient({
       setMaxRounds(Math.min(initialMaxRounds, MAX_ROUND_ROUNDS));
     }
   }, [initialMaxRounds]);
+
+  useEffect(() => {
+    const el = rightPanelRef.current;
+    if (!el) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+    if (isNearBottom || live) {
+      requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }));
+    }
+  }, [live, state?.transcript.length]);
 
   const skillKey = useMemo(() => skills.map((k) => k.skillId).join("|"), [skills]);
   const skillsRef = useRef(skills);
@@ -207,6 +219,23 @@ export function RoundtableClient({
       });
     }
     if (e.type === "turn_complete") {
+      setState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          transcript: [
+            ...prev.transcript,
+            { role: e.role, skillId: e.skillId, content: e.fullText, ts: new Date().toISOString() },
+          ],
+        };
+      });
+      setLive(null);
+    }
+    if (e.type === "round_complete") {
+      setState((prev) => (prev ? { ...prev, round: e.round } : prev));
+    }
+    if (e.type === "synthesis_complete") {
+      setState((prev) => (prev ? { ...prev, synthesis: e.text, phase: "done" } : prev));
       setLive(null);
     }
   }, []);
@@ -261,48 +290,32 @@ export function RoundtableClient({
 
   const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
 
-  const appendMyVoice = () => {
+  const submitVoiceAndContinue = () => {
     const text = userDraft.trim();
-    if (!text || !state || state.phase !== "await_user" || streaming) return;
-    setState({
-      ...state,
-      transcript: [...state.transcript, { role: "user", content: text, ts: new Date().toISOString() }],
-    });
-    setUserDraft("");
+    if (!state || state.phase !== "await_user" || streaming) return;
+    let next = state;
+    if (text) {
+      next = {
+        ...state,
+        transcript: [...state.transcript, { role: "user" as const, content: text, ts: new Date().toISOString() }],
+      };
+      setState(next);
+      setUserDraft("");
+    }
+    const s: RoundtableState = { ...next, phase: "running", userCommand: undefined };
+    setLive(null);
+    void runStream(s, { onEvent: handleEvent, onDone: setState, onError: recoverFromStreamFailure });
   };
+
+  const hasSession = !!state;
 
   return (
     <FadeIn>
       <InkReveal>
-        <header className="mb-8 border-b border-ink-200/40 pb-6">
-          <h1 className="font-serif text-2xl tracking-[0.2em] text-ink-900">圆桌</h1>
-          <p className="mt-2 text-sm text-ink-700">
-            每席列席是<strong className="text-ink-900">独立代理</strong>
-            ，各加载一种视角（Skill）；主持另起一路，不代他们发言。轮末你可
-            <strong className="text-ink-900">在席上插话</strong>
-            ，再续下一轮让各席回应你。
-          </p>
-          <p className="mt-3 text-xs text-ink-600">
-            正式使用请先
-            <Link href="/login" className="text-cinnabar-700 underline">
-              登入
-            </Link>
-            并在
-            <Link href="/settings" className="text-cinnabar-700 underline">
-              砚台
-            </Link>
-            钤印，以免开席后无墨可用。登入后的存档可在
-            <Link href="/roundtable/jiuxi" className="mx-1 text-cinnabar-700 underline">
-              旧席录
-            </Link>
-            查看。
-          </p>
-        </header>
-
         <RoundtableReadinessBanner readiness={readiness} />
 
         {skills.length === 0 && (
-          <div className="mb-6 rounded-sm border border-cinnabar-600/40 bg-cinnabar-600/5 px-4 py-3 text-sm text-ink-800">
+          <div className="mb-4 rounded-sm border border-cinnabar-600/40 bg-cinnabar-600/5 px-4 py-3 text-sm text-ink-800">
             讨论席名录尚未备好，无法点选视角。请待维护者处理后再来，或返回
             <Link href="/" className="text-cinnabar-700 underline">
               序页
@@ -311,138 +324,137 @@ export function RoundtableClient({
           </div>
         )}
 
-        <section className="mb-8 space-y-4 rounded-sm border border-ink-200/40 bg-paper-100/30 p-4">
-          <label className="block text-sm text-ink-700">
-            <span className="mb-1 block text-ink-900">今日所议</span>
-            <textarea
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              rows={2}
-              className="w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
-            />
-          </label>
-          <div>
-            <span className="text-sm text-ink-900">请哪些视角入席</span>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {skills.map((s) => {
-                const d = getSkillDisplay(s.skillId);
-                return (
+        <div className="lg:grid lg:grid-cols-[340px_1fr] lg:gap-6">
+          {/* ── 左栏：设置 ── */}
+          <aside className="space-y-4 rounded-sm border border-ink-200/40 bg-paper-100/30 p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
+            <label className="block text-sm text-ink-700">
+              <span className="mb-1 block text-ink-900">今日所议</span>
+              <textarea
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                rows={2}
+                className="w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
+              />
+            </label>
+            <div>
+              <span className="text-sm text-ink-900">请哪些视角入席</span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {skills.map((s) => {
+                  const d = getSkillDisplay(s.skillId);
+                  return (
+                    <Button
+                      key={s.skillId}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      title={d.brief}
+                      onClick={() => toggle(s.skillId)}
+                      className={cn(
+                        "font-sans transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
+                        selected.includes(s.skillId) &&
+                          "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
+                      )}
+                    >
+                      {d.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <label className="flex items-center gap-2 text-ink-700">
+                最多几轮
+                <input
+                  type="number"
+                  min={1}
+                  max={MAX_ROUND_ROUNDS}
+                  value={maxRounds}
+                  onChange={(e) => setMaxRounds(Number(e.target.value))}
+                  className="w-14 border border-ink-200/60 bg-paper-50 px-2 py-1"
+                />
+              </label>
+              <div className="flex items-center gap-0.5 rounded-sm border border-ink-200/60 p-0.5">
+                {(["discussion", "debate"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={cn(
+                      "rounded-sm px-3 py-1 text-xs transition-colors",
+                      mode === m ? "bg-ink-900 text-paper-50" : "text-ink-600 hover:bg-ink-100"
+                    )}
+                  >
+                    {m === "discussion" ? "讨论" : "辩论"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {streaming && (
+              <p className="flex items-center gap-2 font-sans text-sm text-ink-600" aria-live="polite">
+                <Loader2 className="size-4 shrink-0 animate-spin text-cinnabar-700" aria-hidden />
+                执笔流转中…
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 font-sans">
+              <Button
+                type="button"
+                onClick={startFresh}
+                disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
+                className="bg-ink-900 text-primary-foreground shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-ink-800 active:scale-[0.99] disabled:active:scale-100"
+              >
+                开席
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={sealEnd}
+                disabled={streaming || !hasSession || state?.phase === "done"}
+                className="border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]"
+              >
+                钤印结案
+              </Button>
+              {hasSession && (
+                <>
+                  <span className="mx-0.5 hidden h-4 w-px bg-ink-200/60 sm:inline-block" />
                   <Button
-                    key={s.skillId}
                     type="button"
                     variant="outline"
                     size="sm"
-                    title={d.brief}
-                    onClick={() => toggle(s.skillId)}
-                    className={cn(
-                      "font-sans transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
-                      selected.includes(s.skillId) &&
-                        "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
-                    )}
+                    onClick={() => navigator.clipboard.writeText(exportMd)}
+                    className="active:scale-[0.99]"
                   >
-                    {d.label}
+                    抄录全文
                   </Button>
-                );
-              })}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
+                    className="active:scale-[0.99]"
+                  >
+                    下载 MD
+                  </Button>
+                </>
+              )}
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <label className="flex items-center gap-2 text-ink-700">
-              最多几轮
-              <input
-                type="number"
-                min={1}
-                max={MAX_ROUND_ROUNDS}
-                value={maxRounds}
-                onChange={(e) => setMaxRounds(Number(e.target.value))}
-                className="w-16 border border-ink-200/60 bg-paper-50 px-2 py-1"
-              />
-            </label>
-            <div className="flex items-center gap-1 rounded-sm border border-ink-200/60 p-0.5">
-              {(["discussion", "debate"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    "rounded-sm px-3 py-1 text-xs transition-colors",
-                    mode === m ? "bg-ink-900 text-paper-50" : "text-ink-600 hover:bg-ink-100"
-                  )}
-                >
-                  {m === "discussion" ? "讨论" : "辩论"}
-                </button>
-              ))}
-            </div>
-          </div>
-          {streaming && (
-            <p className="mb-2 flex items-center gap-2 font-sans text-sm text-ink-600" aria-live="polite">
-              <Loader2 className="size-4 shrink-0 animate-spin text-cinnabar-700" aria-hidden />
-              执笔流转中，请稍候…
-            </p>
-          )}
-          <div className="flex flex-wrap gap-3 font-sans">
-            <Button
-              type="button"
-              onClick={startFresh}
-              disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
-              className="bg-ink-900 text-primary-foreground shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-ink-800 active:scale-[0.99] disabled:active:scale-100"
-            >
-              开席
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={continueRound}
-              disabled={streaming || !state || state.phase !== "await_user"}
-              className="transition-[transform,border-color] duration-150 active:scale-[0.99]"
-            >
-              再续一轮
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={sealEnd}
-              disabled={streaming || !state || state.phase === "done"}
-              className="border-cinnabar-600/60 text-cinnabar-800 transition-[transform] duration-150 hover:bg-cinnabar-600/10 active:scale-[0.99]"
-            >
-              钤印结案
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(exportMd)}
-              disabled={!state}
-              className="transition-[transform] duration-150 active:scale-[0.99]"
-            >
-              抄录全文
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
-              disabled={!state}
-              className="transition-[transform] duration-150 active:scale-[0.99]"
-            >
-              下载 Markdown
-            </Button>
-          </div>
-          {state && (
-            <div className="rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
-              <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
-            </div>
-          )}
-          {error && (
-            <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
-              <p className="text-sm text-cinnabar-800">{error}</p>
-              <p className="mt-2 text-xs text-ink-600">
-                若你刚完成登入或砚台钤印，可先
+
+            {hasSession && (
+              <div className="rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
+                <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
+                <p className="text-sm text-cinnabar-800">{error}</p>
                 <Button
                   type="button"
                   variant="link"
                   size="sm"
-                  className="mx-1 h-auto p-0 text-cinnabar-700"
+                  className="mt-1 h-auto p-0 text-cinnabar-700"
                   onClick={() => {
                     clearError();
                     refetch();
@@ -450,63 +462,78 @@ export function RoundtableClient({
                 >
                   刷新就绪状态
                 </Button>
-                再点「开席」。若提示需登入或钤印，请按横幅指引操作。
-              </p>
-            </div>
-          )}
-        </section>
-
-        {state && (
-          <div className="mb-4 text-sm text-ink-700">
-            第 {state.round} / {state.maxRounds} 轮 · 此刻{" "}
-            <span className="text-cinnabar-700">{phaseInWords(state.phase)}</span>
-            {state.moderatorMemory && (
-              <p className="mt-2 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">
-                主持手记：{state.moderatorMemory}
-              </p>
+              </div>
             )}
+          </aside>
+
+          {/* ── 右栏：对话 ── */}
+          <div ref={rightPanelRef} className="mt-6 min-w-0 space-y-4 overflow-y-auto lg:mt-0">
+            {hasSession && (
+              <div className="text-sm text-ink-700">
+                第 {state.round} / {state.maxRounds} 轮 · 此刻{" "}
+                <span className="text-cinnabar-700">{phaseInWords(state.phase)}</span>
+                {state.moderatorMemory && (
+                  <div className="mt-1 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">
+                    <span className="font-medium">主持手记：</span>
+                    <MarkdownContent content={state.moderatorMemory} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {hasSession && (
+              <SwimLanes
+                transcript={state.transcript}
+                participantIds={state.participantSkillIds}
+                skillTitle={(id) => getSkillDisplay(id).label}
+                liveTokens={live}
+              />
+            )}
+
+            {!hasSession && (
+              <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-600 lg:min-h-[400px]">
+                选好议题与列席，点「开席」即可开始。
+              </div>
+            )}
+
+            {state?.phase === "await_user" && !streaming && (
+              <section className="rounded-sm border border-gold-500/40 bg-paper-100/50 p-4">
+                <h3 className="text-sm font-medium text-ink-900">席间插话</h3>
+                <p className="mt-1 text-xs text-ink-600">本轮已收束。写下观点后「记入并续轮」，或直接续轮跳过。</p>
+                <textarea
+                  value={userDraft}
+                  onChange={(e) => setUserDraft(e.target.value)}
+                  rows={2}
+                  placeholder="写你想补充的判断、质疑或例子…"
+                  className="mt-2 w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
+                />
+                <div className="mt-2 flex flex-wrap gap-2 font-sans">
+                  <Button
+                    type="button"
+                    onClick={submitVoiceAndContinue}
+                    disabled={!userDraft.trim()}
+                    className="bg-ink-900 text-primary-foreground active:scale-[0.99]"
+                  >
+                    记入并续轮
+                  </Button>
+                  <Button type="button" variant="outline" onClick={continueRound}>
+                    直接续轮
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={sealEnd}
+                    className="border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10"
+                  >
+                    钤印结案
+                  </Button>
+                </div>
+              </section>
+            )}
+
+            {state?.synthesis && <SynthesisColumns content={state.synthesis} />}
           </div>
-        )}
-
-        {state?.phase === "await_user" && !streaming && (
-          <section className="mb-6 rounded-sm border border-gold-500/40 bg-paper-100/50 p-4">
-            <h3 className="text-sm font-medium text-ink-900">席上插话</h3>
-            <p className="mt-1 text-xs text-ink-600">
-              本轮主持已收束。你可写下自己的观点；记入后出现在「席上（你）」泳道，再点「再续一轮」时各列席代理会读到并回应。
-            </p>
-            <textarea
-              value={userDraft}
-              onChange={(e) => setUserDraft(e.target.value)}
-              rows={3}
-              placeholder="写你想补充的判断、质疑或例子…"
-              className="mt-3 w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
-            />
-            <Button
-              type="button"
-              onClick={appendMyVoice}
-              disabled={!userDraft.trim()}
-              className="mt-2 bg-ink-900 text-primary-foreground transition-[transform] duration-150 active:scale-[0.99]"
-            >
-              记入席上
-            </Button>
-          </section>
-        )}
-
-        {state && (
-          <SwimLanes
-            transcript={state.transcript}
-            participantIds={state.participantSkillIds}
-            skillTitle={(id) => getSkillDisplay(id).label}
-            liveTokens={live}
-          />
-        )}
-
-        {state?.synthesis && (
-          <section className="mt-8 scroll-paper border border-cinnabar-600/30 bg-paper-100/50 p-4">
-            <h2 className="mb-2 text-lg font-semibold text-cinnabar-700">结案提要</h2>
-            <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">{state.synthesis}</div>
-          </section>
-        )}
+        </div>
 
         {process.env.NODE_ENV === "development" && eventsLog.length > 0 && (
           <details className="mt-8 text-xs text-ink-600">

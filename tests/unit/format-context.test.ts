@@ -19,12 +19,16 @@ describe("formatTranscript", () => {
     expect(t).toContain("【sk】");
     expect(t).toContain("【席上你我】");
     expect(t).toContain("【系统】");
+
+    const named = formatTranscript(entries, { sk: "Paul Graham" });
+    expect(named).toContain("【Paul Graham】");
+    expect(named).not.toContain("【sk】");
   });
 
   it("truncates with head ellipsis when over maxChars", () => {
     const long = "x".repeat(100);
     const entries: TranscriptEntry[] = [{ role: "moderator", content: long, ts: "1" }];
-    const t = formatTranscript(entries, 40);
+    const t = formatTranscript(entries, undefined, 40);
     expect(t).toContain("…（前略）…");
     expect(t.length).toBeLessThanOrEqual(long.length + 50);
   });

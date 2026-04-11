@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
+import { SynthesisColumns } from "@/components/roundtable/SynthesisColumns";
 import { SwimLanes } from "@/components/roundtable/SwimLanes";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import type { RoundtableState } from "@/lib/spec/schema";
@@ -42,45 +43,49 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
         <p className="mt-2 text-sm text-ink-600">
           第 {state.round}/{state.maxRounds} 轮 · {phaseInWords(state.phase)}
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
           <Link
             href={id ? `/roundtable?resume=${id}` : "/roundtable"}
-            className="rounded-sm bg-ink-900 px-4 py-2 text-sm text-paper-50 hover:bg-ink-700"
+            className="rounded-sm bg-ink-900 px-3 py-1.5 text-paper-50 hover:bg-ink-700"
           >
             回到此席继续
           </Link>
           <Link
             href="/roundtable/jiuxi"
-            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
             返回旧席录
           </Link>
-          <button
-            type="button"
-            disabled={busy || !id}
-            onClick={() => void remove()}
-            className="rounded-sm border border-cinnabar-600/50 px-4 py-2 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10 disabled:opacity-40"
-          >
-            撤席
-          </button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+
+          <span className="mx-1 hidden h-4 w-px bg-ink-200/60 sm:inline-block" />
+
           <button
             type="button"
             onClick={() => void navigator.clipboard.writeText(md)}
-            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
             抄录全文
           </button>
           <button
             type="button"
             onClick={() => triggerMarkdownDownload(state.topic, md)}
-            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
-            下载 Markdown
+            下载 MD
+          </button>
+
+          <span className="mx-1 hidden h-4 w-px bg-ink-200/60 sm:inline-block" />
+
+          <button
+            type="button"
+            disabled={busy || !id}
+            onClick={() => void remove()}
+            className="rounded-sm border border-cinnabar-600/40 px-3 py-1.5 text-cinnabar-700 hover:bg-cinnabar-600/10 disabled:opacity-40"
+          >
+            撤席
           </button>
         </div>
-        <div className="mt-3 rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
+        <div className="mt-3">
           <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={false} />
         </div>
       </header>
@@ -97,10 +102,9 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
       />
 
       {state.synthesis ? (
-        <section className="mt-8 scroll-paper border border-cinnabar-600/30 bg-paper-100/50 p-4">
-          <h2 className="mb-2 text-lg font-semibold text-cinnabar-700">结案提要</h2>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">{state.synthesis}</div>
-        </section>
+        <div className="mt-8">
+          <SynthesisColumns content={state.synthesis} />
+        </div>
       ) : null}
     </>
   );

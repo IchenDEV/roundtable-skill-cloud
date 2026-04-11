@@ -15,6 +15,12 @@ export const SKILL_DISPLAY: Record<string, { label: string; brief: string }> = {
   "zhangxuefeng-perspective": { label: "张雪峰", brief: "教育选择、职业规划与阶层流动" },
   "legalist-perspective": { label: "法家", brief: "信赏必罚，规则与激励结构" },
   "sage-perspective": { label: "道家", brief: "无为守柔，顺势与反身思考" },
+  "drucker-perspective": { label: "德鲁克", brief: "管理学之父，组织效能与知识工作者" },
+  "karl-marx-perspective": { label: "马克思", brief: "结构分析、矛盾分析与实践检验" },
+  "laozi-perspective": { label: "老子", brief: "道法自然，反身观照与柔弱胜刚" },
+  "miyamoto-perspective": { label: "宫本茂", brief: "任天堂，游戏设计与交互体验" },
+  "wangyangming-perspective": { label: "王阳明", brief: "知行合一，致良知与心学实践" },
+  "warren-buffett-perspective": { label: "巴菲特", brief: "价值投资，能力圈与长期主义" },
 };
 
 export function getSkillDisplay(skillId: string): { label: string; brief: string } {

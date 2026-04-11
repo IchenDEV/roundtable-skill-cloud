@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { TranscriptEntry } from "@/lib/spec/schema";
+import { MarkdownContent } from "./MarkdownContent";
 
 type Props = {
   transcript: TranscriptEntry[];
@@ -30,41 +31,46 @@ export function SwimLanes({ transcript, participantIds, skillTitle, liveTokens }
 
   const lanes = [
     { key: "moderator", title: "主持" },
-    { key: USER_LANE, title: "席上（你）" },
     ...participantIds.map((id) => ({
       key: `speaker:${id}`,
       title: skillTitle(id),
     })),
+    { key: USER_LANE, title: "席上（你）" },
   ];
 
+  const activeLaneKey = liveTokens
+    ? liveTokens.role === "moderator"
+      ? "moderator"
+      : `speaker:${liveTokens.skillId}`
+    : null;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {lanes.map(({ key, title }, i) => (
-        <motion.section
-          key={key}
-          initial={reduce ? false : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: reduce ? 0 : i * 0.06 }}
-          className="scroll-paper border border-ink-200/50 bg-paper-100/40 p-3 shadow-sm"
-        >
-          <h3 className="mb-2 border-b border-ink-200/30 pb-1 text-sm font-semibold text-cinnabar-700">{title}</h3>
-          <div className="max-h-96 space-y-3 overflow-y-auto text-sm leading-relaxed text-ink-700">
-            {(groups[key] ?? []).map((e, j) => (
-              <p key={j} className="whitespace-pre-wrap">
-                {e.content}
-              </p>
-            ))}
-            {liveTokens &&
-              ((key === "moderator" && liveTokens.role === "moderator") ||
-                (key === `speaker:${liveTokens.skillId}` && liveTokens.role === "speaker")) && (
-                <p className="whitespace-pre-wrap text-ink-900/80">
-                  {liveTokens.text}
-                  <span className="inline-block w-1 animate-pulse">▍</span>
-                </p>
-              )}
-          </div>
-        </motion.section>
-      ))}
+    <div className="grid gap-4 sm:grid-cols-2">
+      {lanes.map(({ key, title }, i) => {
+        const isActive = key === activeLaneKey;
+        return (
+          <motion.section
+            key={key}
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: reduce ? 0 : i * 0.06 }}
+            className={`scroll-paper border p-3 shadow-sm transition-colors duration-300 ${
+              isActive ? "border-cinnabar-500/60 bg-paper-100/60" : "border-ink-200/50 bg-paper-100/40"
+            }`}
+          >
+            <h3 className="mb-2 flex items-center gap-2 border-b border-ink-200/30 pb-1 text-sm font-semibold text-cinnabar-700">
+              {title}
+              {isActive && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cinnabar-500" />}
+            </h3>
+            <div className="max-h-96 space-y-3 overflow-y-auto">
+              {(groups[key] ?? []).map((e, j) => (
+                <MarkdownContent key={j} content={e.content} />
+              ))}
+              {isActive && liveTokens && <MarkdownContent content={liveTokens.text} streaming />}
+            </div>
+          </motion.section>
+        );
+      })}
     </div>
   );
 }

@@ -46,7 +46,6 @@ export function NavUser({ email }: { email: string }) {
           <span className="block truncate text-xs text-muted-foreground">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/settings")}>砚台</DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={() => void signOut()}>
           <LogOut className="size-4" />
           登出
