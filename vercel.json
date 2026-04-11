@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["hnd1"],
+  "functions": {
+    "app/api/roundtable/stream/route.ts": {
+      "maxDuration": 120
+    }
+  }
+}

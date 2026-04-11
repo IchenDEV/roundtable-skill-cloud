@@ -1,0 +1,107 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
+import { SwimLanes } from "@/components/roundtable/SwimLanes";
+import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
+import type { RoundtableState } from "@/lib/spec/schema";
+import { phaseInWords } from "@/lib/roundtable/phase-label";
+
+type Skill = { skillId: string; name: string; description: string };
+
+export function JiuxiDetailView({ state, skills }: { state: RoundtableState; skills: Skill[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const id = state.sessionId;
+  const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
+  const md = useMemo(
+    () => buildRoundtableMarkdown(state, (i) => skills.find((x) => x.skillId === i)?.name ?? "列席"),
+    [state, skills]
+  );
+
+  async function remove() {
+    if (!id) return;
+    if (!confirm("确定撤去这一席？不可恢复。")) return;
+    setBusy(true);
+    const res = await fetch(`/api/roundtable/sessions/${id}`, { method: "DELETE" });
+    setBusy(false);
+    if (res.ok) {
+      router.push("/roundtable/jiuxi");
+      return;
+    }
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    alert(j.error ?? "撤席失败");
+  }
+
+  return (
+    <>
+      <header className="mb-6 border-b border-ink-200/40 pb-4">
+        <h1 className="font-serif text-xl text-ink-900">{state.topic}</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          第 {state.round}/{state.maxRounds} 轮 · {phaseInWords(state.phase)}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href={id ? `/roundtable?resume=${id}` : "/roundtable"}
+            className="rounded-sm bg-ink-900 px-4 py-2 text-sm text-paper-50 hover:bg-ink-700"
+          >
+            回到此席继续
+          </Link>
+          <Link
+            href="/roundtable/jiuxi"
+            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+          >
+            返回旧席录
+          </Link>
+          <button
+            type="button"
+            disabled={busy || !id}
+            onClick={() => void remove()}
+            className="rounded-sm border border-cinnabar-600/50 px-4 py-2 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10 disabled:opacity-40"
+          >
+            撤席
+          </button>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void navigator.clipboard.writeText(md)}
+            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+          >
+            抄录全文
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerMarkdownDownload(state.topic, md)}
+            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+          >
+            下载 Markdown
+          </button>
+        </div>
+        <div className="mt-3 rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
+          <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={false} />
+        </div>
+      </header>
+
+      {state.moderatorMemory ? (
+        <p className="mb-4 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">主持手记：{state.moderatorMemory}</p>
+      ) : null}
+
+      <SwimLanes
+        transcript={state.transcript}
+        participantIds={state.participantSkillIds}
+        skillTitle={(i) => skills.find((x) => x.skillId === i)?.name ?? "列席"}
+        liveTokens={null}
+      />
+
+      {state.synthesis ? (
+        <section className="mt-8 scroll-paper border border-cinnabar-600/30 bg-paper-100/50 p-4">
+          <h2 className="mb-2 text-lg font-semibold text-cinnabar-700">结案提要</h2>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">{state.synthesis}</div>
+        </section>
+      ) : null}
+    </>
+  );
+}
