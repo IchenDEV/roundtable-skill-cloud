@@ -23,12 +23,14 @@ export async function POST(req: Request) {
 
   const { state, skillNames } = body.data;
   const supabase = await createSupabaseServerClient();
-  let ownerId: string | null = null;
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    ownerId = user?.id ?? null;
+  if (!supabase) {
+    return NextResponse.json({ error: "服务端未配置账户库，暂不可分享。" }, { status: 503 });
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "请先登入后再生成分享链接。" }, { status: 401 });
   }
 
   const stateRest = { ...state };
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
     skillNames: skillNames ?? {},
   };
 
-  const token = await insertShareSnapshot(payload, ownerId);
+  const token = await insertShareSnapshot(payload, user.id);
   if (!token) {
     return NextResponse.json(
       { error: "未能生成分享（请配置 SUPABASE_SERVICE_ROLE_KEY 并执行 003 迁移）。" },

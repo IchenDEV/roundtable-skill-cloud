@@ -119,6 +119,7 @@ export function RoundtableClient({
       const data = (await res.json()) as { state?: RoundtableState; error?: string };
       if (cancelled) return;
       if (!res.ok || !data.state) {
+        setMode("discussion");
         setState({
           sessionId: resumeSessionId,
           mode: "discussion",
@@ -139,6 +140,7 @@ export function RoundtableClient({
       }
       const curSkills = skillsRef.current;
       setState(s);
+      setMode(s.mode);
       setTopic(s.topic);
       setSelected((prevSel) => {
         const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
@@ -163,6 +165,7 @@ export function RoundtableClient({
       const data = (await res.json()) as { payload?: SharePayload; error?: string };
       if (cancelled) return;
       if (!res.ok || !data.payload) {
+        setMode("discussion");
         setState({
           sessionId: crypto.randomUUID(),
           mode: "discussion",
@@ -180,6 +183,7 @@ export function RoundtableClient({
       const s = cloneStateForFork(data.payload.state);
       const curSkills = skillsRef.current;
       setState(s);
+      setMode(s.mode);
       setTopic(s.topic);
       setSelected((prevSel) => {
         const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
@@ -199,7 +203,7 @@ export function RoundtableClient({
   const recoverFromStreamFailure = useCallback(() => {
     setState((prev) => {
       if (!prev || prev.transcript.length === 0) return null;
-      return { ...prev, phase: "error" };
+      return { ...prev, phase: "await_user" };
     });
     setLive(null);
   }, []);
@@ -450,18 +454,33 @@ export function RoundtableClient({
             {error && (
               <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
                 <p className="text-sm text-cinnabar-800">{error}</p>
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="mt-1 h-auto p-0 text-cinnabar-700"
-                  onClick={() => {
-                    clearError();
-                    refetch();
-                  }}
-                >
-                  刷新就绪状态
-                </Button>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {hasSession && state.transcript.length > 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        clearError();
+                        continueRound();
+                      }}
+                      className="bg-ink-900 text-primary-foreground active:scale-[0.99]"
+                    >
+                      从中断处续轮
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-cinnabar-700"
+                    onClick={() => {
+                      clearError();
+                      refetch();
+                    }}
+                  >
+                    刷新就绪状态
+                  </Button>
+                </div>
               </div>
             )}
           </aside>

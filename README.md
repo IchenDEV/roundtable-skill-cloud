@@ -110,7 +110,7 @@ flowchart TB
 | 道家           | `sage-perspective`            | 自建                                                                                  |
 | 法家           | `legalist-perspective`        | 自建                                                                                  |
 
-完整致谢与来源索引见 [`/credits`](https://roundtable-skill-cloud.vercel.app/credits)。Skill 索引参考 [awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)。
+完整致谢与来源索引见 `[/credits](https://roundtable-skill-cloud.vercel.app/credits)`。Skill 索引参考 [awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)。
 
 ## 目录约定
 
@@ -199,6 +199,7 @@ docker compose up --build
 2. `002_llm_providers.sql` — 多笔会、`user_llm_settings` 等
 3. `003_roundtable_share_snapshots.sql` — 分享快照（仅服务端 `SUPABASE_SERVICE_ROLE_KEY` 写入）
 4. `004_remove_jm_jiminai_providers.sql` — 清理弃用笔会
+5. `005_roundtable_mode_and_atomic_persist.sql` — 会话 `mode` 持久化 + 原子写入整席 transcript
 
 将 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` 写入 `.env.local`；生产需 `KEY_ENCRYPTION_SECRET`（加密 BYOK 密文）。分享链接绝对地址可选 `NEXT_PUBLIC_SITE_URL`；未设时由请求头推断。
 
@@ -225,8 +226,8 @@ docker compose up --build
 - **人可读席名**：`formatTranscript` 接受 `skillNames` 映射，LLM 上下文中使用中文名而非 skillId。
 - **席上插话**：`await_user` 阶段用户可写入观点，记入 transcript（`role: user`），再「记入并续轮」时进入各代理上下文。
 - **主持手记**：`summarizeModeratorMemory` 压缩轮末总结，服务端自动剥离 `<think>` 标签。
-- **持久化**：每段流式编排 **finalize 后** 若已登录则写入 `roundtable_sessions` / `roundtable_messages`（见 `lib/db/persist-roundtable.ts`）。
-- **分享**：`POST /api/roundtable/share` 生成 token；公开读 `GET /api/roundtable/share/[token]` 与展卷页；须配置 `SUPABASE_SERVICE_ROLE_KEY` 与 `003` 迁移。
+- **持久化**：每段流式编排 **finalize 后** 若已登录则以单个 DB 事务写入 `roundtable_sessions` / `roundtable_messages`（见 `lib/db/persist-roundtable.ts`）。
+- **分享**：登录后可 `POST /api/roundtable/share` 生成 token；公开读 `GET /api/roundtable/share/[token]` 与展卷页；须配置 `SUPABASE_SERVICE_ROLE_KEY` 与 `003`、`005` 迁移。
 
 ## 致谢
 

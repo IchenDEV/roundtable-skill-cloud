@@ -11,7 +11,7 @@ import { parseJsonBody } from "@/lib/server/parse-json-body";
 import { z } from "zod";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const bodySchema = z.object({
   state: roundtableStateSchema,
@@ -101,8 +101,8 @@ export async function POST(req: Request) {
           n = await it.next();
         }
         const finalState = n.value as RoundtableState;
-        controller.enqueue(enc.encode(encodeSSE({ type: "finalize", state: finalState })));
         await persistRoundtableState(finalState);
+        controller.enqueue(enc.encode(encodeSSE({ type: "finalize", state: finalState })));
       } catch (err) {
         const msg = err instanceof Error ? err.message : "unknown error";
         controller.enqueue(enc.encode(encodeSSE({ type: "error", message: msg })));

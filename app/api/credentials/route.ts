@@ -39,6 +39,7 @@ export async function GET() {
     authenticated: true,
     activeProvider: active,
     defaultModel: settings?.default_model ?? null,
+    apiBaseUrl: activeRow?.api_base_url ?? null,
     providersSaved: creds?.map((c) => c.provider) ?? [],
     hasCredential: !!activeRow,
     updatedAt: activeRow?.updated_at ?? null,

@@ -1,11 +1,12 @@
 import { streamModeratorTurn, summarizeModeratorMemory } from "./agents/moderator-agent";
-import { streamParticipantDeepAgent } from "./agents/participant-deepagent";
+import { streamParticipantTurn } from "./agents/participant-agent";
 import type { RoundtableState, StreamEvent, TranscriptEntry } from "../spec/schema";
 import { getSkillById } from "../skills/lookup";
 import { loadModeratorPrompt } from "./moderator-load";
-import { formatTranscript } from "./format-context";
+import { formatTranscript, formatTranscriptForSeat } from "./format-context";
 import { nowIso, runSynthesisPhase } from "./shared-phases";
 import type { RunRoundtableParams } from "../spec/orchestrator-port";
+import { getSkillDisplay } from "../skills/skill-display";
 
 /**
  * 多代理圆桌（讨论模式）：主持代理与每位列席代理各自独立模型调用；列席仅加载本席 Skill。
@@ -20,8 +21,7 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
 
   const skillNames: Record<string, string> = {};
   for (const id of state.participantSkillIds) {
-    const sk = getSkillById(manifest, id);
-    if (sk) skillNames[id] = sk.name;
+    skillNames[id] = getSkillDisplay(id).label;
   }
 
   if (state.userCommand === "stop" || state.round >= state.maxRounds) {
@@ -33,7 +33,7 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
 
   const openUser =
     state.transcript.length === 0
-      ? `议题：${state.topic}\n列席代理 skillId：${state.participantSkillIds.join(", ")}\n请开场：统一核心概念、提出定义性问题，并说明本轮规则（每位须回应前文含「席上」用户插话，末句「简言之」）。`
+      ? `议题：${state.topic}\n列席代理：${state.participantSkillIds.map((id) => `${skillNames[id]}（${id}）`).join("、")}\n请开场：统一核心概念、提出定义性问题，并说明本轮规则（每位须回应前文含「席上」用户插话，末句「简言之」）。`
       : `当前第 ${roundLabel} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n请根据「主持人记忆」推进：${state.moderatorMemory || "（无）"}\n提出本轮引导问题。`;
 
   let modOpen = "";
@@ -54,9 +54,9 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
       state = { ...state, phase: "error", error: `Unknown skill: ${skillId}` };
       return state;
     }
-    const tctx = formatTranscript(state.transcript, skillNames);
+    const tctx = formatTranscriptForSeat(state.transcript, skillId, skillNames);
     let spoke = "";
-    for await (const ev of streamParticipantDeepAgent(runtime, m, sk, tctx)) {
+    for await (const ev of streamParticipantTurn(runtime, m, sk, tctx, skillNames[skillId])) {
       if (ev.type === "turn_complete") spoke = ev.fullText;
       yield ev;
     }

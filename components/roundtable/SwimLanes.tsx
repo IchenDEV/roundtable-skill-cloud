@@ -60,7 +60,15 @@ export function SwimLanes({ transcript, participantIds, skillTitle, liveTokens }
           >
             <h3 className="mb-2 flex items-center gap-2 border-b border-ink-200/30 pb-1 text-sm font-semibold text-cinnabar-700">
               {title}
-              {isActive && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cinnabar-500" />}
+              {isActive && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-cinnabar-500/10 px-2 py-0.5 text-xs font-medium text-cinnabar-600">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cinnabar-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-cinnabar-500" />
+                  </span>
+                  执笔中
+                </span>
+              )}
             </h3>
             <div className="max-h-96 space-y-3 overflow-y-auto">
               {(groups[key] ?? []).map((e, j) => (

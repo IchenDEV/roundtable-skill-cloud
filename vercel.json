@@ -4,7 +4,7 @@
   "regions": ["hnd1"],
   "functions": {
     "app/api/roundtable/stream/route.ts": {
-      "maxDuration": 120
+      "maxDuration": 300
     }
   }
 }

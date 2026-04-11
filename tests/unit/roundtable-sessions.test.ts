@@ -124,6 +124,7 @@ describe("roundtable-sessions", () => {
       sessionRow: {
         id: "00000000-0000-4000-8000-000000000001",
         topic: "T",
+        mode: "debate",
         participant_skill_ids: ["a"],
         max_rounds: 2,
         current_round: 1,
@@ -150,6 +151,7 @@ describe("roundtable-sessions", () => {
     });
     const s = await getRoundtableSessionState("00000000-0000-4000-8000-000000000001");
     expect(s?.phase).toBe("done");
+    expect(s?.mode).toBe("debate");
     expect(s?.transcript[1].role).toBe("system");
   });
 

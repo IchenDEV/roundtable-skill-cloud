@@ -80,7 +80,7 @@ export async function getRoundtableSessionState(sessionId: string): Promise<Roun
 
   const { data: sess, error: sErr } = await supabase
     .from("roundtable_sessions")
-    .select("id, topic, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis")
+    .select("id, topic, mode, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis")
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -103,7 +103,7 @@ export async function getRoundtableSessionState(sessionId: string): Promise<Roun
 
   return {
     sessionId: sess.id,
-    mode: (sess as Record<string, unknown>).mode === "debate" ? ("debate" as const) : ("discussion" as const),
+    mode: sess.mode === "debate" ? ("debate" as const) : ("discussion" as const),
     topic: sess.topic,
     round: sess.current_round,
     maxRounds: sess.max_rounds,

@@ -15,6 +15,7 @@ type Status = {
   authenticated?: boolean;
   activeProvider?: string;
   defaultModel?: string | null;
+  apiBaseUrl?: string | null;
   providersSaved?: string[];
   hasCredential?: boolean;
   hasOpenai?: boolean;
@@ -32,16 +33,19 @@ export function SettingsClient() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const syncFromStatus = (j: Status) => {
+    setStatus(j);
+    if (j?.activeProvider && BYOK_PROVIDERS.includes(j.activeProvider as ByokProvider)) {
+      setProvider(j.activeProvider as ByokProvider);
+    }
+    setDefaultModel(j?.defaultModel ?? "");
+    setApiBaseUrl(j?.apiBaseUrl ?? "");
+  };
+
   useEffect(() => {
     void fetch("/api/credentials")
       .then((r) => r.json())
-      .then((j: Status) => {
-        setStatus(j);
-        if (j?.activeProvider && BYOK_PROVIDERS.includes(j.activeProvider as ByokProvider)) {
-          setProvider(j.activeProvider as ByokProvider);
-        }
-        if (j?.defaultModel) setDefaultModel(j.defaultModel);
-      })
+      .then((j: Status) => syncFromStatus(j))
       .catch(() => setStatus(null));
   }, []);
 
@@ -68,7 +72,7 @@ export function SettingsClient() {
       setMsg("已钤印入库。");
       setKey("");
       const s = await fetch("/api/credentials").then((x) => x.json());
-      setStatus(s);
+      syncFromStatus(s);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "错误");
     } finally {
@@ -80,7 +84,9 @@ export function SettingsClient() {
     setLoading(true);
     await fetch("/api/credentials", { method: "DELETE" });
     const s = await fetch("/api/credentials").then((x) => x.json());
-    setStatus(s);
+    syncFromStatus(s);
+    setKey("");
+    setLabel("");
     setLoading(false);
   };
 

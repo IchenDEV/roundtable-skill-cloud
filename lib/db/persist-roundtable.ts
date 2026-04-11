@@ -13,32 +13,7 @@ export async function persistRoundtableState(state: RoundtableState): Promise<vo
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { error: upErr } = await supabase.from("roundtable_sessions").upsert(
-    {
-      id: state.sessionId,
-      user_id: user.id,
-      topic: state.topic,
-      participant_skill_ids: state.participantSkillIds,
-      max_rounds: state.maxRounds,
-      current_round: state.round,
-      phase: state.phase,
-      moderator_memory: state.moderatorMemory,
-      synthesis: state.synthesis ?? null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" }
-  );
-
-  if (upErr) {
-    console.error("persist session", upErr.message);
-    return;
-  }
-
-  await supabase.from("roundtable_messages").delete().eq("session_id", state.sessionId).eq("user_id", user.id);
-
-  const rows = state.transcript.map((t, position_idx) => ({
-    session_id: state.sessionId,
-    user_id: user.id,
+  const messages = state.transcript.map((t, position_idx) => ({
     role: t.role,
     skill_id: t.skillId ?? null,
     content: t.content,
@@ -46,8 +21,21 @@ export async function persistRoundtableState(state: RoundtableState): Promise<vo
     position_idx,
   }));
 
-  if (rows.length === 0) return;
+  const { error } = await supabase.rpc("persist_roundtable_state", {
+    p_session_id: state.sessionId,
+    p_topic: state.topic,
+    p_mode: state.mode,
+    p_participant_skill_ids: state.participantSkillIds,
+    p_max_rounds: state.maxRounds,
+    p_current_round: state.round,
+    p_phase: state.phase,
+    p_moderator_memory: state.moderatorMemory,
+    p_synthesis: state.synthesis ?? null,
+    p_messages: messages,
+  });
 
-  const { error: msgErr } = await supabase.from("roundtable_messages").insert(rows);
-  if (msgErr) console.error("persist messages", msgErr.message);
+  if (error) {
+    console.error("persist session", error.message);
+    throw new Error("旧席未能落库，请稍后再试。");
+  }
 }

@@ -25,9 +25,11 @@ class ReadOnlyFsBackend extends FilesystemBackend {
 /*  System / user prompt builders                                     */
 /* ------------------------------------------------------------------ */
 
-function buildSystemPrompt(skill: SkillRow): string {
-  return `你是圆桌中的独立代理，席位代号「${skill.name}」。
+function buildSystemPrompt(skill: SkillRow, displayName?: string): string {
+  const seatName = displayName || skill.name;
+  return `你是圆桌中的独立代理，席名「${seatName}」（skillId: ${skill.skillId}）。
 你只能代表本席发言，不得冒充主持或其他列席。
+输出中不要出现 skillId 或方括号标记，直接以本席人物口吻发言。
 
 你的工作目录中包含：
 - /SKILL.md — 你的思维框架与表达 DNA（务必先阅读）
@@ -83,14 +85,14 @@ function resolveSkillDir(dirPath: string): string {
   return abs;
 }
 
-async function createParticipantAgent(runtime: LlmRuntime, model: string, skill: SkillRow) {
+async function createParticipantAgent(runtime: LlmRuntime, model: string, skill: SkillRow, displayName?: string) {
   const llm = toLangChainModel(runtime, model);
   const absDir = resolveSkillDir(skill.dirPath);
 
   return createDeepAgent({
     model: llm,
     backend: new ReadOnlyFsBackend({ rootDir: absDir, virtualMode: true }),
-    systemPrompt: buildSystemPrompt(skill),
+    systemPrompt: buildSystemPrompt(skill, displayName),
   });
 }
 
@@ -102,9 +104,10 @@ async function* streamDeepAgent(
   runtime: LlmRuntime,
   model: string,
   skill: SkillRow,
-  userContent: string
+  userContent: string,
+  displayName?: string
 ): AsyncGenerator<StreamEvent> {
-  const agent = await createParticipantAgent(runtime, model, skill);
+  const agent = await createParticipantAgent(runtime, model, skill, displayName);
 
   let fullText = "";
 
@@ -150,10 +153,11 @@ export async function* streamParticipantDeepAgent(
   runtime: LlmRuntime,
   model: string,
   skill: SkillRow,
-  formattedTranscript: string
+  formattedTranscript: string,
+  displayName?: string
 ): AsyncGenerator<StreamEvent> {
   const userContent = buildUserMessage(formattedTranscript);
-  yield* streamDeepAgent(runtime, model, skill, userContent);
+  yield* streamDeepAgent(runtime, model, skill, userContent, displayName);
 }
 
 /** 辩论模式列席代理（deep agent 版） */
@@ -163,8 +167,9 @@ export async function* streamDebateParticipantDeepAgent(
   skill: SkillRow,
   formattedTranscript: string,
   target?: string,
-  directive?: string
+  directive?: string,
+  displayName?: string
 ): AsyncGenerator<StreamEvent> {
   const userContent = buildDebateUserMessage(formattedTranscript, target, directive);
-  yield* streamDeepAgent(runtime, model, skill, userContent);
+  yield* streamDeepAgent(runtime, model, skill, userContent, displayName);
 }

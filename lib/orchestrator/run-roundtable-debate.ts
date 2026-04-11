@@ -1,12 +1,13 @@
 import { streamModeratorTurn, summarizeModeratorMemory } from "./agents/moderator-agent";
-import { streamDebateParticipantDeepAgent } from "./agents/participant-deepagent";
+import { streamDebateParticipantTurn } from "./agents/participant-agent";
 import type { RoundtableState, StreamEvent, TranscriptEntry } from "../spec/schema";
 import { getSkillById } from "../skills/lookup";
 import { loadModeratorDebatePrompt } from "./moderator-load";
-import { formatTranscript } from "./format-context";
+import { formatTranscript, formatTranscriptForSeat } from "./format-context";
 import { nowIso, runSynthesisPhase } from "./shared-phases";
 import { parseDispatchBlock, defaultDispatch } from "./parse-dispatch";
 import type { RunRoundtableParams } from "../spec/orchestrator-port";
+import { getSkillDisplay } from "../skills/skill-display";
 
 /**
  * 多代理圆桌（辩论模式）：主持输出调度指令，编排按指令调度各席交叉质询。
@@ -21,8 +22,7 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
 
   const skillNames: Record<string, string> = {};
   for (const id of state.participantSkillIds) {
-    const sk = getSkillById(manifest, id);
-    if (sk) skillNames[id] = sk.name;
+    skillNames[id] = getSkillDisplay(id).label;
   }
 
   if (state.userCommand === "stop" || state.round >= state.maxRounds) {
@@ -35,7 +35,7 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
   // 主持辩论开场（要求输出调度指令）
   const openUser =
     state.transcript.length === 0
-      ? `议题：${state.topic}\n列席代理 skillId：${state.participantSkillIds.join(", ")}\n请开场：锚定核心争点，分析各席可能立场，然后输出本轮调度指令（JSON 格式）。`
+      ? `议题：${state.topic}\n列席代理：${state.participantSkillIds.map((id) => `${skillNames[id]}（${id}）`).join("、")}\n请开场：锚定核心争点，分析各席可能立场，然后输出本轮调度指令（JSON 格式，skillId 字段用括号中的 ID）。`
       : `当前第 ${roundLabel} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n主持人记忆：${state.moderatorMemory || "（无）"}\n请根据上轮交锋结果，提出本轮引导问题并输出新的调度指令。`;
 
   let modOpen = "";
@@ -60,9 +60,18 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
       state = { ...state, phase: "error", error: `Unknown skill: ${step.skillId}` };
       return state;
     }
-    const tctx = formatTranscript(state.transcript, skillNames);
+    const tctx = formatTranscriptForSeat(state.transcript, step.skillId, skillNames);
     let spoke = "";
-    for await (const ev of streamDebateParticipantDeepAgent(runtime, m, sk, tctx, step.target, step.directive)) {
+    const targetDisplay = step.target ? skillNames[step.target] || step.target : undefined;
+    for await (const ev of streamDebateParticipantTurn(
+      runtime,
+      m,
+      sk,
+      tctx,
+      skillNames[step.skillId],
+      targetDisplay,
+      step.directive
+    )) {
       if (ev.type === "turn_complete") spoke = ev.fullText;
       yield ev;
     }
