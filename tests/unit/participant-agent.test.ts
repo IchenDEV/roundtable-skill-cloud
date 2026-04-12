@@ -9,6 +9,19 @@ vi.mock("@langchain/langgraph/prebuilt", () => ({
 }));
 
 vi.mock("@langchain/core/messages", () => ({
+  AIMessage: class AIMessage {
+    content: unknown;
+    tool_calls: unknown[];
+
+    constructor(content: unknown, toolCalls: unknown[] = []) {
+      this.content = content;
+      this.tool_calls = toolCalls;
+    }
+
+    getType() {
+      return "ai";
+    }
+  },
   AIMessageChunk: class AIMessageChunk {
     content: unknown;
     tool_call_chunks: unknown[];
@@ -16,6 +29,23 @@ vi.mock("@langchain/core/messages", () => ({
     constructor(content: unknown, toolCallChunks: unknown[] = []) {
       this.content = content;
       this.tool_call_chunks = toolCallChunks;
+    }
+
+    getType() {
+      return "ai";
+    }
+  },
+  ToolMessage: class ToolMessage {
+    content: unknown;
+    tool_call_id: string;
+
+    constructor({ content, tool_call_id }: { content: unknown; tool_call_id: string }) {
+      this.content = content;
+      this.tool_call_id = tool_call_id;
+    }
+
+    getType() {
+      return "tool";
     }
   },
 }));
@@ -104,6 +134,35 @@ describe("participant-agent", () => {
       role: "speaker",
       skillId: "sk1",
       fullText: "其实不空",
+    });
+  });
+
+  it("accepts skills-superman paths and captures final AIMessage text after tool calls", async () => {
+    const { AIMessage, ToolMessage } = await import("@langchain/core/messages");
+    const supermanSkill = {
+      ...skill,
+      skillId: "sk2",
+      dirPath: "skills-superman/skills/camus-perspective",
+      entryPath: "skills-superman/skills/camus-perspective/SKILL.md",
+    };
+    const stream = vi.fn().mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield [new ToolMessage({ content: "SKILL.md contents", tool_call_id: "tool-1" })];
+        yield [new AIMessage("荒诞并不取消行动。")];
+      },
+    });
+    createReactAgent.mockReturnValue({ stream });
+
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", supermanSkill, "记录", "加缪"));
+
+    expect(createSkillTools).toHaveBeenCalledWith(
+      expect.stringMatching(/skills-superman[\\/]+skills[\\/]+camus-perspective$/)
+    );
+    expect(events[events.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk2",
+      fullText: "荒诞并不取消行动。",
     });
   });
 

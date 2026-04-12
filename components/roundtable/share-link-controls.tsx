@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { RoundtableState } from "@/lib/spec/schema";
 
 type Props = {
   state: RoundtableState;
   skillNames: Record<string, string>;
   disabled?: boolean;
+  inline?: boolean;
 };
 
-export function ShareLinkControls({ state, skillNames, disabled }: Props) {
+export function ShareLinkControls({ state, skillNames, disabled, inline = false }: Props) {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -52,6 +54,53 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
     }
   }, [url, state.topic]);
 
+  if (inline) {
+    return (
+      <>
+        <Button
+          type="button"
+          onClick={() => void createLink()}
+          disabled={disabled || busy}
+          variant="outline"
+          size="sm"
+          className="rounded-xl active:scale-[0.99]"
+        >
+          {busy ? "生成中…" : "生成链接"}
+        </Button>
+        {url && (
+          <>
+            <Button
+              type="button"
+              onClick={() => void copy()}
+              variant="outline"
+              size="sm"
+              className="rounded-xl active:scale-[0.99]"
+            >
+              复制链接
+            </Button>
+            {typeof navigator !== "undefined" && "share" in navigator && (
+              <Button
+                type="button"
+                onClick={() => void nativeShare()}
+                variant="outline"
+                size="sm"
+                className="rounded-xl active:scale-[0.99]"
+              >
+                系统分享
+              </Button>
+            )}
+          </>
+        )}
+        {url && (
+          <p className="basis-full break-all rounded-xl bg-paper-50 px-3 py-2 font-mono text-xs text-ink-700 ring-border">
+            {url}
+          </p>
+        )}
+        {err && <p className="basis-full text-xs text-cinnabar-800">{err}</p>}
+      </>
+    );
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
@@ -61,7 +110,7 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
           disabled={disabled || busy}
           className="rounded-xl border border-gold-600/50 bg-gold-600/10 px-4 py-2 text-sm text-ink-900 hover:bg-gold-600/15 disabled:opacity-40"
         >
-          {busy ? "钤印中…" : "生成分享链接"}
+          {busy ? "生成中…" : "生成链接"}
         </button>
         {url && (
           <>
@@ -88,7 +137,6 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
         <p className="break-all rounded-xl bg-paper-50 px-3 py-2 font-mono text-xs text-ink-700 ring-border">{url}</p>
       )}
       {err && <p className="text-xs text-cinnabar-800">{err}</p>}
-      <p className="text-xs text-ink-600">展卷为只读；他人可「携卷复刻」到你方圆桌页继续讨论（须自备砚台与钤印）。</p>
     </div>
   );
 }
