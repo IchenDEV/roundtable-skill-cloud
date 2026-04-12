@@ -1,10 +1,10 @@
-import { RoundtableClient } from "./RoundtableClient";
-import { loadSkillManifest } from "@/lib/skills/load-manifest";
+import { CourtroomClient } from "@/components/court/CourtroomClient";
 import { parseRoundtableSearchParams, type RoundtableSearchParams } from "@/lib/roundtable/roundtable-search";
+import { loadSkillManifest } from "@/lib/skills/load-manifest";
 
 export const dynamic = "force-dynamic";
 
-export default async function RoundtablePage({ searchParams }: { searchParams: Promise<RoundtableSearchParams> }) {
+export default async function CourtPage({ searchParams }: { searchParams: Promise<RoundtableSearchParams> }) {
   const q = await searchParams;
   const { initialTopic, resumeSessionId, fromShareToken, initialSkillIds, initialMaxRounds } =
     parseRoundtableSearchParams(q);
@@ -21,8 +21,9 @@ export default async function RoundtablePage({ searchParams }: { searchParams: P
   } catch {
     skills = [];
   }
+
   return (
-    <RoundtableClient
+    <CourtroomClient
       skills={skills}
       initialTopic={initialTopic}
       resumeSessionId={resumeSessionId}
