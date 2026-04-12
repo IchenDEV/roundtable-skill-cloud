@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { MarkdownContent } from "./markdown-content";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -32,6 +33,37 @@ function splitSections(raw: string): Section[] {
 export function SynthesisDialog({ content }: { content: string }) {
   const [open, setOpen] = useState(false);
   const sections = useMemo(() => splitSections(content), [content]);
+  const canPortal = typeof document !== "undefined";
+
+  const modal =
+    open && canPortal ? (
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
+        <div className="relative my-8 w-full max-w-3xl rounded-2xl bg-paper-50 card-elevated">
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-ink-200/30 bg-paper-50 px-6 py-4">
+            <h2 className="text-lg font-semibold text-cinnabar-700">结案提要</h2>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-lg p-1 text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+          <div className="space-y-6 p-6">
+            {sections.map((s, i) => (
+              <section key={i}>
+                <h3 className="mb-2 border-b border-cinnabar-600/15 pb-1 text-base font-semibold text-cinnabar-700">
+                  {s.heading}
+                </h3>
+                <div className="prose-roundtable">
+                  <MarkdownContent content={s.body.trim()} />
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   return (
     <>
@@ -54,35 +86,7 @@ export function SynthesisDialog({ content }: { content: string }) {
         )}
       </div>
 
-      {/* Full-screen modal */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-          <div className="relative my-8 w-full max-w-3xl rounded-2xl bg-paper-50 card-elevated">
-            <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-ink-200/30 bg-paper-50 px-6 py-4">
-              <h2 className="text-lg font-semibold text-cinnabar-700">结案提要</h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-lg p-1 text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="space-y-6 p-6">
-              {sections.map((s, i) => (
-                <section key={i}>
-                  <h3 className="mb-2 border-b border-cinnabar-600/15 pb-1 text-base font-semibold text-cinnabar-700">
-                    {s.heading}
-                  </h3>
-                  <div className="prose-roundtable">
-                    <MarkdownContent content={s.body.trim()} />
-                  </div>
-                </section>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {canPortal && modal ? createPortal(modal, document.body) : null}
     </>
   );
 }

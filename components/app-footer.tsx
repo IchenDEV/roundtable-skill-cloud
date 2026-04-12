@@ -8,14 +8,14 @@ export function AppFooter() {
   return (
     <footer className="relative mt-auto divider-t bg-paper-50/85 backdrop-blur-[2px]">
       <InkRipple className="h-5 text-ink-900 opacity-90" />
-      <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-3">
             <InkMark className="size-11 text-ink-800" />
             <div>
               <p className="font-serif text-base tracking-[0.2em] text-ink-900">圆桌</p>
-              <p className="mt-1 max-w-xs text-xs leading-relaxed text-ink-600">
-                主持控场，多席异见，钤印收束。纸墨为席，不代持你的执笔。
+              <p className="mt-1 max-w-sm text-xs leading-relaxed text-ink-600">
+                主持控场，多席异见，钤印收束。纸墨为席，你自执笔。
               </p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** 水墨意象：远山与留白，可作站点徽记（装饰性，由父级提供文案即可） */
+/** 圆桌意象：俯视一张桌与数席围坐，可作站点徽记（装饰性，由父级提供文案即可） */
 export function InkMark({
   className,
   "aria-hidden": ariaHidden = true,
@@ -16,23 +16,95 @@ export function InkMark({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden={ariaHidden}
     >
-      <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.35" />
-      <path
-        d="M10 32c6-10 10-14 14-14s8 4 14 14"
+      <circle cx="24" cy="24" r="20.5" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.18" />
+      <circle cx="24" cy="24" r="9.6" fill="currentColor" fillOpacity="0.07" />
+      <circle cx="24" cy="24" r="9.6" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.62" />
+      <circle cx="24" cy="24" r="4.2" stroke="currentColor" strokeWidth="1" strokeOpacity="0.22" />
+
+      <rect
+        x="21.2"
+        y="4.7"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeOpacity="0.55"
-      />
-      <path
-        d="M14 34c5-6 9-9 14-9s9 3 14 9"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
         strokeOpacity="0.35"
+        strokeWidth="0.9"
       />
-      <circle cx="34" cy="14" r="3.5" fill="currentColor" fillOpacity="0.12" />
+      <rect
+        x="34.95"
+        y="10.3"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="0.9"
+        transform="rotate(60 37.75 14.3)"
+      />
+      <rect
+        x="34.95"
+        y="29.7"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="0.9"
+        transform="rotate(120 37.75 33.7)"
+      />
+      <rect
+        x="21.2"
+        y="35.3"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="0.9"
+      />
+      <rect
+        x="7.45"
+        y="29.7"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="0.9"
+        transform="rotate(-120 10.25 33.7)"
+      />
+      <rect
+        x="7.45"
+        y="10.3"
+        width="5.6"
+        height="8"
+        rx="2.8"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="0.9"
+        transform="rotate(-60 10.25 14.3)"
+      />
+
+      <path
+        d="M20.6 24c1.55 1.45 3.05 2.15 4.5 2.15 1.39 0 2.82-.65 4.3-1.95"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        strokeOpacity="0.22"
+      />
     </svg>
   );
 }

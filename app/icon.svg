@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <rect width="32" height="32" rx="6" fill="#f4efe4"/>
-  <circle cx="16" cy="16" r="13" stroke="#1c1914" stroke-opacity="0.4" stroke-width="0.9"/>
-  <path d="M7 21c4-7 7-10 9-10s5 3 9 10" stroke="#1c1914" stroke-opacity="0.65" stroke-width="1.2" stroke-linecap="round"/>
-  <circle cx="22" cy="9" r="2.2" fill="#1c1914" fill-opacity="0.15"/>
+  <circle cx="16" cy="16" r="12.6" stroke="#1c1914" stroke-opacity="0.16" stroke-width="0.9"/>
+  <circle cx="16" cy="16" r="6.2" fill="#1c1914" fill-opacity="0.07"/>
+  <circle cx="16" cy="16" r="6.2" stroke="#1c1914" stroke-opacity="0.62" stroke-width="1.1"/>
+  <circle cx="16" cy="16" r="2.8" stroke="#1c1914" stroke-opacity="0.22" stroke-width="0.75"/>
+
+  <rect x="14.1" y="3.2" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7"/>
+  <rect x="23.1" y="6.8" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7" transform="rotate(60 25 9.4)"/>
+  <rect x="23.1" y="20" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7" transform="rotate(120 25 22.6)"/>
+  <rect x="14.1" y="23.6" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7"/>
+  <rect x="5.1" y="20" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7" transform="rotate(-120 7 22.6)"/>
+  <rect x="5.1" y="6.8" width="3.8" height="5.2" rx="1.9" fill="#1c1914" fill-opacity="0.14" stroke="#1c1914" stroke-opacity="0.34" stroke-width="0.7" transform="rotate(-60 7 9.4)"/>
+
+  <path d="M13.8 16c1 .95 2 .95 2.2.95 1 0 2-.35 2.95-1.15" stroke="#1c1914" stroke-opacity="0.22" stroke-width="0.85" stroke-linecap="round"/>
 </svg>
