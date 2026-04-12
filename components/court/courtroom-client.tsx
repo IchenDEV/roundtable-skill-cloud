@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { FadeIn, InkReveal } from "@/components/MotionRoot";
+import { FadeIn, InkReveal } from "@/components/motion-root";
 import { Button } from "@/components/ui/button";
-import { CourtroomMusicToggle } from "@/components/court/CourtroomMusicToggle";
-import { CourtroomStage } from "@/components/court/CourtroomStage";
-import { RoundtableReadinessBanner } from "@/components/roundtable/RoundtableReadinessBanner";
-import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
-import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
+import { CourtroomMusicToggle } from "@/components/court/courtroom-music-toggle";
+import { CourtroomStage } from "@/components/court/courtroom-stage";
+import { RoundtableReadinessBanner } from "@/components/roundtable/roundtable-readiness-banner";
+import { ShareLinkControls } from "@/components/roundtable/share-link-controls";
+import { SynthesisDialog } from "@/components/roundtable/synthesis-dialog";
 import { useRoundtableSession, type SkillOpt } from "@/components/roundtable/use-roundtable-session";
 import { triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import { MAX_ROUND_ROUNDS } from "@/lib/spec/constants";

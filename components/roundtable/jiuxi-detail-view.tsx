@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
-import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
-import { Timeline } from "@/components/roundtable/Timeline";
+import { ShareLinkControls } from "@/components/roundtable/share-link-controls";
+import { SynthesisDialog } from "@/components/roundtable/synthesis-dialog";
+import { Timeline } from "@/components/roundtable/timeline";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import type { RoundtableState } from "@/lib/spec/schema";
 import { phaseInWords } from "@/lib/roundtable/phase-label";

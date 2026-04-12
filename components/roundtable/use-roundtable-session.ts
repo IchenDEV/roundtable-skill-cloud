@@ -14,6 +14,31 @@ import { getSkillDisplay } from "@/lib/skills/skill-display";
 export type SkillOpt = { skillId: string; name: string; description: string; category: string };
 export type RoundtableMode = RoundtableState["mode"];
 
+function pickSelectedSkillIds(ids: string[], skills: SkillOpt[]) {
+  const known = ids.filter((id) => skills.some((skill) => skill.skillId === id));
+  return known.length > 0 ? known : skills.slice(0, 2).map((skill) => skill.skillId);
+}
+
+function buildSessionErrorState(
+  sessionId: string,
+  mode: RoundtableMode,
+  topic: string,
+  error: string
+): RoundtableState {
+  return {
+    sessionId,
+    mode,
+    topic,
+    round: 0,
+    maxRounds: 3,
+    phase: "error",
+    participantSkillIds: [],
+    transcript: [],
+    moderatorMemory: "",
+    error,
+  };
+}
+
 function emptyState(
   topic: string,
   ids: string[],
@@ -87,6 +112,23 @@ export function useRoundtableSession({
     [forcedMode]
   );
 
+  const hydrateImportedState = useCallback(
+    (incoming: RoundtableState) => {
+      const next = applyModePolicy(incoming);
+      setState(next);
+      setModeState(next.mode);
+      setTopic(next.topic);
+      setSelected(() => pickSelectedSkillIds(next.participantSkillIds, skillsRef.current));
+      setMaxRounds(Math.min(next.maxRounds, MAX_ROUND_ROUNDS));
+    },
+    [applyModePolicy]
+  );
+
+  const resetStreamingState = useCallback(() => {
+    cancelStream();
+    clearBuffer();
+  }, [cancelStream, clearBuffer]);
+
   const setMode = useCallback(
     (nextMode: RoundtableMode) => {
       setModeState(forcedMode ?? nextMode);
@@ -117,82 +159,54 @@ export function useRoundtableSession({
     if (!resumeSessionId?.trim()) return;
     let cancelled = false;
     void (async () => {
-      cancelStream();
-      clearBuffer();
+      resetStreamingState();
       const res = await fetch(`/api/roundtable/sessions/${resumeSessionId.trim()}`);
       const data = (await res.json()) as { state?: RoundtableState; error?: string };
       if (cancelled) return;
       if (!res.ok || !data.state) {
-        setState({
-          sessionId: resumeSessionId,
-          mode: forcedMode ?? "discussion",
-          topic: "（未能载入旧席）",
-          round: 0,
-          maxRounds: 3,
-          phase: "error",
-          participantSkillIds: [],
-          transcript: [],
-          moderatorMemory: "",
-          error: data.error ?? "请确认已登入且该席仍存在。",
-        });
+        setState(
+          buildSessionErrorState(
+            resumeSessionId,
+            forcedMode ?? "discussion",
+            "（未能载入旧席）",
+            data.error ?? "请确认已登入且该席仍存在。"
+          )
+        );
         return;
       }
-      let s = applyModePolicy(data.state);
-      if (s.phase === "running") s = { ...s, phase: "idle" };
-      setState(s);
-      setModeState(s.mode);
-      setTopic(s.topic);
-      const curSkills = skillsRef.current;
-      setSelected(() => {
-        const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
-        return known.length > 0 ? known : curSkills.slice(0, 2).map((k) => k.skillId);
-      });
-      setMaxRounds(s.maxRounds);
+      const next = data.state.phase === "running" ? { ...data.state, phase: "idle" as const } : data.state;
+      hydrateImportedState(next);
     })();
     return () => {
       cancelled = true;
     };
-  }, [applyModePolicy, cancelStream, clearBuffer, forcedMode, resumeSessionId, skillKey]);
+  }, [forcedMode, hydrateImportedState, resetStreamingState, resumeSessionId, skillKey]);
 
   useEffect(() => {
     if (!fromShareToken?.trim()) return;
     let cancelled = false;
     void (async () => {
-      cancelStream();
-      clearBuffer();
+      resetStreamingState();
       const res = await fetch(`/api/roundtable/share/${fromShareToken.trim()}`);
       const data = (await res.json()) as { payload?: SharePayload; error?: string };
       if (cancelled) return;
       if (!res.ok || !data.payload) {
-        setState({
-          sessionId: crypto.randomUUID(),
-          mode: forcedMode ?? "discussion",
-          topic: "（分享无效）",
-          round: 0,
-          maxRounds: 3,
-          phase: "error",
-          participantSkillIds: [],
-          transcript: [],
-          moderatorMemory: "",
-          error: data.error ?? "链接已失效或格式不对。",
-        });
+        setState(
+          buildSessionErrorState(
+            crypto.randomUUID(),
+            forcedMode ?? "discussion",
+            "（分享无效）",
+            data.error ?? "链接已失效或格式不对。"
+          )
+        );
         return;
       }
-      const s = applyModePolicy(cloneStateForFork(data.payload.state));
-      setState(s);
-      setModeState(s.mode);
-      setTopic(s.topic);
-      const curSkills = skillsRef.current;
-      setSelected(() => {
-        const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
-        return known.length > 0 ? known : curSkills.slice(0, 2).map((k) => k.skillId);
-      });
-      setMaxRounds(Math.min(s.maxRounds, MAX_ROUND_ROUNDS));
+      hydrateImportedState(cloneStateForFork(data.payload.state));
     })();
     return () => {
       cancelled = true;
     };
-  }, [applyModePolicy, cancelStream, clearBuffer, forcedMode, fromShareToken, skillKey]);
+  }, [forcedMode, fromShareToken, hydrateImportedState, resetStreamingState, skillKey]);
 
   const buildCallbacks = useCallback(
     () => ({

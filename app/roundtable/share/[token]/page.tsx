@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SharePublicClient } from "@/components/roundtable/SharePublicClient";
-import { FadeIn, InkReveal } from "@/components/MotionRoot";
+import { SharePublicClient } from "@/components/roundtable/share-public-client";
+import { FadeIn, InkReveal } from "@/components/motion-root";
 import { fetchSharePayloadByToken } from "@/lib/db/share-snapshot";
 
 export const dynamic = "force-dynamic";

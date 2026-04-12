@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Timeline } from "@/components/roundtable/Timeline";
-import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
+import { Timeline } from "@/components/roundtable/timeline";
+import { SynthesisDialog } from "@/components/roundtable/synthesis-dialog";
 import type { SharePayload } from "@/lib/spec/share-payload";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import { phaseInWords } from "@/lib/roundtable/phase-label";

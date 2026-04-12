@@ -8,7 +8,7 @@ import matter from "gray-matter";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 
-// Two skill source directories — superman submodule first, then local overrides
+// Two skill source directories — external skill source first, then local additions/overrides
 const skillSourceDirs = [path.join(root, "skills-superman", "skills"), path.join(root, "skills")];
 
 const categoriesFile = path.join(root, "skills", "categories.json");
@@ -59,14 +59,14 @@ function main() {
 
   const categoryMap = buildCategoryMap();
 
-  // Collect all skills; if same skillId appears in multiple dirs, first wins
+  // Collect all skills; if the same skillId appears in multiple dirs, the earlier source wins
   const seen = new Set();
   const skills = [];
 
   for (const sourceDir of skillSourceDirs) {
     const items = walkSkillDirs(sourceDir);
     for (const { skillId, dir, file } of items) {
-      if (seen.has(skillId)) continue; // first source (superman) wins
+      if (seen.has(skillId)) continue; // earlier source wins
       seen.add(skillId);
 
       const raw = fs.readFileSync(file, "utf8");

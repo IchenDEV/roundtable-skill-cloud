@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { JiuxiDetailView } from "@/components/roundtable/JiuxiDetailView";
-import { FadeIn, InkReveal } from "@/components/MotionRoot";
+import { JiuxiDetailView } from "@/components/roundtable/jiuxi-detail-view";
+import { FadeIn, InkReveal } from "@/components/motion-root";
 import { getRoundtableSessionState } from "@/lib/db/roundtable-sessions";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
 import { createSupabaseServerClient } from "@/lib/supabase/server";

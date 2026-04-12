@@ -1,104 +1,88 @@
 # 🏮 圆桌 Skill 云
 
-> **让历史上最锐利的头脑，为你的问题交锋。**
+> 让不同人格化视角同席论辩，再由主持慢慢收束成一纸结案。
 
-一句议题，数位大师入席——马斯克拆成本、芒格查盲点、费曼验真伪——独立思考，当面辩论，你随时插话。结束时主持人铺纸结案：共识、分歧、悬而未决。
+圆桌是一个面向思辨与写作场景的多 Agent Web 应用：你给出议题，选择几位人物视角入席，主持控场，各席独立发言、彼此回应，你也可以在轮间插话。最终系统会给出结构化结案提要。
 
----
+## 核心体验
 
-## ✨ 核心体验
+- 真多 Agent：每席独立调用模型，并只读取本席 skill 目录
+- 讨论 / 辩论双模式：既能求共识，也能做交锋式质询
+- 席上插话：`await_user` 阶段可追加用户发言，再续下一轮
+- 旧席与分享：支持恢复会话、生成快照链接、按分享复刻重开
+- BYOK：凭据加密存储，平台不代管明文 API Key
 
-🎭 **真·多 Agent** — 每位列席都是独立的 AI 代理，拥有自己的思维框架、调研材料和表达风格。不是一个模型分饰多角，而是各自为战。
+## Skill 来源
 
-🗣️ **席上插话** — 每轮讨论间隙，你可以写下判断、质疑或补充。所有代理都会在下一轮回应你的观点。
+运行时 skill manifest 由两层目录汇总生成：
 
-⚔️ **讨论 / 辩论双模式** — 讨论模式求共识，辩论模式追交锋。辩论中主持人会动态调度质询顺序，让论证最弱的一方接受盘问。
+- `skills-superman/skills/`：外部 skill 源，构建时优先扫描
+- `skills/`：本仓自管 skill，用于补充与覆盖
 
-📜 **结案提要** — 主持人最终输出结构化报告：共识 · 分歧 · 开放问题 · 可执行结论。
+构建命令会生成：
 
-🔑 **BYOK 自带钥匙** — 你的 API Key 加密存储，平台不代管明文。支持 OpenAI、Anthropic、OpenRouter、MiniMax、Kimi、豆包。
+- `.generated/skills-manifest.json`
 
----
+当前仓库的 manifest 产物为 75 个 skill、7 个分类；以 `pnpm run build:skills` 的输出为准。
 
-## 🎓 内置 21 位思维人物
-
-| 人物          | 一句话                             |
-| ------------- | ---------------------------------- |
-| 保罗·格雷厄姆 | YC 创始人，创业、写作与产品哲学    |
-| 张一鸣        | 字节跳动创始人，产品、组织与全球化 |
-| 马斯克        | 第一性原理，工程与成本拆解         |
-| 乔布斯        | 苹果创始人，产品设计与战略         |
-| 芒格          | 多元思维模型，投资与逆向思考       |
-| 费曼          | 物理学家，学习方法与科学思维       |
-| 纳瓦尔        | 杠杆、特定知识与财富哲学           |
-| 塔勒布        | 反脆弱、黑天鹅与风险管理           |
-| 卡帕西        | AI 工程师，深度学习与技术教育      |
-| 伊利亚        | AI 安全先驱，scaling 与研究品味    |
-| 特朗普        | 谈判、权力博弈与传播策略           |
-| MrBeast       | YouTube 之王，内容创造方法论       |
-| 张雪峰        | 教育选择、职业规划与阶层流动       |
-| 巴菲特        | 价值投资，能力圈与长期主义         |
-| 德鲁克        | 管理学之父，组织效能与知识工作者   |
-| 马克思        | 结构分析、矛盾分析与实践检验       |
-| 老子          | 道法自然，反身观照与柔弱胜刚       |
-| 王阳明        | 知行合一，致良知与心学实践         |
-| 宫本茂        | 任天堂，游戏设计与交互体验         |
-| 道家          | 无为守柔，顺势与反身思考           |
-| 法家          | 信赏必罚，规则与激励结构           |
-
-每位人物的思维框架均由深度调研蒸馏而成，存放在 `skills/<id>/SKILL.md` 及 `references/` 目录。
-
----
-
-## 🚀 快速开始
+## 快速开始
 
 ```bash
 git clone https://github.com/ichendev/roundtable-skill-cloud.git
 cd roundtable-skill-cloud
+git submodule update --init --recursive
 cp .env.example .env.local
-# 至少填写 DEV_LLM_API_KEY 即可本地跑通（无需 Supabase）
-
 pnpm install
 pnpm dev
-# → http://localhost:3000
 ```
 
-完整部署指南（Supabase、Docker、Vercel）见 [docs/deploy.md](docs/deploy.md)。
+如果只是本地体验流程，`.env.local` 至少填一个：
 
----
+```bash
+DEV_LLM_API_KEY=你的测试 Key
+```
 
-## 🏗 技术架构
+默认访问：`http://localhost:3000`
 
-详见 [docs/agent.md](docs/agent.md) — 完整的 Agent 调度架构文档。
+## 常用命令
 
-**要点**：
+```bash
+pnpm run build:skills
+pnpm lint
+pnpm test
+pnpm build
+```
 
-- **Per-Turn SSE** — 每个 Agent 的每次发言是一个独立的 SSE 请求，不会超时
-- **ReAct Agent** — 列席代理基于 LangChain ReAct，运行时从本席目录读取思维框架
-- **沙箱隔离** — 每个代理只能读取自己的 Skill 目录，不可越界
-- **身份锁定** — 多层 prompt 锚定，防止代理串台
+## 项目结构
 
----
+```text
+app/                  Next.js App Router 页面与 API
+components/           共享 UI 与业务组件
+content/              主持 prompt
+docs/                 当前有效文档
+lib/                  编排、技能、服务端、数据库与 schema
+scripts/              构建脚本
+skills/               本仓自管 skill
+skills-superman/      外部 skill 源（git submodule）
+supabase/migrations/  数据库迁移
+tests/unit/           Vitest 单元测试
+```
 
-## 📖 文档
+## 文档
 
-| 文档                           | 内容                         |
-| ------------------------------ | ---------------------------- |
-| [docs/agent.md](docs/agent.md) | Agent 调度架构、状态机、协议 |
-| [.env.example](.env.example)   | 环境变量说明                 |
+- [docs/architecture.md](docs/architecture.md)：当前架构与主执行路径
+- [docs/deployment.md](docs/deployment.md)：本地运行、迁移顺序与部署前提
+- [docs/design-system.md](docs/design-system.md)：界面风格与设计约束
+- [AGENTS.md](AGENTS.md)：协作者工作指引
 
----
+## 致谢
 
-## 🙏 致谢
+- Skill 蒸馏框架：[花叔 / 女娲造人](https://github.com/alchaincyf/nuwa-skill)
+- 产品灵感：[lijigang/ljg-roundtable](https://github.com/lijigang/ljg-skills/tree/master/skills/ljg-roundtable)
+- Skill 索引：[awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)
 
-- **Skill 蒸馏框架** — [花叔 (alchaincyf)](https://github.com/alchaincyf) 及 [女娲造人](https://github.com/alchaincyf/nuwa-skill)
-- **产品灵感** — [lijigang/ljg-roundtable](https://github.com/lijigang/ljg-skills/tree/master/skills/ljg-roundtable)
-- **Skill 索引** — [awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)
+完整来源说明见 [app/credits/page.tsx](app/credits/page.tsx) 对应页面。
 
-完整致谢见 [/credits](https://roundtable-skill-cloud.vercel.app/credits)。
-
----
-
-## 📄 License
+## License
 
 MIT

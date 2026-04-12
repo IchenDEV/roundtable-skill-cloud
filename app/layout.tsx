@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Noto_Serif_SC, Geist } from "next/font/google";
 import "./globals.css";
-import { AppNav } from "@/components/AppNav";
-import { AppFooter } from "@/components/AppFooter";
+import { AppNav } from "@/components/app-nav";
+import { AppFooter } from "@/components/app-footer";
 import { cn } from "@/lib/utils";
-import { PageTransition } from "@/components/PageTransition";
+import { PageTransition } from "@/components/page-transition";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
