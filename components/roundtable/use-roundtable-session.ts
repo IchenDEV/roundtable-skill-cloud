@@ -104,8 +104,11 @@ export function useRoundtableSession({
   const [state, setState] = useState<RoundtableState | null>(null);
 
   const skillsRef = useRef(skills);
-  skillsRef.current = skills;
   const skillKey = useMemo(() => skills.map((k) => k.skillId).join("|"), [skills]);
+
+  useEffect(() => {
+    skillsRef.current = skills;
+  }, [skills]);
 
   const applyModePolicy = useCallback(
     (s: RoundtableState): RoundtableState => (forcedMode ? { ...s, mode: forcedMode } : s),
@@ -135,18 +138,6 @@ export function useRoundtableSession({
     },
     [forcedMode]
   );
-
-  useEffect(() => {
-    if (initialTopic?.trim()) setTopic(initialTopic.trim());
-  }, [initialTopic]);
-
-  useEffect(() => {
-    if (initialMaxRounds) setMaxRounds(Math.min(initialMaxRounds, MAX_ROUND_ROUNDS));
-  }, [initialMaxRounds]);
-
-  useEffect(() => {
-    if (forcedMode) setModeState(forcedMode);
-  }, [forcedMode]);
 
   useEffect(
     () => () => {
@@ -277,6 +268,7 @@ export function useRoundtableSession({
     [state]
   );
   const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
+  const effectiveMode = forcedMode ?? mode;
 
   return {
     activeTurn,
@@ -289,7 +281,7 @@ export function useRoundtableSession({
     hasSession: !!state,
     live,
     maxRounds,
-    mode,
+    mode: effectiveMode,
     readiness,
     refetch,
     sealEnd,

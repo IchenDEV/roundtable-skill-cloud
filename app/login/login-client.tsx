@@ -13,20 +13,22 @@ const AUTH_ERROR_HINT: Record<string, string> = {
   access_denied: "登录未完成或被拒绝，请重试或重新发送链接。",
 };
 
-export function LoginClient() {
+type LoginClientProps = {
+  initialAuthError?: string;
+};
+
+export function LoginClient({ initialAuthError }: LoginClientProps) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [flashErr, setFlashErr] = useState<string | null>(null);
+  const [flashErr, setFlashErr] = useState<string | null>(() =>
+    initialAuthError ? (AUTH_ERROR_HINT[initialAuthError] ?? `登录异常（${initialAuthError}），请重试。`) : null
+  );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("auth_error");
-    if (!code) return;
-    setFlashErr(AUTH_ERROR_HINT[code] ?? `登录异常（${code}），请重试。`);
+    if (!initialAuthError || typeof window === "undefined") return;
     window.history.replaceState(null, "", "/login");
-  }, []);
+  }, [initialAuthError]);
 
   const clearMessages = useCallback(() => {
     setErr(null);

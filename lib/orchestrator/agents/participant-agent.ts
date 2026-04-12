@@ -20,8 +20,8 @@ function isAbortError(err: unknown): boolean {
 /* ------------------------------------------------------------------ */
 
 function resolveSkillDir(dirPath: string): string {
-  const abs = path.resolve(process.cwd(), dirPath);
-  const root = path.resolve(process.cwd(), "skills");
+  const abs = path.resolve(/* turbopackIgnore: true */ process.cwd(), dirPath);
+  const root = path.resolve(/* turbopackIgnore: true */ process.cwd(), "skills");
   if (!abs.startsWith(root + path.sep) && abs !== root) {
     throw new Error(`Skill path traversal blocked: ${dirPath}`);
   }
