@@ -1,6 +1,12 @@
-# 🏮 圆桌 Skill 云
+<p align="center">
+  <img src="./app/icon.svg" alt="圆桌图标" width="88" height="88" />
+</p>
 
-> 让不同人格化视角同席论辩，再由主持慢慢收束成一纸结案。
+<h1 align="center">圆桌 Skill 云</h1>
+
+<p align="center">让不同人格化视角同席论辩，再由主持慢慢收束成一纸结案。</p>
+
+> 品牌图标采用“俯视圆桌 + 多席围坐”的意象，对应产品里的主持控场、列席分席与轮次收束。
 
 圆桌是一个面向思辨与写作场景的多 Agent Web 应用：你给出议题，选择几位人物视角入席，主持控场，各席独立发言、彼此回应，你也可以在轮间插话。最终系统会给出结构化结案提要。
 
@@ -77,11 +83,12 @@ tests/unit/           Vitest 单元测试
 
 ## 致谢
 
-- Skill 蒸馏框架：[花叔 / 女娲造人](https://github.com/alchaincyf/nuwa-skill)
 - 产品灵感：[lijigang/ljg-roundtable](https://github.com/lijigang/ljg-skills/tree/master/skills/ljg-roundtable)
-- Skill 索引：[awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)
+- 蒸馏标准：[花叔 / 女娲造人](https://github.com/alchaincyf/nuwa-skill)
+- 外部视角库：[IchenDEV/superman](https://github.com/IchenDEV/superman)
+- 社区索引：[awesome-persona-distill-skills](https://github.com/xixu-me/awesome-persona-distill-skills)
 
-完整来源说明见 [app/credits/page.tsx](app/credits/page.tsx) 对应页面。
+完整来源说明见 [app/credits/page.tsx](app/credits/page.tsx) 对应页面；页面内容按运行时 `.generated/skills-manifest.json` 的实际来源统计展示。
 
 ## License
 

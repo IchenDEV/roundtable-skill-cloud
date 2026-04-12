@@ -16,6 +16,12 @@ import { phaseInWords } from "@/lib/roundtable/phase-label";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
 import { cn } from "@/lib/utils";
 
+const lightActionButtonClass =
+  "rounded-xl border-ink-200/60 bg-card text-ink-800 hover:border-cinnabar-600/40 hover:bg-paper-50 active:scale-[0.99]";
+
+const darkActionButtonClass =
+  "rounded-xl border-paper-50/20 bg-paper-50/8 text-paper-50 hover:bg-paper-50/14 hover:text-paper-50 active:scale-[0.99]";
+
 export function CourtroomClient({
   skills,
   initialTopic,
@@ -85,36 +91,44 @@ export function CourtroomClient({
           </div>
         )}
 
-        <CourtroomStage
-          transcript={state?.transcript ?? []}
-          participantIds={state?.participantSkillIds ?? selected}
-          skillTitle={(id) => getSkillDisplay(id).label}
-          liveTokens={live}
-          activeTurn={activeTurn}
-          round={state?.round ?? 0}
-          maxRounds={state?.maxRounds ?? maxRounds}
-          phaseLabel={state ? phaseInWords(state.phase) : "待开庭"}
-        />
-
-        <section className="rounded-2xl bg-ink-900/85 p-5 text-paper-50 card-dark-elevated">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="font-sans text-xs tracking-[0.24em] text-gold-500">开庭设置</p>
-              <label className="mt-3 block text-sm">
-                <span className="mb-1 block text-paper-50/80">案由</span>
-                <textarea
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-xl border border-paper-50/20 bg-paper-50/95 px-3 py-2 text-ink-900 outline-none focus:ring-2 focus:ring-gold-500"
-                />
-              </label>
+        <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start xl:grid-cols-[400px_minmax(0,1fr)]">
+          <aside className="rounded-2xl bg-card p-5 text-ink-800 card-elevated lg:sticky lg:top-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-sans text-xs tracking-[0.24em] text-ink-500">开庭设置</p>
+                <h2 className="mt-2 max-w-none text-balance font-serif text-2xl leading-tight tracking-[0.08em] text-ink-900">
+                  先定案由，再择列席
+                </h2>
+              </div>
+              <div className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-cinnabar-600/20 bg-cinnabar-600/8 px-3 py-1 text-xs text-cinnabar-700">
+                <span>公堂模式</span>
+                <span className="rounded-full border border-cinnabar-600/25 bg-cinnabar-600/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-cinnabar-700">
+                  Beta
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 lg:w-[360px]">
-              <div>
-                <span className="font-sans text-xs text-paper-50/70">列席</span>
-                <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto pr-1">
+            <p className="mt-3 text-sm leading-7 text-ink-600">
+              题目写得越锋利，席上交锋越有力。先圈定争点，再挑几位真正彼此牵制的视角入庭。
+            </p>
+
+            <label className="mt-5 block text-sm text-ink-700">
+              <span className="mb-1 block text-ink-900">案由</span>
+              <textarea
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                rows={3}
+                className="w-full rounded-xl border border-ink-200/60 bg-paper-50 px-3 py-2 text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
+              />
+            </label>
+
+            <div className="mt-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-ink-900">列席</span>
+                <span className="font-sans text-xs text-ink-500">已选 {selected.length} 位</span>
+              </div>
+              <div className="mt-2 max-h-52 overflow-y-auto rounded-2xl bg-paper-50/70 p-3 ring-border">
+                <div className="flex flex-wrap gap-2">
                   {skills.map((s) => {
                     const d = getSkillDisplay(s.skillId);
                     return (
@@ -124,10 +138,10 @@ export function CourtroomClient({
                         title={d.brief}
                         onClick={() => toggle(s.skillId)}
                         className={cn(
-                          "rounded-lg border px-2.5 py-1 font-sans text-xs transition-[transform,border-color,background-color] active:scale-[0.97]",
+                          "rounded-lg border px-2.5 py-1 font-sans text-xs transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
                           selected.includes(s.skillId)
-                            ? "border-gold-500 bg-gold-500/20 text-paper-50"
-                            : "border-paper-50/20 bg-paper-50/5 text-paper-50/70 hover:border-gold-500/70"
+                            ? "border-transparent ring-brand bg-cinnabar-600/10 text-cinnabar-700 hover:bg-cinnabar-600/15"
+                            : "border-ink-200/70 bg-card text-ink-600 hover:border-cinnabar-600/40 hover:text-cinnabar-700"
                         )}
                       >
                         {d.label}
@@ -136,9 +150,11 @@ export function CourtroomClient({
                   })}
                 </div>
               </div>
+            </div>
 
-              <div className="flex flex-wrap items-center gap-2 font-sans text-sm">
-                <label className="flex items-center gap-2 text-paper-50/80">
+            <div className="mt-5 space-y-4">
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <label className="flex items-center gap-2 text-ink-700">
                   庭数
                   <input
                     type="number"
@@ -146,15 +162,18 @@ export function CourtroomClient({
                     max={MAX_ROUND_ROUNDS}
                     value={maxRounds}
                     onChange={(e) => setMaxRounds(Number(e.target.value))}
-                    className="w-14 rounded-lg border border-paper-50/20 bg-paper-50/95 px-2 py-1 text-ink-900"
+                    className="w-14 rounded-lg border border-ink-200/60 bg-paper-50 px-2 py-1 text-ink-900"
                   />
                 </label>
                 <CourtroomMusicToggle />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 font-sans">
                 <Button
                   type="button"
                   onClick={startFresh}
                   disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
-                  className="rounded-xl bg-cinnabar-600 text-paper-50 hover:bg-cinnabar-700 active:scale-[0.99]"
+                  className="rounded-xl bg-cinnabar-600 text-card shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-cinnabar-700 active:scale-[0.99] disabled:active:scale-100"
                 >
                   升堂
                 </Button>
@@ -163,29 +182,74 @@ export function CourtroomClient({
                   variant="outline"
                   onClick={sealEnd}
                   disabled={streaming || !hasSession || state?.phase === "done"}
-                  className="rounded-xl border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
+                  className="rounded-xl border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]"
                 >
                   结案
                 </Button>
               </div>
             </div>
-          </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-paper-50/15 pt-3 font-sans text-xs text-paper-50/75">
-            <span className="flex items-center gap-2">
-              {streaming ? <Loader2 className="size-3.5 animate-spin text-gold-500" aria-hidden /> : null}
-              {streaming ? currentStep || "堂上交锋中" : "原创像素法庭 · 辩论编排"}
-            </span>
             {state ? (
-              <span>
-                第 {state.round} / {state.maxRounds} 庭 · {phaseInWords(state.phase)}
-              </span>
+              <div className="mt-5 space-y-3 border-t border-ink-200/70 pt-4">
+                <div className="flex flex-wrap items-center gap-2 font-sans">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn("min-w-[96px]", lightActionButtonClass)}
+                    onClick={() => navigator.clipboard.writeText(exportMd)}
+                  >
+                    抄录全文
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn("min-w-[96px]", lightActionButtonClass)}
+                    onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
+                  >
+                    下载 MD
+                  </Button>
+                  <Link
+                    href="/roundtable"
+                    className="inline-flex h-7 min-w-[96px] items-center justify-center rounded-xl border border-ink-200/60 bg-card px-3 py-1 text-[0.8rem] text-ink-800 transition-[transform,border-color,background-color] hover:border-cinnabar-600/40 hover:bg-paper-50 active:scale-[0.99]"
+                  >
+                    回圆桌
+                  </Link>
+                  <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} inline />
+                </div>
+              </div>
             ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ink-200/70 pt-4 font-sans text-xs text-ink-600">
+              <span className="flex items-center gap-2">
+                {streaming ? <Loader2 className="size-3.5 animate-spin text-cinnabar-700" aria-hidden /> : null}
+                {streaming ? currentStep || "堂上交锋中" : "原创像素法庭 · 辩论编排"}
+              </span>
+              {state ? (
+                <span>
+                  第 {state.round} / {state.maxRounds} 庭 · {phaseInWords(state.phase)}
+                </span>
+              ) : null}
+            </div>
+          </aside>
+
+          <div className="space-y-5">
+            <CourtroomStage
+              transcript={state?.transcript ?? []}
+              participantIds={state?.participantSkillIds ?? selected}
+              skillTitle={(id) => getSkillDisplay(id).label}
+              liveTokens={live}
+              activeTurn={activeTurn}
+              round={state?.round ?? 0}
+              maxRounds={state?.maxRounds ?? maxRounds}
+              phaseLabel={state ? phaseInWords(state.phase) : "待开庭"}
+            />
           </div>
-        </section>
+        </div>
 
         {state?.phase === "await_user" && !streaming && (
-          <section className="rounded-2xl border border-gold-500/50 bg-ink-900/85 p-5 text-paper-50">
+          <section className="rounded-2xl border border-gold-500/50 bg-ink-900/85 p-5 text-paper-50 card-dark-elevated">
             <h3 className="text-sm font-medium">席间陈词</h3>
             <p className="mt-1 text-xs text-paper-50/70">本庭已收束。写下补充、质疑或证据，再续下一庭。</p>
             <textarea
@@ -204,57 +268,20 @@ export function CourtroomClient({
               >
                 呈上并续庭
               </Button>
-              <Button type="button" variant="outline" onClick={continueRound} className="rounded-xl">
+              <Button type="button" variant="outline" onClick={continueRound} className={darkActionButtonClass}>
                 直接续庭
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={sealEnd}
-                className="rounded-xl border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
+                className="rounded-xl border-gold-500/70 bg-gold-500/10 text-paper-50 hover:bg-gold-500/18 hover:text-paper-50 active:scale-[0.99]"
               >
                 结案
               </Button>
             </div>
           </section>
         )}
-
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-          {state ? (
-            <div className="rounded-xl bg-card/80 p-3 ring-border">
-              <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
-            </div>
-          ) : null}
-
-          {state ? (
-            <div className="flex flex-wrap items-center gap-2 font-sans">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                onClick={() => navigator.clipboard.writeText(exportMd)}
-              >
-                抄录全文
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
-              >
-                下载 MD
-              </Button>
-              <Link
-                href="/roundtable"
-                className="rounded-xl bg-card/80 px-3 py-1.5 text-sm text-ink-800 ring-border hover:shadow-[0_0_0_1px_var(--cinnabar)]"
-              >
-                回圆桌
-              </Link>
-            </div>
-          ) : null}
-        </div>
 
         {error && (
           <div className="rounded-xl bg-destructive/5 p-3 ring-destructive" role="alert">

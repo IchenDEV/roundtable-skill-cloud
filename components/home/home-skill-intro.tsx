@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
+import { buildRoundtableHref } from "@/lib/home/home-quick-start";
 
 type SkillRow = { skillId: string; name: string; description: string; category: string };
 
@@ -102,6 +104,15 @@ export function HomeSkillIntro({ skills }: { skills: SkillRow[] }) {
                   >
                     <h4 className="text-sm font-medium text-ink-900">{display.label}</h4>
                     <p className="mt-2 text-xs leading-6 text-ink-600">{display.brief || skill.description}</p>
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-ink-200/60 pt-3">
+                      <span className="text-[11px] tracking-[0.18em] text-ink-500">先带此人入席</span>
+                      <Link
+                        href={buildRoundtableHref({ skillIds: [skill.skillId] })}
+                        className="inline-flex items-center rounded-full border border-ink-200/70 px-3 py-1 text-xs text-ink-700 transition-colors duration-200 hover:border-cinnabar-600/40 hover:text-cinnabar-700"
+                      >
+                        去开题
+                      </Link>
+                    </div>
                   </div>
                 );
               })}

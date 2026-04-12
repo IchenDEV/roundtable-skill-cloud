@@ -1,6 +1,5 @@
 import path from "node:path";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { AIMessageChunk } from "@langchain/core/messages";
 import type { LlmRuntime } from "../../llm/types";
 import type { StreamEvent } from "../../spec/schema";
 import type { SkillManifest } from "../../skills/types";
@@ -19,13 +18,40 @@ function isAbortError(err: unknown): boolean {
 /*  Skill 目录解析（沙箱在 skills/ 下）                                 */
 /* ------------------------------------------------------------------ */
 
+const SKILL_SOURCE_ROOTS = ["skills", "skills-superman/skills"].map((root) =>
+  path.resolve(/* turbopackIgnore: true */ process.cwd(), root)
+);
+
 function resolveSkillDir(dirPath: string): string {
   const abs = path.resolve(/* turbopackIgnore: true */ process.cwd(), dirPath);
-  const root = path.resolve(/* turbopackIgnore: true */ process.cwd(), "skills");
-  if (!abs.startsWith(root + path.sep) && abs !== root) {
+  const isAllowed = SKILL_SOURCE_ROOTS.some((root) => abs === root || abs.startsWith(root + path.sep));
+  if (!isAllowed) {
     throw new Error(`Skill path traversal blocked: ${dirPath}`);
   }
   return abs;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractVisibleAssistantText(message: unknown): string {
+  if (!isRecord(message)) return "";
+
+  const maybeGetType = message.getType;
+  if (typeof maybeGetType === "function" && maybeGetType.call(message) === "tool") {
+    return "";
+  }
+
+  if ("tool_call_id" in message) return "";
+
+  const toolCallChunks = message.tool_call_chunks;
+  if (Array.isArray(toolCallChunks) && toolCallChunks.length > 0) {
+    return "";
+  }
+
+  const content = "content" in message ? message.content : undefined;
+  return extractMessageText(content);
 }
 
 /* ------------------------------------------------------------------ */
@@ -122,14 +148,10 @@ async function* streamReactAgent(
 
     for await (const chunk of stream) {
       const msg = Array.isArray(chunk) ? chunk[0] : chunk;
-
-      if (msg instanceof AIMessageChunk) {
-        if (msg.tool_call_chunks && msg.tool_call_chunks.length > 0) continue;
-        const text = extractMessageText(msg.content);
-        if (text) {
-          fullText += text;
-          yield { type: "token", role: "speaker", skillId: skill.skillId, text };
-        }
+      const text = extractVisibleAssistantText(msg);
+      if (text) {
+        fullText += text;
+        yield { type: "token", role: "speaker", skillId: skill.skillId, text };
       }
     }
   } catch (err) {

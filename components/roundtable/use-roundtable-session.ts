@@ -15,8 +15,7 @@ export type SkillOpt = { skillId: string; name: string; description: string; cat
 export type RoundtableMode = RoundtableState["mode"];
 
 function pickSelectedSkillIds(ids: string[], skills: SkillOpt[]) {
-  const known = ids.filter((id) => skills.some((skill) => skill.skillId === id));
-  return known.length > 0 ? known : skills.slice(0, 2).map((skill) => skill.skillId);
+  return ids.filter((id) => skills.some((skill) => skill.skillId === id));
 }
 
 function buildSessionErrorState(
@@ -94,7 +93,7 @@ export function useRoundtableSession({
       const valid = initialSkillIds.filter((id) => skills.some((s) => s.skillId === id));
       if (valid.length) return valid;
     }
-    return skills.slice(0, 2).map((s) => s.skillId);
+    return [];
   });
   const [maxRounds, setMaxRounds] = useState(() =>
     initialMaxRounds ? Math.min(initialMaxRounds, MAX_ROUND_ROUNDS) : 3

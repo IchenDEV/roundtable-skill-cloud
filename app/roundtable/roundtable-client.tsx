@@ -120,8 +120,8 @@ export function RoundtableClient({
   };
 
   return (
-    <FadeIn className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden">
-      <InkReveal className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+    <FadeIn className="lg:flex lg:h-full lg:min-h-0 lg:flex-col">
+      <InkReveal className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <RoundtableReadinessBanner readiness={readiness} />
 
         {skills.length === 0 && (
@@ -134,9 +134,9 @@ export function RoundtableClient({
           </div>
         )}
 
-        <div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
+        <div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6">
           {/* ── 左栏：设置 ── */}
-          <aside className="space-y-4 rounded-2xl bg-card p-5 card-elevated lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
+          <aside className="space-y-4 rounded-2xl bg-card p-5 card-elevated lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100svh-8rem)] lg:overflow-y-auto lg:pr-3 lg:overscroll-contain">
             <label className="block text-sm text-ink-700">
               <span className="mb-1 block text-ink-900">今日所议</span>
               <textarea
@@ -160,6 +160,15 @@ export function RoundtableClient({
                   {recommendLoading ? <Loader2 className="size-3 animate-spin" /> : "智能推荐"}
                 </Button>
               </div>
+              {state?.participantSkillIds.length ? (
+                <p className="mt-1 text-xs leading-6 text-ink-500">
+                  当前这一席：
+                  {state.participantSkillIds.map((skillId) => getSkillDisplay(skillId).label).join("、")}
+                  。若改动左侧勾选，需重新点「开席」才会换人。
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-ink-500">未开席前不会默认替你选人，请先明确列席再开谈。</p>
+              )}
               {recommendError && <p className="mt-1 text-xs text-cinnabar-700">{recommendError}</p>}
               <div className="mt-2 space-y-1">
                 {orderedCategories.map((cat) => {
@@ -257,7 +266,7 @@ export function RoundtableClient({
                 disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
                 className="rounded-xl bg-cinnabar-600 text-card shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-cinnabar-700 active:scale-[0.99] disabled:active:scale-100"
               >
-                开席
+                {state ? "另起新席" : "开席"}
               </Button>
               <Button
                 type="button"
@@ -290,15 +299,10 @@ export function RoundtableClient({
                   >
                     下载 MD
                   </Button>
+                  <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} inline />
                 </>
               )}
             </div>
-
-            {state && (
-              <div className="rounded-xl bg-card p-3 ring-border">
-                <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
-              </div>
-            )}
 
             {error && (
               <div className="rounded-xl bg-destructive/5 p-3 ring-destructive" role="alert">
@@ -335,7 +339,7 @@ export function RoundtableClient({
           </aside>
 
           {/* ── 右栏：对话 ── */}
-          <div className="mt-6 min-w-0 space-y-4 lg:mt-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:space-y-3 lg:overflow-hidden">
+          <div className="mt-6 min-w-0 space-y-4 lg:mt-0 lg:flex lg:min-h-0 lg:flex-col lg:space-y-3">
             {/* 状态栏 */}
             {state && (
               <div className="space-y-1 text-sm text-ink-700 lg:shrink-0">
@@ -371,7 +375,7 @@ export function RoundtableClient({
                   liveTokens={live}
                   round={state.round}
                   maxRounds={state.maxRounds}
-                  className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:overscroll-contain"
+                  className="lg:pr-2"
                 />
               ) : (
                 <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-600 lg:h-full lg:min-h-[400px]">
