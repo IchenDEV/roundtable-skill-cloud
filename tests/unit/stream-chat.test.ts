@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const openAiCreate = vi.fn();
 const anthropicStream = vi.fn();
@@ -27,7 +27,13 @@ vi.mock("@anthropic-ai/sdk", () => ({
   },
 }));
 
-import { chatComplete, streamChat } from "@/lib/llm/stream-chat";
+import { chatComplete, chatToolCall, streamChat } from "@/lib/llm/stream-chat";
+
+beforeEach(() => {
+  openAiCreate.mockReset();
+  anthropicStream.mockReset();
+  anthropicCreate.mockReset();
+});
 
 describe("streamChat", () => {
   it("streams openai_compat deltas", async () => {
@@ -93,5 +99,79 @@ describe("chatComplete", () => {
     const text = await chatComplete(runtime, "m", [{ role: "user", content: "u" }], signal);
     expect(text).toBe("ant");
     expect(anthropicCreate).toHaveBeenCalledWith(expect.objectContaining({ signal }));
+  });
+});
+
+describe("chatToolCall", () => {
+  const schema = {
+    type: "object" as const,
+    properties: {
+      recommendedSkillIds: {
+        type: "array",
+        items: { type: "string" },
+      },
+    },
+    required: ["recommendedSkillIds"],
+    additionalProperties: false,
+  };
+
+  it("returns parsed openai tool input", async () => {
+    openAiCreate.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: "",
+            tool_calls: [
+              {
+                type: "function",
+                function: {
+                  name: "recommend_skill_ids",
+                  arguments: '{"recommendedSkillIds":["sun-wu-perspective"]}',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    const runtime = { kind: "openai_compat" as const, apiKey: "k", baseURL: "http://x", provider: "openai" as const };
+    const result = await chatToolCall(
+      runtime,
+      "m",
+      [{ role: "user", content: "u" }],
+      "recommend_skill_ids",
+      schema,
+      "挑人"
+    );
+
+    expect(result).toEqual({
+      input: { recommendedSkillIds: ["sun-wu-perspective"] },
+      text: "",
+    });
+  });
+
+  it("returns anthropic tool input and text", async () => {
+    anthropicCreate.mockResolvedValue({
+      content: [
+        { type: "text", text: "已选好。" },
+        { type: "tool_use", name: "recommend_skill_ids", input: { recommendedSkillIds: ["plato-perspective"] } },
+      ],
+    });
+
+    const runtime = { kind: "anthropic" as const, apiKey: "k", provider: "anthropic" as const };
+    const result = await chatToolCall(
+      runtime,
+      "m",
+      [{ role: "user", content: "u" }],
+      "recommend_skill_ids",
+      schema,
+      "挑人"
+    );
+
+    expect(result).toEqual({
+      input: { recommendedSkillIds: ["plato-perspective"] },
+      text: "已选好。",
+    });
   });
 });
