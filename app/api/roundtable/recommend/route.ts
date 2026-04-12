@@ -42,6 +42,8 @@ export async function POST(req: Request) {
     return Response.json({ error: "服务端未配置推荐引擎。" }, { status: 503 });
   }
 
+  const safeTopic = topic.replace(/[\x00-\x1f\x7f]/g, " ").trim();
+
   const roster = availableSkillIds
     .map((id) => {
       const d = getSkillDisplay(id);
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
 
   const prompt = `你是一个圆桌讨论主持人。用户想讨论以下话题：
 
-"${topic}"
+"${safeTopic}"
 
 以下是所有可选人物（格式：skillId: 姓名（简介））：
 ${roster}
@@ -66,17 +68,18 @@ ${roster}
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    const first = message.content[0];
+    const text = first?.type === "text" ? first.text.trim() : "";
 
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
     } catch {
-      return Response.json({ error: "推荐引擎返回格式异常，请重试。" });
+      return Response.json({ error: "推荐引擎返回格式异常，请重试。" }, { status: 422 });
     }
 
     if (!Array.isArray(parsed)) {
-      return Response.json({ error: "推荐引擎返回格式异常，请重试。" });
+      return Response.json({ error: "推荐引擎返回格式异常，请重试。" }, { status: 422 });
     }
 
     const validSet = new Set(availableSkillIds);
@@ -85,11 +88,11 @@ ${roster}
       .slice(0, 5);
 
     if (recommendedSkillIds.length === 0) {
-      return Response.json({ error: "推荐引擎未能找到合适人物，请手动选择。" });
+      return Response.json({ error: "推荐引擎未能找到合适人物，请手动选择。" }, { status: 422 });
     }
 
     return Response.json({ recommendedSkillIds });
   } catch {
-    return Response.json({ error: "推荐引擎调用失败，请重试。" });
+    return Response.json({ error: "推荐引擎调用失败，请重试。" }, { status: 500 });
   }
 }
