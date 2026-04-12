@@ -5,6 +5,7 @@ export type SkillEntry = {
   contentHash: string;
   dirPath: string;
   entryPath: string;
+  category: string;
 };
 
 export type SkillManifest = {

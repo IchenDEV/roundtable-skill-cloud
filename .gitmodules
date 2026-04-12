@@ -1,0 +1,3 @@
+[submodule "skills-superman"]
+	path = skills-superman
+	url = https://github.com/IchenDEV/superman.git

@@ -10,6 +10,7 @@ const manifestJson = JSON.stringify({
       contentHash: "h",
       dirPath: "skills/s1",
       entryPath: "skills/s1/SKILL.md",
+      category: "其他",
     },
   ],
 });

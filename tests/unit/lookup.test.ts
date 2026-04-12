@@ -13,6 +13,7 @@ describe("getSkillById", () => {
         contentHash: "h",
         dirPath: "skills/one",
         entryPath: "skills/one/SKILL.md",
+        category: "其他",
       },
     ],
   };
