@@ -2,6 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { RoundtableState, TurnResponseEvent, TurnStep } from "@/lib/spec/schema";
+import {
+  buildModeratorActiveTurn,
+  buildParticipantActiveTurn,
+  type RoundtableActiveTurn,
+} from "@/lib/roundtable/active-turn";
 
 type DispatchStep = { skillId: string; target?: string; directive?: string };
 
@@ -102,6 +107,7 @@ export function useRoundtableOrchestrator() {
   const [streaming, setStreaming] = useState(false);
   const [currentStep, setCurrentStep] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTurn, setActiveTurn] = useState<RoundtableActiveTurn>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
   const cancelStream = useCallback(() => {
@@ -109,6 +115,7 @@ export function useRoundtableOrchestrator() {
     controllerRef.current = null;
     setStreaming(false);
     setCurrentStep(null);
+    setActiveTurn(null);
   }, []);
 
   /** Run a full round: moderator_open → each participant → moderator_wrap */
@@ -125,6 +132,7 @@ export function useRoundtableOrchestrator() {
     try {
       // ── Step 1: Moderator Open ──
       setCurrentStep("主持开场");
+      setActiveTurn(buildModeratorActiveTurn("moderator_open"));
       let modOpenText = "";
       let dispatch: DispatchStep[] | null = null;
 
@@ -166,6 +174,7 @@ export function useRoundtableOrchestrator() {
       for (const ps of participantSteps) {
         if (signal.aborted) return;
         setCurrentStep(ps.skillId);
+        setActiveTurn(buildParticipantActiveTurn(ps));
         let spokeText = "";
 
         await consumeTurnStream(
@@ -203,6 +212,7 @@ export function useRoundtableOrchestrator() {
       // ── Step 3: Moderator Wrap ──
       if (signal.aborted) return;
       setCurrentStep("主持收束");
+      setActiveTurn(buildModeratorActiveTurn("moderator_wrap"));
       let wrapText = "";
       let memory = "";
 
@@ -261,6 +271,7 @@ export function useRoundtableOrchestrator() {
         controllerRef.current = null;
         setStreaming(false);
         setCurrentStep(null);
+        setActiveTurn(null);
       }
     }
   }, []);
@@ -275,6 +286,7 @@ export function useRoundtableOrchestrator() {
     setStreaming(true);
     setError(null);
     setCurrentStep("合成结案");
+    setActiveTurn(buildModeratorActiveTurn("synthesis"));
     let s = { ...state };
 
     try {
@@ -327,11 +339,12 @@ export function useRoundtableOrchestrator() {
         controllerRef.current = null;
         setStreaming(false);
         setCurrentStep(null);
+        setActiveTurn(null);
       }
     }
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
 
-  return { streaming, currentStep, error, clearError, runRound, runSynthesis, cancelStream };
+  return { streaming, currentStep, activeTurn, error, clearError, runRound, runSynthesis, cancelStream };
 }

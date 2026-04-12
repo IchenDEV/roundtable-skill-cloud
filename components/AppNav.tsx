@@ -36,6 +36,9 @@ export async function AppNav() {
             <Link href="/roundtable" className={navClass}>
               圆桌
             </Link>
+            <Link href="/court" className={navClass}>
+              公堂
+            </Link>
             <Link href="/roundtable/jiuxi" className={navClass}>
               旧席录
             </Link>
