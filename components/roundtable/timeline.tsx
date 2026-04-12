@@ -134,14 +134,12 @@ export function Timeline({ transcript, participantIds, skillTitle, liveTokens, m
     }
   }, [transcript.length, liveTokens]);
 
-  let lastRound = 0;
-
   return (
     <div ref={containerRef} className={cn("space-y-3", className)}>
       {transcript.map((entry, i) => {
         const entryRound = rounds[i];
-        const showRoundDivider = entryRound > lastRound;
-        lastRound = entryRound;
+        const previousRound = i === 0 ? 0 : rounds[i - 1];
+        const showRoundDivider = entryRound > previousRound;
 
         let label: string;
         let style: { bg: string; ring: string; badge: string };

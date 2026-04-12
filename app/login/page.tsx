@@ -1,10 +1,12 @@
-import { Suspense } from "react";
 import { LoginClient } from "./login-client";
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<p className="text-sm text-ink-600">加载…</p>}>
-      <LoginClient />
-    </Suspense>
-  );
+type LoginPageProps = {
+  searchParams: Promise<{ auth_error?: string | string[] }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const authError = Array.isArray(params.auth_error) ? params.auth_error[0] : params.auth_error;
+
+  return <LoginClient initialAuthError={authError} />;
 }

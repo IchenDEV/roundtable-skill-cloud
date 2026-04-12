@@ -22,7 +22,7 @@ function authErrorOnRootRedirect(request: NextRequest): NextResponse | null {
   return NextResponse.redirect(u);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const forwarded = authCallbackRedirect(request);
   if (forwarded) return forwarded;
   const errRedirect = authErrorOnRootRedirect(request);
