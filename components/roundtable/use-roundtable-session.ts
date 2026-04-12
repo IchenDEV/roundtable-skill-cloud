@@ -282,6 +282,7 @@ export function useRoundtableSession({
     selected,
     setMaxRounds,
     setMode,
+    setSelectedDirectly: setSelected,
     setTopic,
     setUserDraft,
     skillNameRecord,

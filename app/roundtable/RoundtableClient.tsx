@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { FadeIn, InkReveal } from "@/components/MotionRoot";
@@ -9,40 +9,14 @@ import { cn } from "@/lib/utils";
 import { Timeline } from "@/components/roundtable/Timeline";
 import { SynthesisDialog } from "@/components/roundtable/SynthesisDialog";
 import { RoundtableReadinessBanner } from "@/components/roundtable/RoundtableReadinessBanner";
-import { useRoundtableReadiness } from "@/components/roundtable/use-roundtable-readiness";
-import { useRoundtableOrchestrator } from "@/components/roundtable/use-roundtable-orchestrator";
-import { useTokenBuffer } from "@/components/roundtable/use-token-buffer";
-import type { RoundtableState } from "@/lib/spec/schema";
+import { useRoundtableSession, type SkillOpt } from "@/components/roundtable/use-roundtable-session";
 import { ShareLinkControls } from "@/components/roundtable/ShareLinkControls";
-import { cloneStateForFork } from "@/lib/roundtable/clone-for-fork";
-import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
-import type { SharePayload } from "@/lib/spec/share-payload";
+import { triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
 import { MAX_ROUND_ROUNDS } from "@/lib/spec/constants";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
 
-type SkillOpt = { skillId: string; name: string; description: string };
-type RoundtableMode = "discussion" | "debate";
-
-function emptyState(
-  topic: string,
-  ids: string[],
-  maxRounds: number,
-  sessionId: string,
-  mode: RoundtableMode
-): RoundtableState {
-  return {
-    sessionId,
-    mode,
-    topic,
-    round: 0,
-    maxRounds,
-    phase: "running",
-    participantSkillIds: ids,
-    transcript: [],
-    moderatorMemory: "",
-  };
-}
+const CATEGORY_ORDER = ["军事战略", "政治治国", "哲学思想", "商业投资", "科技理工", "谋略纵横", "其他"];
 
 export function RoundtableClient({
   skills,
@@ -59,192 +33,90 @@ export function RoundtableClient({
   initialSkillIds?: string[];
   initialMaxRounds?: number;
 }) {
-  const { streaming, currentStep, error, clearError, runRound, runSynthesis, cancelStream } =
-    useRoundtableOrchestrator();
-  const { readiness, refetch, canStartRoundtable } = useRoundtableReadiness();
-  const { live, pushToken, clearBuffer } = useTokenBuffer();
-
-  const [topic, setTopic] = useState(() => initialTopic?.trim() || "人工智能是否会削弱人的主体性？");
-  const [selected, setSelected] = useState<string[]>(() => {
-    if (initialSkillIds?.length) {
-      const valid = initialSkillIds.filter((id) => skills.some((s) => s.skillId === id));
-      if (valid.length) return valid;
-    }
-    return skills.slice(0, 2).map((s) => s.skillId);
+  const session = useRoundtableSession({
+    skills,
+    initialTopic,
+    resumeSessionId,
+    fromShareToken,
+    initialSkillIds,
+    initialMaxRounds,
   });
-  const [maxRounds, setMaxRounds] = useState(() =>
-    initialMaxRounds ? Math.min(initialMaxRounds, MAX_ROUND_ROUNDS) : 3
-  );
-  const [mode, setMode] = useState<RoundtableMode>("discussion");
-  const [userDraft, setUserDraft] = useState("");
-  const [state, setState] = useState<RoundtableState | null>(null);
   const [memoryOpen, setMemoryOpen] = useState(false);
+  const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set([CATEGORY_ORDER[0]]));
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [recommendError, setRecommendError] = useState<string | null>(null);
 
-  const skillsRef = useRef(skills);
-  skillsRef.current = skills;
-  const skillKey = useMemo(() => skills.map((k) => k.skillId).join("|"), [skills]);
-
-  useEffect(() => {
-    if (initialTopic?.trim()) setTopic(initialTopic.trim());
-  }, [initialTopic]);
-
-  useEffect(() => {
-    if (initialMaxRounds) setMaxRounds(Math.min(initialMaxRounds, MAX_ROUND_ROUNDS));
-  }, [initialMaxRounds]);
-
-  useEffect(
-    () => () => {
-      cancelStream();
-    },
-    [cancelStream]
-  );
-
-  // ── Resume session ──
-  useEffect(() => {
-    if (!resumeSessionId?.trim()) return;
-    let cancelled = false;
-    void (async () => {
-      cancelStream();
-      clearBuffer();
-      const res = await fetch(`/api/roundtable/sessions/${resumeSessionId.trim()}`);
-      const data = (await res.json()) as { state?: RoundtableState; error?: string };
-      if (cancelled) return;
-      if (!res.ok || !data.state) {
-        setState({
-          sessionId: resumeSessionId,
-          mode: "discussion",
-          topic: "（未能载入旧席）",
-          round: 0,
-          maxRounds: 3,
-          phase: "error",
-          participantSkillIds: [],
-          transcript: [],
-          moderatorMemory: "",
-          error: data.error ?? "请确认已登入且该席仍存在。",
-        });
-        return;
-      }
-      let s = data.state;
-      if (s.phase === "running") s = { ...s, phase: "idle" };
-      setState(s);
-      setMode(s.mode);
-      setTopic(s.topic);
-      const curSkills = skillsRef.current;
-      setSelected(() => {
-        const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
-        return known.length > 0 ? known : curSkills.slice(0, 2).map((k) => k.skillId);
-      });
-      setMaxRounds(s.maxRounds);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [cancelStream, clearBuffer, resumeSessionId, skillKey]);
-
-  // ── From share ──
-  useEffect(() => {
-    if (!fromShareToken?.trim()) return;
-    let cancelled = false;
-    void (async () => {
-      cancelStream();
-      clearBuffer();
-      const res = await fetch(`/api/roundtable/share/${fromShareToken.trim()}`);
-      const data = (await res.json()) as { payload?: SharePayload; error?: string };
-      if (cancelled) return;
-      if (!res.ok || !data.payload) {
-        setState({
-          sessionId: crypto.randomUUID(),
-          mode: "discussion",
-          topic: "（分享无效）",
-          round: 0,
-          maxRounds: 3,
-          phase: "error",
-          participantSkillIds: [],
-          transcript: [],
-          moderatorMemory: "",
-          error: data.error ?? "链接已失效或格式不对。",
-        });
-        return;
-      }
-      const s = cloneStateForFork(data.payload.state);
-      setState(s);
-      setMode(s.mode);
-      setTopic(s.topic);
-      const curSkills = skillsRef.current;
-      setSelected(() => {
-        const known = s.participantSkillIds.filter((id) => curSkills.some((k) => k.skillId === id));
-        return known.length > 0 ? known : curSkills.slice(0, 2).map((k) => k.skillId);
-      });
-      setMaxRounds(Math.min(s.maxRounds, MAX_ROUND_ROUNDS));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [cancelStream, clearBuffer, fromShareToken, skillKey]);
-
-  // ── Orchestrator callbacks ──
-  const buildCallbacks = useCallback(
-    () => ({
-      onStateChange: (s: RoundtableState) => setState(s),
-      onToken: (role: "moderator" | "speaker", text: string, skillId?: string) => pushToken(role, text, skillId),
-      onTurnComplete: () => clearBuffer(),
-      onRoundComplete: () => {},
-      onError: () => {},
-    }),
-    [pushToken, clearBuffer]
-  );
-
-  const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
-  const startFresh = () => {
-    if (!topic.trim() || selected.length === 0) return;
-    const s = emptyState(topic.trim(), selected, Math.min(maxRounds, MAX_ROUND_ROUNDS), crypto.randomUUID(), mode);
-    setState(s);
-    clearBuffer();
-    void runRound(s, buildCallbacks());
-  };
-
-  const continueRound = () => {
-    if (!state) return;
-    const s: RoundtableState = { ...state, phase: "running", userCommand: undefined };
-    setState(s);
-    clearBuffer();
-    void runRound(s, buildCallbacks());
-  };
-
-  const sealEnd = () => {
-    if (!state) return;
-    const s: RoundtableState = { ...state, userCommand: "stop", phase: "running" };
-    setState(s);
-    clearBuffer();
-    void runSynthesis(s, buildCallbacks());
-  };
-
-  const submitVoiceAndContinue = () => {
-    const text = userDraft.trim();
-    if (!state || state.phase !== "await_user" || streaming) return;
-    let next = state;
-    if (text) {
-      next = {
-        ...state,
-        transcript: [...state.transcript, { role: "user" as const, content: text, ts: new Date().toISOString() }],
-      };
-      setState(next);
-      setUserDraft("");
+  const groupedSkills = useMemo(() => {
+    const groups: Record<string, typeof skills> = {};
+    for (const s of skills) {
+      const cat = s.category || "其他";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(s);
     }
-    const s: RoundtableState = { ...next, phase: "running", userCommand: undefined };
-    setState(s);
-    clearBuffer();
-    void runRound(s, buildCallbacks());
+    return groups;
+  }, [skills]);
+
+  const orderedCategories = useMemo(() => CATEGORY_ORDER.filter((c) => groupedSkills[c]?.length > 0), [groupedSkills]);
+
+  const toggleCategory = (cat: string) =>
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+
+  const handleRecommend = async () => {
+    if (!topic.trim() || skills.length === 0) return;
+    setRecommendLoading(true);
+    setRecommendError(null);
+    try {
+      const res = await fetch("/api/roundtable/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: topic.trim(), availableSkillIds: skills.map((s) => s.skillId) }),
+      });
+      const data = (await res.json()) as { recommendedSkillIds?: string[]; error?: string };
+      if (res.ok && data.recommendedSkillIds && data.recommendedSkillIds.length > 0) {
+        setSelectedDirectly(data.recommendedSkillIds);
+      } else {
+        setRecommendError(data.error ?? "推荐失败，请重试。");
+      }
+    } catch {
+      setRecommendError("网络错误，请重试。");
+    } finally {
+      setRecommendLoading(false);
+    }
   };
-
-  const exportMd = useMemo(
-    () => (state ? buildRoundtableMarkdown(state, (id) => (id ? getSkillDisplay(id).label : "列席")) : ""),
-    [state]
-  );
-  const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
-
-  const hasSession = !!state;
+  const {
+    canStartRoundtable,
+    clearError,
+    continueRound,
+    currentStep,
+    error,
+    exportMd,
+    hasSession,
+    live,
+    maxRounds,
+    mode,
+    readiness,
+    refetch,
+    sealEnd,
+    selected,
+    setMaxRounds,
+    setMode,
+    setSelectedDirectly,
+    setTopic,
+    setUserDraft,
+    skillNameRecord,
+    startFresh,
+    state,
+    streaming,
+    submitVoiceAndContinue,
+    topic,
+    toggle,
+    userDraft,
+  } = session;
 
   return (
     <FadeIn>
@@ -274,26 +146,69 @@ export function RoundtableClient({
               />
             </label>
             <div>
-              <span className="text-sm text-ink-900">请哪些视角入席</span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {skills.map((s) => {
-                  const d = getSkillDisplay(s.skillId);
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink-900">请哪些视角入席</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={streaming || recommendLoading || !topic.trim() || skills.length === 0}
+                  onClick={handleRecommend}
+                  className="font-sans text-xs"
+                >
+                  {recommendLoading ? <Loader2 className="size-3 animate-spin" /> : "智能推荐"}
+                </Button>
+              </div>
+              {recommendError && <p className="mt-1 text-xs text-cinnabar-700">{recommendError}</p>}
+              <div className="mt-2 space-y-1">
+                {orderedCategories.map((cat) => {
+                  const isOpen = openCategories.has(cat);
+                  const catSkills = groupedSkills[cat] ?? [];
+                  const selectedCount = catSkills.filter((s) => selected.includes(s.skillId)).length;
                   return (
-                    <Button
-                      key={s.skillId}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      title={d.brief}
-                      onClick={() => toggle(s.skillId)}
-                      className={cn(
-                        "font-sans transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
-                        selected.includes(s.skillId) &&
-                          "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
+                    <div key={cat} className="rounded-sm border border-ink-200/40">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(cat)}
+                        className="flex w-full items-center justify-between px-2 py-1.5 text-xs text-ink-700 hover:bg-ink-50"
+                      >
+                        <span className="flex items-center gap-1">
+                          {isOpen ? (
+                            <ChevronDown className="size-3 shrink-0" />
+                          ) : (
+                            <ChevronRight className="size-3 shrink-0" />
+                          )}
+                          {cat}
+                        </span>
+                        <span className="text-ink-400">
+                          {selectedCount > 0 ? `已选 ${selectedCount} / ` : ""}共 {catSkills.length}
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div className="flex flex-wrap gap-1.5 border-t border-ink-200/30 px-2 py-2">
+                          {catSkills.map((s) => {
+                            const d = getSkillDisplay(s.skillId);
+                            return (
+                              <Button
+                                key={s.skillId}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                title={d.brief}
+                                onClick={() => toggle(s.skillId)}
+                                className={cn(
+                                  "font-sans text-xs transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
+                                  selected.includes(s.skillId) &&
+                                    "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
+                                )}
+                              >
+                                {d.label}
+                              </Button>
+                            );
+                          })}
+                        </div>
                       )}
-                    >
-                      {d.label}
-                    </Button>
+                    </div>
                   );
                 })}
               </div>
@@ -353,7 +268,7 @@ export function RoundtableClient({
               >
                 钤印结案
               </Button>
-              {hasSession && (
+              {state && (
                 <>
                   <span className="mx-0.5 hidden h-4 w-px bg-ink-200/60 sm:inline-block" />
                   <Button
@@ -378,7 +293,7 @@ export function RoundtableClient({
               )}
             </div>
 
-            {hasSession && (
+            {state && (
               <div className="rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
                 <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
               </div>
@@ -388,7 +303,7 @@ export function RoundtableClient({
               <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
                 <p className="text-sm text-cinnabar-800">{error}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {hasSession && state.transcript.length > 0 && (
+                  {state && state.transcript.length > 0 && (
                     <Button
                       type="button"
                       size="sm"
@@ -421,7 +336,7 @@ export function RoundtableClient({
           {/* ── 右栏：对话 ── */}
           <div className="mt-6 min-w-0 space-y-4 lg:mt-0">
             {/* 状态栏 */}
-            {hasSession && (
+            {state && (
               <div className="space-y-1 text-sm text-ink-700">
                 <div className="flex items-center gap-2">
                   <span>
@@ -448,7 +363,7 @@ export function RoundtableClient({
             )}
 
             {/* 时间线 */}
-            {hasSession ? (
+            {state ? (
               <Timeline
                 transcript={state.transcript}
                 participantIds={state.participantSkillIds}
