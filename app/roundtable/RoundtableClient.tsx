@@ -120,8 +120,8 @@ export function RoundtableClient({
   };
 
   return (
-    <FadeIn>
-      <InkReveal>
+    <FadeIn className="lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden">
+      <InkReveal className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
         <RoundtableReadinessBanner readiness={readiness} />
 
         {skills.length === 0 && (
@@ -134,9 +134,9 @@ export function RoundtableClient({
           </div>
         )}
 
-        <div className="lg:grid lg:grid-cols-[340px_1fr] lg:gap-6">
+        <div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
           {/* ── 左栏：设置 ── */}
-          <aside className="space-y-4 rounded-sm border border-ink-200/40 bg-paper-100/30 p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
+          <aside className="space-y-4 rounded-sm border border-ink-200/40 bg-paper-100/30 p-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
             <label className="block text-sm text-ink-700">
               <span className="mb-1 block text-ink-900">今日所议</span>
               <textarea
@@ -335,10 +335,10 @@ export function RoundtableClient({
           </aside>
 
           {/* ── 右栏：对话 ── */}
-          <div className="mt-6 min-w-0 space-y-4 lg:mt-0">
+          <div className="mt-6 min-w-0 space-y-4 lg:mt-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:space-y-3 lg:overflow-hidden">
             {/* 状态栏 */}
             {state && (
-              <div className="space-y-1 text-sm text-ink-700">
+              <div className="space-y-1 text-sm text-ink-700 lg:shrink-0">
                 <div className="flex items-center gap-2">
                   <span>
                     第 {state.round} / {state.maxRounds} 轮 · 此刻{" "}
@@ -364,24 +364,27 @@ export function RoundtableClient({
             )}
 
             {/* 时间线 */}
-            {state ? (
-              <Timeline
-                transcript={state.transcript}
-                participantIds={state.participantSkillIds}
-                skillTitle={(id) => getSkillDisplay(id).label}
-                liveTokens={live}
-                round={state.round}
-                maxRounds={state.maxRounds}
-              />
-            ) : (
-              <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-600 lg:min-h-[400px]">
-                选好议题与列席，点「开席」即可开始。
-              </div>
-            )}
+            <div className="lg:min-h-0 lg:flex-1">
+              {state ? (
+                <Timeline
+                  transcript={state.transcript}
+                  participantIds={state.participantSkillIds}
+                  skillTitle={(id) => getSkillDisplay(id).label}
+                  liveTokens={live}
+                  round={state.round}
+                  maxRounds={state.maxRounds}
+                  className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:overscroll-contain"
+                />
+              ) : (
+                <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-600 lg:h-full lg:min-h-[400px]">
+                  选好议题与列席，点「开席」即可开始。
+                </div>
+              )}
+            </div>
 
             {/* 席间插话 */}
             {state?.phase === "await_user" && !streaming && (
-              <section className="rounded-sm border border-gold-500/40 bg-paper-100/50 p-4">
+              <section className="rounded-sm border border-gold-500/40 bg-paper-100/50 p-4 lg:shrink-0">
                 <h3 className="text-sm font-medium text-ink-900">席间插话</h3>
                 <p className="mt-1 text-xs text-ink-600">本轮已收束。写下观点后「记入并续轮」，或直接续轮跳过。</p>
                 <textarea
