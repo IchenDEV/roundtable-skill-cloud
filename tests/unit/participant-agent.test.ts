@@ -10,10 +10,10 @@ vi.mock("@langchain/langgraph/prebuilt", () => ({
 
 vi.mock("@langchain/core/messages", () => ({
   AIMessageChunk: class AIMessageChunk {
-    content: string;
+    content: unknown;
     tool_call_chunks: unknown[];
 
-    constructor(content: string, toolCallChunks: unknown[] = []) {
+    constructor(content: unknown, toolCallChunks: unknown[] = []) {
       this.content = content;
       this.tool_call_chunks = toolCallChunks;
     }
@@ -74,6 +74,36 @@ describe("participant-agent", () => {
       role: "speaker",
       skillId: "sk1",
       fullText: "你好",
+    });
+  });
+
+  it("extracts visible text from structured content blocks", async () => {
+    const { AIMessageChunk } = await import("@langchain/core/messages");
+    const stream = vi.fn().mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield [
+          new AIMessageChunk([
+            { type: "text", text: "其" },
+            { type: "tool_use", text: "hidden" },
+            { type: "text", text: "实" },
+          ]),
+        ];
+        yield [new AIMessageChunk({ type: "content_block", content: [{ type: "text", text: "不空" }] })];
+      },
+    });
+    createReactAgent.mockReturnValue({ stream });
+
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲"));
+
+    expect(events.filter((e) => (e as { type?: string }).type === "token")).toEqual([
+      { type: "token", role: "speaker", skillId: "sk1", text: "其实" },
+      { type: "token", role: "speaker", skillId: "sk1", text: "不空" },
+    ]);
+    expect(events[events.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk1",
+      fullText: "其实不空",
     });
   });
 
