@@ -22,14 +22,14 @@ type Props = {
 };
 
 const PALETTE = [
-  { bg: "bg-amber-50/60", border: "border-amber-600/30", badge: "bg-amber-600 text-white" },
-  { bg: "bg-emerald-50/60", border: "border-emerald-600/30", badge: "bg-emerald-600 text-white" },
-  { bg: "bg-blue-50/60", border: "border-blue-600/30", badge: "bg-blue-600 text-white" },
-  { bg: "bg-purple-50/60", border: "border-purple-600/30", badge: "bg-purple-600 text-white" },
-  { bg: "bg-rose-50/60", border: "border-rose-600/30", badge: "bg-rose-600 text-white" },
-  { bg: "bg-teal-50/60", border: "border-teal-600/30", badge: "bg-teal-600 text-white" },
-  { bg: "bg-orange-50/60", border: "border-orange-600/30", badge: "bg-orange-600 text-white" },
-  { bg: "bg-indigo-50/60", border: "border-indigo-600/30", badge: "bg-indigo-600 text-white" },
+  { bg: "bg-amber-50/60", ring: "shadow-[0_0_0_1px_rgba(217,119,6,0.3)]", badge: "bg-amber-600 text-white" },
+  { bg: "bg-emerald-50/60", ring: "shadow-[0_0_0_1px_rgba(5,150,105,0.3)]", badge: "bg-emerald-600 text-white" },
+  { bg: "bg-blue-50/60", ring: "shadow-[0_0_0_1px_rgba(37,99,235,0.3)]", badge: "bg-blue-600 text-white" },
+  { bg: "bg-purple-50/60", ring: "shadow-[0_0_0_1px_rgba(147,51,234,0.3)]", badge: "bg-purple-600 text-white" },
+  { bg: "bg-rose-50/60", ring: "shadow-[0_0_0_1px_rgba(225,29,72,0.3)]", badge: "bg-rose-600 text-white" },
+  { bg: "bg-teal-50/60", ring: "shadow-[0_0_0_1px_rgba(13,148,136,0.3)]", badge: "bg-teal-600 text-white" },
+  { bg: "bg-orange-50/60", ring: "shadow-[0_0_0_1px_rgba(234,88,12,0.3)]", badge: "bg-orange-600 text-white" },
+  { bg: "bg-indigo-50/60", ring: "shadow-[0_0_0_1px_rgba(79,70,229,0.3)]", badge: "bg-indigo-600 text-white" },
 ];
 
 const speakerColorCache: Record<string, (typeof PALETTE)[number]> = {};
@@ -44,10 +44,14 @@ function getSpeakerColor(skillId: string, participantIds: string[]) {
 
 const MODERATOR_STYLE = {
   bg: "bg-paper-100/60",
-  border: "border-cinnabar-600/20",
+  ring: "ring-accent",
   badge: "bg-cinnabar-700 text-white",
 };
-const USER_STYLE = { bg: "bg-gold-50/60", border: "border-gold-600/30", badge: "bg-gold-700 text-white" };
+const USER_STYLE = {
+  bg: "bg-gold-50/60",
+  ring: "shadow-[0_0_0_1px_rgba(161,128,53,0.3)]",
+  badge: "bg-gold-700 text-white",
+};
 
 /** Count moderator entries to derive round boundaries */
 function computeRounds(transcript: TranscriptEntry[]): number[] {
@@ -74,7 +78,7 @@ const TimelineEntry = memo(function TimelineEntry({
 }: {
   entry: { content: string; role: string };
   label: string;
-  style: { bg: string; border: string; badge: string };
+  style: { bg: string; ring: string; badge: string };
   isLive: boolean;
   index: number;
   reduce: boolean;
@@ -85,14 +89,14 @@ const TimelineEntry = memo(function TimelineEntry({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: reduce ? 0 : Math.min(index * 0.03, 0.3) }}
       className={cn(
-        "relative rounded-sm border p-4 transition-colors duration-300",
+        "relative rounded-xl p-4 transition-colors duration-300",
         style.bg,
-        style.border,
-        isLive && "ring-2 ring-cinnabar-500/40"
+        style.ring,
+        isLive && "ring-2 ring-cinnabar-600/40"
       )}
     >
       <div className="mb-2 flex items-center gap-2">
-        <span className={cn("inline-block rounded-sm px-2 py-0.5 text-xs font-medium", style.badge)}>{label}</span>
+        <span className={cn("inline-block rounded-lg px-2 py-0.5 text-xs font-medium", style.badge)}>{label}</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 text-xs text-cinnabar-600">
             <span className="relative flex h-2 w-2">
@@ -139,7 +143,7 @@ export function Timeline({ transcript, participantIds, skillTitle, liveTokens, m
         lastRound = entryRound;
 
         let label: string;
-        let style: { bg: string; border: string; badge: string };
+        let style: { bg: string; ring: string; badge: string };
 
         if (entry.role === "moderator") {
           label = "主持";
@@ -171,7 +175,7 @@ export function Timeline({ transcript, participantIds, skillTitle, liveTokens, m
       {liveTokens &&
         (() => {
           let label: string;
-          let style: { bg: string; border: string; badge: string };
+          let style: { bg: string; ring: string; badge: string };
           if (liveTokens.role === "moderator") {
             label = "主持";
             style = MODERATOR_STYLE;

@@ -8,15 +8,15 @@ const EXAMPLES = [
 
 export function HomeExamples() {
   return (
-    <section className="mx-auto mt-16 max-w-3xl border-t border-ink-200/40 pt-10">
-      <h2 className="font-serif text-lg tracking-[0.15em] text-ink-900">可试议题</h2>
+    <section className="mx-auto mt-20 max-w-3xl border-t border-ink-200/40 pt-12">
+      <h2 className="font-serif text-xl tracking-[0.15em] text-ink-900">可试议题</h2>
       <p className="mt-2 text-sm text-ink-700">点选一则，带入圆桌；仍可在席间改写。</p>
       <ul className="mt-6 space-y-3 text-left text-sm">
         {EXAMPLES.map((e) => (
           <li key={e.label}>
             <Link
               href={`/roundtable?topic=${encodeURIComponent(e.topic)}`}
-              className="block rounded-md border border-ink-200/50 bg-paper-100/30 px-4 py-3 font-sans text-ink-800 transition-[transform,border-color,color] duration-150 hover:border-gold-500 hover:text-cinnabar-800 active:scale-[0.995]"
+              className="block rounded-xl bg-card px-5 py-4 font-sans text-ink-800 card-elevated transition-all duration-200 hover:shadow-[0_0_0_1px_var(--cinnabar),rgba(0,0,0,0.05)_0px_4px_24px] hover:text-cinnabar-600 active:scale-[0.995]"
             >
               <span className="font-medium text-ink-900">{e.label}</span>
               <span className="mt-1 block text-ink-600">{e.topic}</span>

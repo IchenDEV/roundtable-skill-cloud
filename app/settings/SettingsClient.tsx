@@ -100,7 +100,7 @@ export function SettingsClient() {
       </p>
 
       {status?.devBypass && (
-        <Alert className="mb-4 border-gold-500/50 bg-paper-100/50 font-sans">
+        <Alert className="mb-4 rounded-xl border-none ring-ring bg-card font-sans">
           <AlertDescription className="text-ink-800">
             当前为<strong className="text-ink-900">本地试墨</strong>：未登入也可开席，仅在本机有效，切勿用于对外站点。
           </AlertDescription>
@@ -133,11 +133,11 @@ export function SettingsClient() {
         </p>
       )}
 
-      <div className="max-w-lg space-y-4 rounded-lg border border-ink-200/50 bg-paper-100/30 p-4 font-sans">
+      <div className="max-w-lg space-y-4 rounded-2xl bg-card p-6 card-elevated font-sans">
         <div className="space-y-2">
           <Label>选用笔会</Label>
           <Select value={provider} onValueChange={(v) => setProvider(v as ByokProvider)} disabled={loading}>
-            <SelectTrigger className="w-full bg-paper-50/80">
+            <SelectTrigger className="w-full rounded-xl bg-paper-50/80">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -159,7 +159,7 @@ export function SettingsClient() {
             onChange={(e) => setKey(e.target.value)}
             autoComplete="off"
             placeholder="粘贴授权码"
-            className="bg-paper-50/80"
+            className="rounded-xl bg-paper-50/80"
           />
         </div>
 
@@ -171,7 +171,7 @@ export function SettingsClient() {
               value={apiBaseUrl}
               onChange={(e) => setApiBaseUrl(e.target.value)}
               placeholder={baseHint || "https://…"}
-              className="font-mono text-xs bg-paper-50/80"
+              className="rounded-xl font-mono text-xs bg-paper-50/80"
             />
             {baseHint ? (
               <span className="block text-xs text-ink-500">默认：{baseHint}</span>
@@ -190,13 +190,18 @@ export function SettingsClient() {
             value={defaultModel}
             onChange={(e) => setDefaultModel(e.target.value)}
             placeholder={provider === "anthropic" ? "如 claude-sonnet-4-20250514" : "如 gpt-4o-mini"}
-            className="bg-paper-50/80"
+            className="rounded-xl bg-paper-50/80"
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="byok-label">备注（可选）</Label>
-          <Input id="byok-label" value={label} onChange={(e) => setLabel(e.target.value)} className="bg-paper-50/80" />
+          <Input
+            id="byok-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="rounded-xl bg-paper-50/80"
+          />
         </div>
 
         <div className="flex flex-wrap gap-3 pt-1">
@@ -204,7 +209,7 @@ export function SettingsClient() {
             type="button"
             onClick={() => void save()}
             disabled={loading || !key.trim()}
-            className="bg-ink-900 text-primary-foreground transition-[transform,box-shadow] duration-150 hover:bg-ink-800 active:scale-[0.99] disabled:active:scale-100"
+            className="rounded-xl bg-cinnabar-600 text-primary-foreground transition-[transform,box-shadow] duration-150 hover:bg-cinnabar-700 active:scale-[0.99] disabled:active:scale-100"
           >
             {loading ? "保存中…" : "保存"}
           </Button>
@@ -213,7 +218,7 @@ export function SettingsClient() {
             variant="outline"
             onClick={() => void remove()}
             disabled={loading || !hasKey}
-            className="border-cinnabar-600/50 text-cinnabar-800 transition-[transform] duration-150 active:scale-[0.99]"
+            className="rounded-xl border-cinnabar-600/50 text-cinnabar-800 transition-[transform] duration-150 active:scale-[0.99]"
           >
             抹去当前选用
           </Button>

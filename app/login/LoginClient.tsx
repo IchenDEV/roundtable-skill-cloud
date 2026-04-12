@@ -60,15 +60,23 @@ export function LoginClient() {
         输入常用邮箱，我们会向你的信箱寄一封短函；点开信中的链接即可回到圆桌，无需另设密码。
       </p>
       {banner && (
-        <Alert variant="destructive" className="mb-6 border-cinnabar-600/40 bg-cinnabar-600/5 font-sans text-ink-900">
+        <Alert
+          variant="destructive"
+          className="mb-6 rounded-xl ring-destructive border-none bg-destructive/5 font-sans text-ink-900"
+        >
           <AlertTitle className="text-cinnabar-800">提示</AlertTitle>
           <AlertDescription className="text-ink-800">{banner}</AlertDescription>
         </Alert>
       )}
       {sent ? (
-        <p className="text-ink-800">已发送链接，请查收邮箱。</p>
+        <div className="max-w-sm rounded-2xl bg-card p-6 card-elevated">
+          <p className="text-center text-ink-800">已发送链接，请查收邮箱。</p>
+        </div>
       ) : (
-        <form onSubmit={(e) => void submit(e)} className="max-w-sm space-y-4 font-sans">
+        <form
+          onSubmit={(e) => void submit(e)}
+          className="max-w-sm space-y-4 rounded-2xl bg-card p-6 card-elevated font-sans"
+        >
           <div className="space-y-2">
             <Label htmlFor="login-email">邮箱</Label>
             <Input
@@ -81,13 +89,13 @@ export function LoginClient() {
                 if (err) setErr(null);
               }}
               placeholder="you@example.com"
-              className="bg-paper-50/80"
+              className="rounded-xl bg-paper-50/80"
               autoComplete="email"
             />
           </div>
           <Button
             type="submit"
-            className="w-full bg-ink-900 text-primary-foreground shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-ink-800 active:scale-[0.99]"
+            className="w-full rounded-xl bg-cinnabar-600 text-primary-foreground shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-cinnabar-700 active:scale-[0.99]"
           >
             发送魔法链接
           </Button>

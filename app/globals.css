@@ -5,36 +5,37 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --paper: #f4efe4;
-  --paper-deep: #e8e0d0;
-  --ink: #1c1914;
-  --ink-soft: #3d3830;
-  --cinnabar: #a63d3d;
-  --gold-line: #b8a06e;
-  --background: #f4efe4;
-  --foreground: #1c1914;
-  --card: #f0e9dc;
-  --card-foreground: #1c1914;
-  --popover: #f4efe4;
-  --popover-foreground: #1c1914;
-  --primary: #1c1914;
-  --primary-foreground: #f4efe4;
-  --secondary: #e8e0d0;
-  --secondary-foreground: #1c1914;
-  --muted: #e8e0d0;
-  --muted-foreground: #5a5348;
-  --accent: #e8e0d0;
-  --accent-foreground: #1c1914;
-  --destructive: #9a3535;
-  --border: #c4bdb0;
-  --input: #c4bdb0;
-  --ring: #b8a06e;
+  --paper: #f5f4ed;
+  --paper-deep: #e8e6dc;
+  --ink: #141413;
+  --ink-soft: #5e5d59;
+  --cinnabar: #c96442;
+  --ring-warm: #d1cfc5; /* Ring Warm — neutral hover/focus ring（非金色）*/
+  --gold-line: #d1cfc5; /* 保持兼容，实际同 ring-warm */
+  --background: #f5f4ed;
+  --foreground: #141413;
+  --card: #faf9f5;
+  --card-foreground: #141413;
+  --popover: #f5f4ed;
+  --popover-foreground: #141413;
+  --primary: #141413;
+  --primary-foreground: #f5f4ed;
+  --secondary: #e8e6dc;
+  --secondary-foreground: #141413;
+  --muted: #e8e6dc;
+  --muted-foreground: #5e5d59;
+  --accent: #e8e6dc;
+  --accent-foreground: #141413;
+  --destructive: #b53333;
+  --border: #cfc9bc; /* Border Warm — 比背景(#f5f4ed)深，保证可见度 */
+  --input: #cfc9bc;
+  --ring: #d1cfc5;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -45,7 +46,7 @@
   --sidebar-ring: oklch(0.708 0 0);
   /* 宣纸肌理 + 极淡云气（data URL，无外链） */
   --ink-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
-  --ink-mist-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%231c1914' stroke-opacity='0.055' stroke-width='0.55' stroke-linecap='round'%3E%3Cpath d='M-10 70 Q35 48 70 70 T150 68'/%3E%3Cpath d='M-10 95 Q45 118 90 95 T160 102'/%3E%3Cpath d='M20 -5 Q55 25 90 5 T150 20'/%3E%3C/g%3E%3C/svg%3E");
+  --ink-mist-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='%23141413' stroke-opacity='0.055' stroke-width='0.55' stroke-linecap='round'%3E%3Cpath d='M-10 70 Q35 48 70 70 T150 68'/%3E%3Cpath d='M-10 95 Q45 118 90 95 T160 102'/%3E%3Cpath d='M20 -5 Q55 25 90 5 T150 20'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 @theme inline {
@@ -53,9 +54,16 @@
   --color-paper-100: var(--paper-deep);
   --color-ink-900: var(--ink);
   --color-ink-700: var(--ink-soft);
-  --color-ink-200: #c4bdb0;
+  --color-ink-600: #87867f;
+  --color-ink-500: #b0aea5;
+  --color-ink-400: #d1cfc5;
+  --color-ink-200: #e8e6dc;
+  --color-ink-800: #4d4c48;
   --color-cinnabar-600: var(--cinnabar);
-  --color-cinnabar-700: #8a3232;
+  --color-cinnabar-700: #b55a3a;
+  --color-terracotta-500: #c96442;
+  --color-terracotta-600: #b55a3a;
+  --color-terracotta-700: #9a4d32;
   --color-gold-500: var(--gold-line);
   --font-serif: var(--font-noto-serif-sc), "Songti SC", "SimSun", serif;
   --font-heading: var(--font-sans);
@@ -102,6 +110,57 @@
 
 .scroll-paper {
   box-shadow: inset 0 0 80px rgba(28, 25, 20, 0.04);
+}
+
+/* ── 设计系统工具类 ── */
+.ring-border {
+  box-shadow: 0 0 0 1px var(--border);
+}
+.ring-brand {
+  box-shadow: 0 0 0 1px var(--cinnabar);
+}
+.ring-destructive {
+  box-shadow: 0 0 0 1px var(--destructive);
+}
+.ring-ring {
+  box-shadow: 0 0 0 1px var(--ring);
+}
+/* ring-warm：AppNav 登入按钮等浅色交互边框，同 ring-ring */
+.ring-warm {
+  box-shadow: 0 0 0 1px var(--ring-warm);
+}
+/* ring-accent：半透明品牌色描边，用 color-mix 避免硬编码 RGB */
+.ring-accent {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cinnabar) 20%, transparent);
+}
+/* ring-invert：深色面板（公堂）上的浅色描边 */
+.ring-invert {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.card-elevated {
+  box-shadow:
+    0 0 0 1px var(--border),
+    rgba(0, 0, 0, 0.05) 0px 4px 24px;
+}
+.card-elevated-brand {
+  box-shadow:
+    0 0 0 1px var(--cinnabar),
+    rgba(0, 0, 0, 0.05) 0px 4px 24px;
+}
+/* 深色面板专用：ring-invert + 更强投影 */
+.card-dark-elevated {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 24px 60px rgba(0, 0, 0, 0.3);
+}
+.divider-b {
+  box-shadow: inset 0 -1px 0 0 var(--border);
+}
+.divider-t {
+  box-shadow: inset 0 1px 0 0 var(--border);
+}
+.divider-l {
+  box-shadow: inset 2px 0 0 0 var(--ring);
 }
 
 /* 全页水墨底纹层（fixed，不挡交互） */

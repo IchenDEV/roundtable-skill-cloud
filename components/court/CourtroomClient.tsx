@@ -76,7 +76,7 @@ export function CourtroomClient({
         <RoundtableReadinessBanner readiness={readiness} />
 
         {skills.length === 0 && (
-          <div className="rounded-sm border border-cinnabar-600/40 bg-cinnabar-600/5 px-4 py-3 text-sm text-ink-800">
+          <div className="rounded-xl bg-destructive/5 px-4 py-3 text-sm text-ink-800 ring-destructive">
             讨论席名录尚未备好，无法升堂。请待维护者处理后再来，或返回
             <Link href="/" className="text-cinnabar-700 underline">
               序页
@@ -96,7 +96,7 @@ export function CourtroomClient({
           phaseLabel={state ? phaseInWords(state.phase) : "待开庭"}
         />
 
-        <section className="rounded-sm border border-ink-900/70 bg-ink-900/85 p-4 text-paper-50 shadow-xl">
+        <section className="rounded-2xl bg-ink-900/85 p-5 text-paper-50 card-dark-elevated">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0 flex-1">
               <p className="font-sans text-xs tracking-[0.24em] text-gold-500">开庭设置</p>
@@ -106,7 +106,7 @@ export function CourtroomClient({
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   rows={2}
-                  className="w-full rounded-sm border border-paper-50/20 bg-paper-50/95 px-3 py-2 text-ink-900 outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-full rounded-xl border border-paper-50/20 bg-paper-50/95 px-3 py-2 text-ink-900 outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </label>
             </div>
@@ -124,7 +124,7 @@ export function CourtroomClient({
                         title={d.brief}
                         onClick={() => toggle(s.skillId)}
                         className={cn(
-                          "rounded-sm border px-2.5 py-1 font-sans text-xs transition-[transform,border-color,background-color] active:scale-[0.97]",
+                          "rounded-lg border px-2.5 py-1 font-sans text-xs transition-[transform,border-color,background-color] active:scale-[0.97]",
                           selected.includes(s.skillId)
                             ? "border-gold-500 bg-gold-500/20 text-paper-50"
                             : "border-paper-50/20 bg-paper-50/5 text-paper-50/70 hover:border-gold-500/70"
@@ -146,7 +146,7 @@ export function CourtroomClient({
                     max={MAX_ROUND_ROUNDS}
                     value={maxRounds}
                     onChange={(e) => setMaxRounds(Number(e.target.value))}
-                    className="w-14 rounded-sm border border-paper-50/20 bg-paper-50/95 px-2 py-1 text-ink-900"
+                    className="w-14 rounded-lg border border-paper-50/20 bg-paper-50/95 px-2 py-1 text-ink-900"
                   />
                 </label>
                 <CourtroomMusicToggle />
@@ -154,7 +154,7 @@ export function CourtroomClient({
                   type="button"
                   onClick={startFresh}
                   disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
-                  className="bg-cinnabar-600 text-paper-50 hover:bg-cinnabar-700 active:scale-[0.99]"
+                  className="rounded-xl bg-cinnabar-600 text-paper-50 hover:bg-cinnabar-700 active:scale-[0.99]"
                 >
                   升堂
                 </Button>
@@ -163,7 +163,7 @@ export function CourtroomClient({
                   variant="outline"
                   onClick={sealEnd}
                   disabled={streaming || !hasSession || state?.phase === "done"}
-                  className="border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
+                  className="rounded-xl border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
                 >
                   结案
                 </Button>
@@ -185,7 +185,7 @@ export function CourtroomClient({
         </section>
 
         {state?.phase === "await_user" && !streaming && (
-          <section className="rounded-sm border border-gold-500/50 bg-ink-900/85 p-4 text-paper-50">
+          <section className="rounded-2xl border border-gold-500/50 bg-ink-900/85 p-5 text-paper-50">
             <h3 className="text-sm font-medium">席间陈词</h3>
             <p className="mt-1 text-xs text-paper-50/70">本庭已收束。写下补充、质疑或证据，再续下一庭。</p>
             <textarea
@@ -193,25 +193,25 @@ export function CourtroomClient({
               onChange={(e) => setUserDraft(e.target.value)}
               rows={2}
               placeholder="写下你的追问或判断..."
-              className="mt-2 w-full rounded-sm border border-paper-50/20 bg-paper-50/95 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-gold-500"
+              className="mt-2 w-full rounded-xl border border-paper-50/20 bg-paper-50/95 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-gold-500"
             />
             <div className="mt-2 flex flex-wrap gap-2 font-sans">
               <Button
                 type="button"
                 onClick={submitVoiceAndContinue}
                 disabled={!userDraft.trim()}
-                className="bg-cinnabar-600 text-paper-50 hover:bg-cinnabar-700"
+                className="rounded-xl bg-cinnabar-600 text-paper-50 hover:bg-cinnabar-700"
               >
                 呈上并续庭
               </Button>
-              <Button type="button" variant="outline" onClick={continueRound}>
+              <Button type="button" variant="outline" onClick={continueRound} className="rounded-xl">
                 直接续庭
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={sealEnd}
-                className="border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
+                className="rounded-xl border-gold-500/70 bg-paper-50/5 text-paper-50 hover:bg-gold-500/20 hover:text-paper-50"
               >
                 结案
               </Button>
@@ -221,27 +221,34 @@ export function CourtroomClient({
 
         <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
           {state ? (
-            <div className="rounded-sm border border-ink-200/40 bg-paper-50/80 p-3">
+            <div className="rounded-xl bg-card/80 p-3 ring-border">
               <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
             </div>
           ) : null}
 
           {state ? (
             <div className="flex flex-wrap items-center gap-2 font-sans">
-              <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(exportMd)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => navigator.clipboard.writeText(exportMd)}
+              >
                 抄录全文
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="rounded-xl"
                 onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
               >
                 下载 MD
               </Button>
               <Link
                 href="/roundtable"
-                className="rounded-sm border border-ink-200/60 bg-paper-50/80 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+                className="rounded-xl bg-card/80 px-3 py-1.5 text-sm text-ink-800 ring-border hover:shadow-[0_0_0_1px_var(--cinnabar)]"
               >
                 回圆桌
               </Link>
@@ -250,7 +257,7 @@ export function CourtroomClient({
         </div>
 
         {error && (
-          <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
+          <div className="rounded-xl bg-destructive/5 p-3 ring-destructive" role="alert">
             <p className="text-sm text-cinnabar-800">{error}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {state && state.transcript.length > 0 ? (
@@ -261,7 +268,7 @@ export function CourtroomClient({
                     clearError();
                     continueRound();
                   }}
-                  className="bg-ink-900 text-primary-foreground active:scale-[0.99]"
+                  className="rounded-xl bg-cinnabar-600 text-card active:scale-[0.99]"
                 >
                   从中断处续庭
                 </Button>
