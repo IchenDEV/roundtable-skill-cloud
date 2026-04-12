@@ -42,52 +42,6 @@ export function RoundtableClient({
     initialMaxRounds,
   });
   const [memoryOpen, setMemoryOpen] = useState(false);
-  const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set([CATEGORY_ORDER[0]]));
-  const [recommendLoading, setRecommendLoading] = useState(false);
-  const [recommendError, setRecommendError] = useState<string | null>(null);
-
-  const groupedSkills = useMemo(() => {
-    const groups: Record<string, typeof skills> = {};
-    for (const s of skills) {
-      const cat = s.category || "其他";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(s);
-    }
-    return groups;
-  }, [skills]);
-
-  const orderedCategories = useMemo(() => CATEGORY_ORDER.filter((c) => groupedSkills[c]?.length > 0), [groupedSkills]);
-
-  const toggleCategory = (cat: string) =>
-    setOpenCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
-
-  const handleRecommend = async () => {
-    if (!topic.trim() || skills.length === 0) return;
-    setRecommendLoading(true);
-    setRecommendError(null);
-    try {
-      const res = await fetch("/api/roundtable/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim(), availableSkillIds: skills.map((s) => s.skillId) }),
-      });
-      const data = (await res.json()) as { recommendedSkillIds?: string[]; error?: string };
-      if (res.ok && data.recommendedSkillIds && data.recommendedSkillIds.length > 0) {
-        setSelectedDirectly(data.recommendedSkillIds);
-      } else {
-        setRecommendError(data.error ?? "推荐失败，请重试。");
-      }
-    } catch {
-      setRecommendError("网络错误，请重试。");
-    } finally {
-      setRecommendLoading(false);
-    }
-  };
   const {
     canStartRoundtable,
     clearError,
@@ -117,6 +71,53 @@ export function RoundtableClient({
     toggle,
     userDraft,
   } = session;
+  const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set([CATEGORY_ORDER[0]]));
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [recommendError, setRecommendError] = useState<string | null>(null);
+
+  const groupedSkills = useMemo(() => {
+    const groups: Record<string, typeof skills> = {};
+    for (const s of skills) {
+      const cat = s.category || "其他";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(s);
+    }
+    return groups;
+  }, [skills]);
+
+  const orderedCategories = useMemo(() => CATEGORY_ORDER.filter((c) => groupedSkills[c]?.length > 0), [groupedSkills]);
+
+  const toggleCategory = (cat: string) =>
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+
+  const handleRecommend = async () => {
+    if (!topic.trim() || skills.length === 0) return;
+    if (recommendLoading) return;
+    setRecommendLoading(true);
+    setRecommendError(null);
+    try {
+      const res = await fetch("/api/roundtable/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: topic.trim(), availableSkillIds: skills.map((s) => s.skillId) }),
+      });
+      const data = (await res.json()) as { recommendedSkillIds?: string[]; error?: string };
+      if (res.ok && data.recommendedSkillIds && data.recommendedSkillIds.length > 0) {
+        setSelectedDirectly(data.recommendedSkillIds);
+      } else {
+        setRecommendError(data.error ?? "推荐失败，请重试。");
+      }
+    } catch {
+      setRecommendError("网络错误，请重试。");
+    } finally {
+      setRecommendLoading(false);
+    }
+  };
 
   return (
     <FadeIn>
