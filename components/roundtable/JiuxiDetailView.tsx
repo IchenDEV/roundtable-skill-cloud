@@ -38,7 +38,7 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
 
   return (
     <>
-      <header className="mb-6 border-b border-ink-200/40 pb-4">
+      <header className="mb-6 pb-4 divider-b">
         <h1 className="font-serif text-xl text-ink-900">{state.topic}</h1>
         <p className="mt-2 text-sm text-ink-600">
           第 {state.round}/{state.maxRounds} 轮 · {phaseInWords(state.phase)}
@@ -46,19 +46,19 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
           <Link
             href={id ? `/roundtable?resume=${id}` : "/roundtable"}
-            className="rounded-sm bg-ink-900 px-3 py-1.5 text-paper-50 hover:bg-ink-700"
+            className="rounded-xl bg-cinnabar-600 px-3 py-1.5 text-card hover:bg-cinnabar-700"
           >
             回到此席继续
           </Link>
           <Link
             href={id ? `/court?resume=${id}` : "/court"}
-            className="rounded-sm border border-cinnabar-600/50 px-3 py-1.5 text-cinnabar-800 hover:bg-cinnabar-600/10"
+            className="rounded-xl border border-cinnabar-600/50 px-3 py-1.5 text-cinnabar-800 hover:bg-cinnabar-600/10"
           >
             入公堂复辩
           </Link>
           <Link
             href="/roundtable/jiuxi"
-            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
             返回旧席录
           </Link>
@@ -68,14 +68,14 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
           <button
             type="button"
             onClick={() => void navigator.clipboard.writeText(md)}
-            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
             抄录全文
           </button>
           <button
             type="button"
             onClick={() => triggerMarkdownDownload(state.topic, md)}
-            className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
             下载 MD
           </button>
@@ -86,7 +86,7 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
             type="button"
             disabled={busy || !id}
             onClick={() => void remove()}
-            className="rounded-sm border border-cinnabar-600/40 px-3 py-1.5 text-cinnabar-700 hover:bg-cinnabar-600/10 disabled:opacity-40"
+            className="rounded-xl border border-cinnabar-600/40 px-3 py-1.5 text-cinnabar-700 hover:bg-cinnabar-600/10 disabled:opacity-40"
           >
             撤席
           </button>
@@ -97,7 +97,9 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
       </header>
 
       {state.moderatorMemory ? (
-        <p className="mb-4 border-l-2 border-gold-500 pl-3 text-xs text-ink-600">主持手记：{state.moderatorMemory}</p>
+        <p className="mb-4 rounded-xl border-l-2 border-gold-500 pl-3 text-xs text-ink-600 ring-border  py-2 pr-3">
+          主持手记：{state.moderatorMemory}
+        </p>
       ) : null}
 
       <Timeline

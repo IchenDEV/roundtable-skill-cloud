@@ -54,8 +54,8 @@ export function SwimLanes({ transcript, participantIds, skillTitle, liveTokens }
             initial={reduce ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: reduce ? 0 : i * 0.06 }}
-            className={`scroll-paper border p-3 shadow-sm transition-colors duration-300 ${
-              isActive ? "border-cinnabar-500/60 bg-paper-100/60" : "border-ink-200/50 bg-paper-100/40"
+            className={`rounded-xl bg-card p-3 transition-shadow duration-300 ${
+              isActive ? "ring-brand" : "ring-border"
             }`}
           >
             <h3 className="mb-2 flex items-center gap-2 border-b border-ink-200/30 pb-1 text-sm font-semibold text-cinnabar-700">

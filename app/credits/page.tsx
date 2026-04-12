@@ -127,9 +127,9 @@ export default function CreditsPage() {
           （花叔）。
         </p>
 
-        <div className="mt-5 overflow-hidden rounded-md border border-ink-200/50">
+        <div className="mt-5 overflow-hidden rounded-xl ring-border">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-ink-200/40 bg-paper-100/50">
+            <thead className="border-b border-ink-200/40 bg-card">
               <tr>
                 <th className="px-4 py-2 font-medium text-ink-900">视角</th>
                 <th className="px-4 py-2 font-medium text-ink-900">来源</th>
@@ -173,10 +173,7 @@ export default function CreditsPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {SELF_MADE.map((s) => (
-            <span
-              key={s.skillId}
-              className="rounded-md border border-ink-200/50 bg-paper-100/30 px-3 py-1.5 text-sm text-ink-800"
-            >
+            <span key={s.skillId} className="rounded-xl bg-card px-3 py-1.5 text-sm text-ink-800 ring-border">
               {s.label}
             </span>
           ))}
@@ -184,7 +181,7 @@ export default function CreditsPage() {
       </section>
 
       {/* ── 许可说明 ── */}
-      <section className="border-t border-ink-200/40 pt-6">
+      <section className="pt-6 divider-t">
         <p className="text-xs leading-relaxed text-ink-600">
           上述各 Skill 遵循其原始仓库许可协议。圆桌对其进行了格式适配与 YAML frontmatter 规范化，
           原始版权与署名归各作者所有。如有遗漏或错误，请
@@ -201,7 +198,7 @@ export default function CreditsPage() {
       </section>
 
       <div className="pt-2 text-center">
-        <Link href="/" className="text-sm text-ink-600 transition-colors hover:text-cinnabar-700">
+        <Link href="/" className="text-sm text-ink-600 transition-colors hover:text-cinnabar-600">
           ← 返回序页
         </Link>
       </div>

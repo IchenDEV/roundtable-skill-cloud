@@ -6,7 +6,7 @@ import { NavUser } from "./NavUser";
 import { cn } from "@/lib/utils";
 
 const navClass =
-  "text-sm text-ink-700 transition-[color,transform] duration-150 hover:text-cinnabar-700 active:scale-[0.98]";
+  "text-sm text-ink-700 transition-[color,transform] duration-150 hover:text-cinnabar-600 active:scale-[0.98]";
 
 export async function AppNav() {
   const supabase = await createSupabaseServerClient();
@@ -20,8 +20,8 @@ export async function AppNav() {
 
   return (
     <FadeIn>
-      <nav className="border-b border-ink-200/40 bg-paper-50/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <nav className="divider-b bg-paper-50/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3.5">
           <Link
             href="/"
             className="flex items-center gap-2.5 font-serif text-lg tracking-widest text-ink-900 transition-opacity duration-150 hover:opacity-80"
@@ -52,7 +52,7 @@ export async function AppNav() {
                 href="/login"
                 className={cn(
                   navClass,
-                  "rounded-md border border-ink-200/60 bg-paper-50 px-3 py-1.5 hover:border-gold-500/60"
+                  "rounded-lg ring-warm bg-paper-50 px-3 py-1.5 hover:shadow-[0px_0px_0px_1px_var(--color-terracotta-500)]"
                 )}
               >
                 登入

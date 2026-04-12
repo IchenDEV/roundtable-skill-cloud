@@ -12,7 +12,7 @@ export default async function JiuxiPage() {
       return (
         <FadeIn>
           <InkReveal>
-            <header className="mb-6 border-b border-ink-200/40 pb-4">
+            <header className="mb-6 pb-4 divider-b">
               <h1 className="font-serif text-2xl tracking-[0.2em] text-ink-900">旧席录</h1>
             </header>
             <p className="text-sm text-ink-700">
@@ -35,7 +35,7 @@ export default async function JiuxiPage() {
   return (
     <FadeIn>
       <InkReveal>
-        <header className="mb-8 border-b border-ink-200/40 pb-6">
+        <header className="mb-8 pb-6 divider-b">
           <h1 className="font-serif text-2xl tracking-[0.2em] text-ink-900">旧席录</h1>
           <p className="mt-2 text-sm text-ink-700">
             收录你已登入时钤印入库的圆桌：可展卷重温泳道与结案提要，或「回到此席」接着议。

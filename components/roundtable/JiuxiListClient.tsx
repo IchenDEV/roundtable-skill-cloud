@@ -38,7 +38,7 @@ export function JiuxiListClient({ sessions: initial }: { sessions: SessionListIt
       {sessions.map((s) => (
         <li
           key={s.id}
-          className="scroll-paper flex flex-col gap-2 border border-ink-200/50 bg-paper-100/40 p-4 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-2 rounded-xl bg-card p-5 card-elevated transition-shadow duration-200 hover:shadow-[0_0_0_1px_var(--cinnabar),rgba(0,0,0,0.05)_0px_4px_24px] sm:flex-row sm:items-center sm:justify-between"
         >
           <div>
             <Link href={`/roundtable/jiuxi/${s.id}`} className="font-medium text-ink-900 hover:text-cinnabar-700">
@@ -52,13 +52,13 @@ export function JiuxiListClient({ sessions: initial }: { sessions: SessionListIt
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/roundtable/jiuxi/${s.id}`}
-              className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
+              className="rounded-xl border border-ink-200/60 px-3 py-1.5 text-sm text-ink-800 hover:border-gold-500"
             >
               展卷
             </Link>
             <Link
               href={`/roundtable?resume=${s.id}`}
-              className="rounded-sm bg-ink-900 px-3 py-1.5 text-sm text-paper-50 hover:bg-ink-700"
+              className="rounded-xl bg-cinnabar-600 px-3 py-1.5 text-sm text-card hover:bg-cinnabar-700"
             >
               回到此席
             </Link>
@@ -66,7 +66,7 @@ export function JiuxiListClient({ sessions: initial }: { sessions: SessionListIt
               type="button"
               disabled={busy === s.id}
               onClick={() => void remove(s.id)}
-              className="rounded-sm border border-cinnabar-600/50 px-3 py-1.5 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10 disabled:opacity-40"
+              className="rounded-xl border border-cinnabar-600/50 px-3 py-1.5 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10 disabled:opacity-40"
             >
               撤席
             </button>

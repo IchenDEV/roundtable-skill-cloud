@@ -36,7 +36,7 @@ export function SynthesisDialog({ content }: { content: string }) {
   return (
     <>
       {/* Collapsed summary bar */}
-      <div className="rounded-sm border border-cinnabar-600/30 bg-paper-100/50 p-3">
+      <div className="rounded-xl bg-card p-3 ring-accent">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-cinnabar-700">结案提要</h3>
           <Button
@@ -44,7 +44,7 @@ export function SynthesisDialog({ content }: { content: string }) {
             variant="outline"
             size="sm"
             onClick={() => setOpen(true)}
-            className="border-cinnabar-600/40 text-cinnabar-700 hover:bg-cinnabar-600/10"
+            className="rounded-xl border-cinnabar-600/40 text-cinnabar-700 hover:bg-cinnabar-600/10"
           >
             展开查看
           </Button>
@@ -57,13 +57,13 @@ export function SynthesisDialog({ content }: { content: string }) {
       {/* Full-screen modal */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-          <div className="relative my-8 w-full max-w-3xl rounded-sm border border-ink-200/40 bg-paper-50 shadow-xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ink-200/30 bg-paper-50 px-6 py-4">
+          <div className="relative my-8 w-full max-w-3xl rounded-2xl bg-paper-50 card-elevated">
+            <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-ink-200/30 bg-paper-50 px-6 py-4">
               <h2 className="text-lg font-semibold text-cinnabar-700">结案提要</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-sm p-1 text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+                className="rounded-lg p-1 text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
               >
                 <X className="size-5" />
               </button>

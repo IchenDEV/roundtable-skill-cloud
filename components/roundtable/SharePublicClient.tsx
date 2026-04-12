@@ -26,7 +26,7 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
 
   return (
     <>
-      <header className="mb-8 border-b border-ink-200/40 pb-6">
+      <header className="mb-8 pb-6 divider-b">
         <p className="text-xs tracking-widest text-ink-600">展卷（只读）</p>
         <h1 className="mt-2 font-serif text-2xl text-ink-900">{state.topic}</h1>
         <p className="mt-2 text-sm text-ink-600">
@@ -36,14 +36,14 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
           <button
             type="button"
             onClick={() => triggerMarkdownDownload(state.topic, md)}
-            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
           >
             下载 Markdown
           </button>
           <button
             type="button"
             onClick={() => void navigator.clipboard.writeText(md)}
-            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
           >
             抄录全文
           </button>
@@ -59,35 +59,38 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
                   })
                   .catch(() => {});
               }}
-              className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+              className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
             >
               系统分享
             </button>
           )}
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-200/30 pt-4">
-          <Link href={forkHref} className="rounded-sm bg-ink-900 px-4 py-2 text-sm text-paper-50 hover:bg-ink-700">
+        <div className="mt-4 flex flex-wrap gap-2 pt-4 divider-t">
+          <Link
+            href={forkHref}
+            className="rounded-xl bg-cinnabar-600 px-4 py-2 text-sm text-card hover:bg-cinnabar-700"
+          >
             携卷复刻（同记录续议）
           </Link>
           <Link
             href={courtForkHref}
-            className="rounded-sm border border-gold-500/70 bg-ink-900 px-4 py-2 text-sm text-paper-50 hover:bg-ink-700"
+            className="rounded-xl bg-cinnabar-600/90 px-4 py-2 text-sm text-card hover:bg-cinnabar-700"
           >
             入公堂复辩
           </Link>
           <Link
             href={freshHref}
-            className="rounded-sm border border-cinnabar-600/50 px-4 py-2 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10"
+            className="rounded-xl border border-cinnabar-600/50 px-4 py-2 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10"
           >
             同席重论（仅议题与列席）
           </Link>
           <Link
             href={courtFreshHref}
-            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+            className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
           >
             公堂重论
           </Link>
-          <Link href="/roundtable" className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800">
+          <Link href="/roundtable" className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800">
             回开席页
           </Link>
         </div>

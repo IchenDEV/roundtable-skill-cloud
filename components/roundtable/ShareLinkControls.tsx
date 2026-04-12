@@ -59,7 +59,7 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
           type="button"
           onClick={() => void createLink()}
           disabled={disabled || busy}
-          className="rounded-sm border border-gold-600/50 bg-gold-600/10 px-4 py-2 text-sm text-ink-900 hover:bg-gold-600/15 disabled:opacity-40"
+          className="rounded-xl border border-gold-600/50 bg-gold-600/10 px-4 py-2 text-sm text-ink-900 hover:bg-gold-600/15 disabled:opacity-40"
         >
           {busy ? "钤印中…" : "生成分享链接"}
         </button>
@@ -68,7 +68,7 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
             <button
               type="button"
               onClick={() => void copy()}
-              className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+              className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
             >
               复制链接
             </button>
@@ -76,7 +76,7 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
               <button
                 type="button"
                 onClick={() => void nativeShare()}
-                className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+                className="rounded-xl border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
               >
                 系统分享
               </button>
@@ -85,9 +85,7 @@ export function ShareLinkControls({ state, skillNames, disabled }: Props) {
         )}
       </div>
       {url && (
-        <p className="break-all rounded-sm border border-ink-200/40 bg-paper-50 px-3 py-2 font-mono text-xs text-ink-700">
-          {url}
-        </p>
+        <p className="break-all rounded-xl bg-paper-50 px-3 py-2 font-mono text-xs text-ink-700 ring-border">{url}</p>
       )}
       {err && <p className="text-xs text-cinnabar-800">{err}</p>}
       <p className="text-xs text-ink-600">展卷为只读；他人可「携卷复刻」到你方圆桌页继续讨论（须自备砚台与钤印）。</p>
