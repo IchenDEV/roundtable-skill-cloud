@@ -19,6 +19,7 @@ type Props = {
   liveTokens: LiveTokens;
   round: number;
   maxRounds: number;
+  className?: string;
 };
 
 const PALETTE = [
@@ -114,7 +115,7 @@ const TimelineEntry = memo(function TimelineEntry({
   );
 });
 
-export function Timeline({ transcript, participantIds, skillTitle, liveTokens, maxRounds }: Props) {
+export function Timeline({ transcript, participantIds, skillTitle, liveTokens, maxRounds, className }: Props) {
   const reduce = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -136,7 +137,7 @@ export function Timeline({ transcript, participantIds, skillTitle, liveTokens, m
   let lastRound = 0;
 
   return (
-    <div ref={containerRef} className="space-y-3">
+    <div ref={containerRef} className={cn("space-y-3", className)}>
       {transcript.map((entry, i) => {
         const entryRound = rounds[i];
         const showRoundDivider = entryRound > lastRound;
