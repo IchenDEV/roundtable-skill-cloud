@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { InkMark, InkRipple } from "@/components/brand/ink-mark";
 
-const footLink = "text-xs text-ink-600 transition-colors hover:text-cinnabar-700";
+const footLink = "text-xs text-ink-600 transition-colors hover:text-cinnabar-600";
 
 export function AppFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative mt-auto border-t border-ink-200/35 bg-paper-50/85 backdrop-blur-[2px]">
+    <footer className="relative mt-auto divider-t bg-paper-50/85 backdrop-blur-[2px]">
       <InkRipple className="h-5 text-ink-900 opacity-90" />
-      <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mx-auto max-w-5xl px-4 py-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex gap-3">
             <InkMark className="size-11 text-ink-800" />
@@ -37,7 +37,7 @@ export function AppFooter() {
             </Link>
           </nav>
         </div>
-        <p className="mt-8 border-t border-ink-200/25 pt-4 text-center font-sans text-[11px] text-ink-500">
+        <p className="mt-8 border-t border-ink-400/25 pt-4 text-center font-sans text-[11px] text-ink-600">
           © {year} 圆桌 · 水墨底纹为饰，论理为本
         </p>
       </div>

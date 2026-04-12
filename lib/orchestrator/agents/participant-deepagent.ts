@@ -5,6 +5,7 @@ import type { LlmRuntime } from "../../llm/types";
 import type { StreamEvent } from "../../spec/schema";
 import type { SkillManifest } from "../../skills/types";
 import { toLangChainModel } from "../../llm/to-langchain-model";
+import { extractMessageText } from "./extract-message-text";
 
 type SkillRow = SkillManifest["skills"][0];
 
@@ -124,7 +125,7 @@ async function* streamDeepAgent(
       // Only forward visible assistant text, skip tool calls / tool results
       if (msg instanceof AIMessageChunk) {
         if (msg.tool_call_chunks && msg.tool_call_chunks.length > 0) continue;
-        const text = typeof msg.content === "string" ? msg.content : "";
+        const text = extractMessageText(msg.content);
         if (text) {
           fullText += text;
           yield { type: "token", role: "speaker", skillId: skill.skillId, text };

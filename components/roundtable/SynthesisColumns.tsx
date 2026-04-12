@@ -32,7 +32,7 @@ export function SynthesisColumns({ content }: { content: string }) {
 
   if (sections.length <= 1) {
     return (
-      <section className="scroll-paper border border-cinnabar-600/30 bg-paper-100/50 p-4">
+      <section className="rounded-xl bg-card p-4 ring-accent">
         <h2 className="mb-2 text-lg font-semibold text-cinnabar-700">结案提要</h2>
         <MarkdownContent content={content} />
       </section>
@@ -44,7 +44,7 @@ export function SynthesisColumns({ content }: { content: string }) {
       <h2 className="text-lg font-semibold text-cinnabar-700">结案提要</h2>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {sections.map((s, i) => (
-          <section key={i} className="scroll-paper border border-cinnabar-600/20 bg-paper-100/50 p-3 shadow-sm">
+          <section key={i} className="rounded-xl bg-card p-3 ring-accent">
             <h3 className="mb-2 border-b border-cinnabar-600/15 pb-1 text-sm font-semibold text-cinnabar-700">
               {s.heading}
             </h3>

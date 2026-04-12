@@ -13,10 +13,10 @@ vi.mock("deepagents", () => ({
 
 vi.mock("@langchain/core/messages", () => ({
   AIMessageChunk: class AIMessageChunk {
-    content: string;
+    content: unknown;
     tool_call_chunks: unknown[];
 
-    constructor(content: string, toolCallChunks: unknown[] = []) {
+    constructor(content: unknown, toolCallChunks: unknown[] = []) {
       this.content = content;
       this.tool_call_chunks = toolCallChunks;
     }
@@ -70,6 +70,43 @@ describe("participant-deepagent", () => {
       role: "speaker",
       skillId: "sk1",
       fullText: "你好",
+    });
+  });
+
+  it("extracts visible text from structured content blocks", async () => {
+    const { AIMessageChunk } = await import("@langchain/core/messages");
+    createDeepAgent.mockResolvedValue({
+      stream: vi.fn().mockResolvedValue({
+        async *[Symbol.asyncIterator]() {
+          yield [
+            new AIMessageChunk([
+              { type: "text", text: "其" },
+              { type: "tool_result", text: "hidden" },
+              { type: "text", text: "实" },
+            ]),
+          ];
+          yield [new AIMessageChunk({ type: "content_block", content: [{ type: "text", text: "不空" }] })];
+        },
+      }),
+    });
+
+    const gen = streamParticipantDeepAgent(runtime, "gpt", skill, "记录");
+    const out = [];
+    let n = await gen.next();
+    while (!n.done) {
+      out.push(n.value);
+      n = await gen.next();
+    }
+
+    expect(out.filter((e) => e.type === "token")).toEqual([
+      { type: "token", role: "speaker", skillId: "sk1", text: "其实" },
+      { type: "token", role: "speaker", skillId: "sk1", text: "不空" },
+    ]);
+    expect(out[out.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk1",
+      fullText: "其实不空",
     });
   });
 

@@ -34,7 +34,7 @@ export function NavUser({ email }: { email: string }) {
         disabled={busy}
         className={cn(
           buttonVariants({ variant: "ghost", size: "sm" }),
-          "h-9 max-w-[14rem] gap-1 border border-ink-200/50 bg-paper-50/80 px-2 font-sans text-ink-800 shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-paper-100 data-[popup-open]:scale-[0.98] data-[popup-open]:shadow-inner"
+          "h-9 max-w-[14rem] gap-1 rounded-xl bg-card px-2 font-sans text-ink-800 ring-border transition-[transform,box-shadow] duration-150 hover:bg-paper-100 data-[popup-open]:scale-[0.98] data-[popup-open]:shadow-inner"
         )}
       >
         <UserRound className="size-4 shrink-0 text-ink-600" aria-hidden />

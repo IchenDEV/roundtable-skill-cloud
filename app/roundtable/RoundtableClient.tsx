@@ -125,7 +125,7 @@ export function RoundtableClient({
         <RoundtableReadinessBanner readiness={readiness} />
 
         {skills.length === 0 && (
-          <div className="mb-4 rounded-sm border border-cinnabar-600/40 bg-cinnabar-600/5 px-4 py-3 text-sm text-ink-800">
+          <div className="mb-4 rounded-xl bg-destructive/5 px-4 py-3 text-sm text-ink-800 ring-destructive">
             讨论席名录尚未备好，无法点选视角。请待维护者处理后再来，或返回
             <Link href="/" className="text-cinnabar-700 underline">
               序页
@@ -136,14 +136,14 @@ export function RoundtableClient({
 
         <div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden">
           {/* ── 左栏：设置 ── */}
-          <aside className="space-y-4 rounded-sm border border-ink-200/40 bg-paper-100/30 p-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
+          <aside className="space-y-4 rounded-2xl bg-card p-5 card-elevated lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
             <label className="block text-sm text-ink-700">
               <span className="mb-1 block text-ink-900">今日所议</span>
               <textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 rows={2}
-                className="w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
+                className="w-full rounded-xl border border-ink-200/60 bg-paper-50 px-3 py-2 text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
               />
             </label>
             <div>
@@ -167,11 +167,11 @@ export function RoundtableClient({
                   const catSkills = groupedSkills[cat] ?? [];
                   const selectedCount = catSkills.filter((s) => selected.includes(s.skillId)).length;
                   return (
-                    <div key={cat} className="rounded-sm border border-ink-200/40">
+                    <div key={cat} className="rounded-lg ring-border">
                       <button
                         type="button"
                         onClick={() => toggleCategory(cat)}
-                        className="flex w-full items-center justify-between px-2 py-1.5 text-xs text-ink-700 hover:bg-ink-50"
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-ink-700 hover:bg-ink-50"
                       >
                         <span className="flex items-center gap-1">
                           {isOpen ? (
@@ -186,7 +186,7 @@ export function RoundtableClient({
                         </span>
                       </button>
                       {isOpen && (
-                        <div className="flex flex-wrap gap-1.5 border-t border-ink-200/30 px-2 py-2">
+                        <div className="flex flex-wrap gap-1.5 px-2 py-2 divider-t">
                           {catSkills.map((s) => {
                             const d = getSkillDisplay(s.skillId);
                             return (
@@ -198,9 +198,9 @@ export function RoundtableClient({
                                 title={d.brief}
                                 onClick={() => toggle(s.skillId)}
                                 className={cn(
-                                  "font-sans text-xs transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
+                                  "rounded-lg font-sans text-xs transition-[transform,border-color,background-color] duration-150 active:scale-[0.97]",
                                   selected.includes(s.skillId) &&
-                                    "border-cinnabar-600 bg-cinnabar-600/10 text-cinnabar-800 hover:bg-cinnabar-600/15"
+                                    "border-transparent ring-brand bg-cinnabar-600/10 text-cinnabar-600 hover:bg-cinnabar-600/15"
                                 )}
                               >
                                 {d.label}
@@ -226,14 +226,14 @@ export function RoundtableClient({
                   className="w-14 border border-ink-200/60 bg-paper-50 px-2 py-1"
                 />
               </label>
-              <div className="flex items-center gap-0.5 rounded-sm border border-ink-200/60 p-0.5">
+              <div className="flex items-center gap-0.5 rounded-xl p-0.5 ring-border">
                 {(["discussion", "debate"] as const).map((m) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => setMode(m)}
                     className={cn(
-                      "rounded-sm px-3 py-1 text-xs transition-colors",
+                      "rounded-lg px-3 py-1 text-xs transition-colors",
                       mode === m ? "bg-ink-900 text-paper-50" : "text-ink-600 hover:bg-ink-100"
                     )}
                   >
@@ -255,7 +255,7 @@ export function RoundtableClient({
                 type="button"
                 onClick={startFresh}
                 disabled={streaming || !canStartRoundtable || skills.length === 0 || selected.length === 0}
-                className="bg-ink-900 text-primary-foreground shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-ink-800 active:scale-[0.99] disabled:active:scale-100"
+                className="rounded-xl bg-cinnabar-600 text-card shadow-sm transition-[transform,box-shadow] duration-150 hover:bg-cinnabar-700 active:scale-[0.99] disabled:active:scale-100"
               >
                 开席
               </Button>
@@ -265,7 +265,7 @@ export function RoundtableClient({
                 size="sm"
                 onClick={sealEnd}
                 disabled={streaming || !hasSession || state?.phase === "done"}
-                className="border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]"
+                className="rounded-xl border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]"
               >
                 钤印结案
               </Button>
@@ -277,7 +277,7 @@ export function RoundtableClient({
                     variant="outline"
                     size="sm"
                     onClick={() => navigator.clipboard.writeText(exportMd)}
-                    className="active:scale-[0.99]"
+                    className="rounded-xl active:scale-[0.99]"
                   >
                     抄录全文
                   </Button>
@@ -286,7 +286,7 @@ export function RoundtableClient({
                     variant="outline"
                     size="sm"
                     onClick={() => state && triggerMarkdownDownload(state.topic, exportMd)}
-                    className="active:scale-[0.99]"
+                    className="rounded-xl active:scale-[0.99]"
                   >
                     下载 MD
                   </Button>
@@ -295,13 +295,13 @@ export function RoundtableClient({
             </div>
 
             {state && (
-              <div className="rounded-sm border border-ink-200/30 bg-paper-50/50 p-3">
+              <div className="rounded-xl bg-card p-3 ring-border">
                 <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={streaming} />
               </div>
             )}
 
             {error && (
-              <div className="rounded-sm border border-cinnabar-600/30 bg-cinnabar-600/5 p-3" role="alert">
+              <div className="rounded-xl bg-destructive/5 p-3 ring-destructive" role="alert">
                 <p className="text-sm text-cinnabar-800">{error}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {state && state.transcript.length > 0 && (
@@ -356,9 +356,7 @@ export function RoundtableClient({
                   </button>
                 )}
                 {memoryOpen && state.moderatorMemory && (
-                  <div className="rounded-sm border border-gold-500/30 bg-paper-100/50 p-3 text-xs text-ink-600">
-                    {state.moderatorMemory}
-                  </div>
+                  <div className="rounded-xl bg-card p-3 text-xs text-ink-600 ring-border">{state.moderatorMemory}</div>
                 )}
               </div>
             )}
@@ -384,7 +382,7 @@ export function RoundtableClient({
 
             {/* 席间插话 */}
             {state?.phase === "await_user" && !streaming && (
-              <section className="rounded-sm border border-gold-500/40 bg-paper-100/50 p-4 lg:shrink-0">
+              <section className="rounded-2xl bg-card p-4 ring-ring lg:shrink-0">
                 <h3 className="text-sm font-medium text-ink-900">席间插话</h3>
                 <p className="mt-1 text-xs text-ink-600">本轮已收束。写下观点后「记入并续轮」，或直接续轮跳过。</p>
                 <textarea
@@ -392,25 +390,25 @@ export function RoundtableClient({
                   onChange={(e) => setUserDraft(e.target.value)}
                   rows={2}
                   placeholder="写你想补充的判断、质疑或例子…"
-                  className="mt-2 w-full border border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
+                  className="mt-2 w-full rounded-xl border border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 outline-none focus:ring-1 focus:ring-gold-500"
                 />
                 <div className="mt-2 flex flex-wrap gap-2 font-sans">
                   <Button
                     type="button"
                     onClick={submitVoiceAndContinue}
                     disabled={!userDraft.trim()}
-                    className="bg-ink-900 text-primary-foreground active:scale-[0.99]"
+                    className="rounded-xl bg-cinnabar-600 text-card hover:bg-cinnabar-700 active:scale-[0.99]"
                   >
                     记入并续轮
                   </Button>
-                  <Button type="button" variant="outline" onClick={continueRound}>
+                  <Button type="button" variant="outline" onClick={continueRound} className="rounded-xl">
                     直接续轮
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={sealEnd}
-                    className="border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10"
+                    className="rounded-xl border-cinnabar-600/60 text-cinnabar-800 hover:bg-cinnabar-600/10"
                   >
                     钤印结案
                   </Button>
