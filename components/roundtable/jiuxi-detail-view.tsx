@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ShareLinkControls } from "@/components/roundtable/share-link-controls";
 import { SynthesisDialog } from "@/components/roundtable/synthesis-dialog";
 import { Timeline } from "@/components/roundtable/timeline";
 import { buildRoundtableMarkdown, triggerMarkdownDownload } from "@/lib/roundtable/export-markdown";
+import { getSkillDisplay } from "@/lib/skills/skill-display";
 import type { RoundtableState } from "@/lib/spec/schema";
 import { phaseInWords } from "@/lib/roundtable/phase-label";
 
@@ -16,11 +17,21 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const id = state.sessionId;
-  const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
-  const md = useMemo(
-    () => buildRoundtableMarkdown(state, (i) => skills.find((x) => x.skillId === i)?.name ?? "列席"),
-    [state, skills]
+  const skillNameRecord = useMemo(
+    () =>
+      Object.fromEntries(
+        skills.map((s) => [s.skillId, s.name && s.name !== s.skillId ? s.name : getSkillDisplay(s.skillId).label])
+      ),
+    [skills]
   );
+  const resolveSkillName = useCallback(
+    (skillId: string | undefined) => {
+      if (!skillId) return "列席";
+      return skillNameRecord[skillId] ?? getSkillDisplay(skillId).label;
+    },
+    [skillNameRecord]
+  );
+  const md = useMemo(() => buildRoundtableMarkdown(state, resolveSkillName), [state, resolveSkillName]);
 
   async function remove() {
     if (!id) return;
@@ -80,6 +91,8 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
             下载 MD
           </button>
 
+          <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={false} inline />
+
           <span className="mx-1 hidden h-4 w-px bg-ink-200/60 sm:inline-block" />
 
           <button
@@ -90,9 +103,6 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
           >
             撤席
           </button>
-        </div>
-        <div className="mt-3">
-          <ShareLinkControls state={state} skillNames={skillNameRecord} disabled={false} />
         </div>
       </header>
 
@@ -105,7 +115,7 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
       <Timeline
         transcript={state.transcript}
         participantIds={state.participantSkillIds}
-        skillTitle={(i) => skills.find((x) => x.skillId === i)?.name ?? "列席"}
+        skillTitle={(i) => resolveSkillName(i)}
         liveTokens={null}
         round={state.round}
         maxRounds={state.maxRounds}

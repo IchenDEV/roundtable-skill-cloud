@@ -1,4 +1,5 @@
 import { insertShareSnapshot } from "@/lib/db/share-snapshot";
+import { pickShareSkillNames } from "@/lib/roundtable/share-skill-names";
 import { resolvePublicOrigin } from "@/lib/server/public-origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { skillNamesSchema } from "@/lib/spec/share-payload";
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   const payload: SharePayload = {
     v: 1,
     state: stateRest,
-    skillNames: skillNames ?? {},
+    skillNames: pickShareSkillNames(state, skillNames ?? {}),
   };
 
   const token = await insertShareSnapshot(payload, user.id);
