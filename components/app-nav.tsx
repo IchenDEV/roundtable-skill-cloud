@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { FadeIn } from "./MotionRoot";
+import { FadeIn } from "./motion-root";
 import { InkMark } from "@/components/brand/ink-mark";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { NavUser } from "./NavUser";
+import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
 
 const navClass =

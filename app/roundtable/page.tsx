@@ -1,4 +1,4 @@
-import { RoundtableClient } from "./RoundtableClient";
+import { RoundtableClient } from "./roundtable-client";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
 import { parseRoundtableSearchParams, type RoundtableSearchParams } from "@/lib/roundtable/roundtable-search";
 

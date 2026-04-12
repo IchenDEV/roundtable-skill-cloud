@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listRoundtableSessions } from "@/lib/db/roundtable-sessions";
-import { JiuxiListClient } from "@/components/roundtable/JiuxiListClient";
-import { FadeIn, InkReveal } from "@/components/MotionRoot";
+import { JiuxiListClient } from "@/components/roundtable/jiuxi-list-client";
+import { FadeIn, InkReveal } from "@/components/motion-root";
 
 export const dynamic = "force-dynamic";
 

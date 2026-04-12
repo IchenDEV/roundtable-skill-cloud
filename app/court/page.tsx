@@ -1,4 +1,4 @@
-import { CourtroomClient } from "@/components/court/CourtroomClient";
+import { CourtroomClient } from "@/components/court/courtroom-client";
 import { parseRoundtableSearchParams, type RoundtableSearchParams } from "@/lib/roundtable/roundtable-search";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
 

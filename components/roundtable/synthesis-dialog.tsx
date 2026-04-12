@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MarkdownContent } from "./MarkdownContent";
+import { MarkdownContent } from "./markdown-content";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FadeIn } from "@/components/MotionRoot";
+import { FadeIn } from "@/components/motion-root";
 import { BYOK_PROVIDERS, PROVIDER_LABEL, defaultApiBaseUrl, type ByokProvider } from "@/lib/spec/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

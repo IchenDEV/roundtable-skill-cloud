@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { MarkdownContent } from "@/components/roundtable/MarkdownContent";
+import { MarkdownContent } from "@/components/roundtable/markdown-content";
 import type { RoundtableActiveTurn } from "@/lib/roundtable/active-turn";
 import type { TranscriptEntry } from "@/lib/spec/schema";
 import { cn } from "@/lib/utils";

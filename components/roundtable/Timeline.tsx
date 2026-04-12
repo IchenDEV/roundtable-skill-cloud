@@ -3,7 +3,7 @@
 import { useEffect, useRef, memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { TranscriptEntry } from "@/lib/spec/schema";
-import { MarkdownContent } from "./MarkdownContent";
+import { MarkdownContent } from "./markdown-content";
 import { cn } from "@/lib/utils";
 
 type LiveTokens = {

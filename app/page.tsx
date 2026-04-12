@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { FadeIn } from "@/components/MotionRoot";
-import { HomeExamples } from "@/components/home/HomeExamples";
-import { HomeSkillIntro } from "@/components/home/HomeSkillIntro";
+import { FadeIn } from "@/components/motion-root";
+import { HomeExamples } from "@/components/home/home-examples";
+import { HomeSkillIntro } from "@/components/home/home-skill-intro";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
