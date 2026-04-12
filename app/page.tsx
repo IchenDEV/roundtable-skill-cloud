@@ -162,7 +162,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeExamples />
+      <HomeExamples availableSkillIds={skills.map((skill) => skill.skillId)} />
       <HomeSkillIntro skills={skills} />
     </FadeIn>
   );
