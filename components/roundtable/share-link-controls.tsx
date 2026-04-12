@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { pickShareSkillNames } from "@/lib/roundtable/share-skill-names";
 import type { RoundtableState } from "@/lib/spec/schema";
 
 type Props = {
@@ -23,7 +24,7 @@ export function ShareLinkControls({ state, skillNames, disabled, inline = false 
       const res = await fetch("/api/roundtable/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state, skillNames }),
+        body: JSON.stringify({ state, skillNames: pickShareSkillNames(state, skillNames) }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
