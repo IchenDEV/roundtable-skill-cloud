@@ -21,6 +21,8 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
   freshParams.set("maxRounds", String(state.maxRounds));
   const freshHref = `/roundtable?${freshParams.toString()}`;
   const forkHref = `/roundtable?fromShare=${token}`;
+  const courtFreshHref = `/court?${freshParams.toString()}`;
+  const courtForkHref = `/court?fromShare=${token}`;
 
   return (
     <>
@@ -68,10 +70,22 @@ export function SharePublicClient({ token, payload }: { token: string; payload: 
             携卷复刻（同记录续议）
           </Link>
           <Link
+            href={courtForkHref}
+            className="rounded-sm border border-gold-500/70 bg-ink-900 px-4 py-2 text-sm text-paper-50 hover:bg-ink-700"
+          >
+            入公堂复辩
+          </Link>
+          <Link
             href={freshHref}
             className="rounded-sm border border-cinnabar-600/50 px-4 py-2 text-sm text-cinnabar-800 hover:bg-cinnabar-600/10"
           >
             同席重论（仅议题与列席）
+          </Link>
+          <Link
+            href={courtFreshHref}
+            className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800 hover:border-gold-500"
+          >
+            公堂重论
           </Link>
           <Link href="/roundtable" className="rounded-sm border border-ink-200/60 px-4 py-2 text-sm text-ink-800">
             回开席页

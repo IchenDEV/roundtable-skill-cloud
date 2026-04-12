@@ -68,6 +68,9 @@ export default async function Home() {
           <Link href="/roundtable" className={btnInk}>
             入席
           </Link>
+          <Link href="/court" className={btnOutline}>
+            升堂
+          </Link>
           <Link href="/settings" className={btnOutline}>
             砚台
           </Link>

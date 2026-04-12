@@ -51,6 +51,12 @@ export function JiuxiDetailView({ state, skills }: { state: RoundtableState; ski
             回到此席继续
           </Link>
           <Link
+            href={id ? `/court?resume=${id}` : "/court"}
+            className="rounded-sm border border-cinnabar-600/50 px-3 py-1.5 text-cinnabar-800 hover:bg-cinnabar-600/10"
+          >
+            入公堂复辩
+          </Link>
+          <Link
             href="/roundtable/jiuxi"
             className="rounded-sm border border-ink-200/60 px-3 py-1.5 text-ink-800 hover:border-gold-500"
           >
