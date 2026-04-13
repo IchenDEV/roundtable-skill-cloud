@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type Block = { kind: "think" | "text"; content: string };
@@ -37,6 +37,15 @@ function parseThinkBlocks(raw: string): Block[] {
 
 export function MarkdownContent({ content, streaming }: { content: string; streaming?: boolean }) {
   const blocks = useMemo(() => parseThinkBlocks(content), [content]);
+  const markdownComponents: Components = {
+    table(props) {
+      return (
+        <div className="prose-roundtable-table-wrap">
+          <table {...props} />
+        </div>
+      );
+    },
+  };
 
   if (!blocks.length && !streaming) return null;
 
@@ -49,7 +58,7 @@ export function MarkdownContent({ content, streaming }: { content: string; strea
             <div className="mt-1 whitespace-pre-wrap">{b.content}</div>
           </details>
         ) : (
-          <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown key={i} remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {b.content}
           </ReactMarkdown>
         )

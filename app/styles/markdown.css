@@ -1,0 +1,135 @@
+.prose-roundtable {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.prose-roundtable p {
+  margin: 0.4em 0;
+}
+
+.prose-roundtable p:first-child {
+  margin-top: 0;
+}
+
+.prose-roundtable p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-roundtable h1,
+.prose-roundtable h2,
+.prose-roundtable h3,
+.prose-roundtable h4 {
+  margin: 0.7em 0 0.2em;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose-roundtable h1 {
+  font-size: 1.1em;
+}
+
+.prose-roundtable h2 {
+  font-size: 1.05em;
+}
+
+.prose-roundtable h3 {
+  font-size: 0.95em;
+}
+
+.prose-roundtable ul,
+.prose-roundtable ol {
+  margin: 0.35em 0;
+  padding-left: 1.4em;
+}
+
+.prose-roundtable li {
+  margin: 0.12em 0;
+}
+
+.prose-roundtable code {
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  background: rgba(28, 25, 20, 0.06);
+  font-size: 0.85em;
+}
+
+.prose-roundtable pre {
+  margin: 0.5em 0;
+  padding: 0.6em 0.8em;
+  overflow-x: auto;
+  border-radius: 4px;
+  background: rgba(28, 25, 20, 0.05);
+}
+
+.prose-roundtable pre code {
+  padding: 0;
+  background: none;
+}
+
+.prose-roundtable blockquote {
+  margin: 0.4em 0;
+  padding-left: 0.75em;
+  border-left: 2px solid var(--gold-line);
+  color: var(--ink-soft);
+}
+
+.prose-roundtable a {
+  color: var(--cinnabar);
+  text-decoration: underline;
+}
+
+.prose-roundtable-table-wrap {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 0.9rem;
+  background: rgba(250, 249, 245, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(196, 189, 176, 0.5);
+}
+
+.prose-roundtable table {
+  margin: 0;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+
+.prose-roundtable th,
+.prose-roundtable td {
+  padding: 0.25em 0.5em;
+  border: 1px solid rgba(196, 189, 176, 0.5);
+}
+
+.prose-roundtable th {
+  background: rgba(28, 25, 20, 0.04);
+  font-weight: 600;
+}
+
+.prose-roundtable strong {
+  color: var(--ink);
+}
+
+.prose-roundtable hr {
+  margin: 0.6em 0;
+  border-color: rgba(196, 189, 176, 0.4);
+}
+
+.prose-roundtable .think-block {
+  margin-bottom: 0.5em;
+  padding: 0.4em 0.65em;
+  border: 1px solid rgba(196, 189, 176, 0.4);
+  border-radius: 4px;
+  background: rgba(244, 239, 228, 0.5);
+  color: rgba(90, 83, 72, 0.75);
+  font-size: 0.82em;
+}
+
+.prose-roundtable .think-block summary {
+  cursor: pointer;
+  user-select: none;
+  color: rgba(90, 83, 72, 0.55);
+  font-family: var(--font-sans);
+  font-size: 0.9em;
+}

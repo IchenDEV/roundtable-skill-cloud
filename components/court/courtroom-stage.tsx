@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { CourtAdvocateSprite } from "@/components/court/court-advocate-sprite";
+import { useCourtStrikeEffect } from "@/components/court/use-court-strike-effect";
 import { MarkdownContent } from "@/components/roundtable/markdown-content";
 import type { RoundtableActiveTurn } from "@/lib/roundtable/active-turn";
 import type { TranscriptEntry } from "@/lib/spec/schema";
 import { cn } from "@/lib/utils";
 
-type LiveTokens = {
-  role: "moderator" | "speaker";
-  skillId?: string;
-  text: string;
-} | null;
+type LiveTokens = { role: "moderator" | "speaker"; skillId?: string; text: string } | null;
 
 type Props = {
   transcript: TranscriptEntry[];
@@ -31,86 +29,10 @@ function roleLabel(entry: { role: string; skillId?: string }, skillTitle: (id: s
 }
 
 function latestSpeaker(transcript: TranscriptEntry[], liveTokens: LiveTokens, skillTitle: (id: string) => string) {
-  if (liveTokens) {
-    return {
-      content: liveTokens.text,
-      label: roleLabel(liveTokens, skillTitle),
-      streaming: true,
-    };
-  }
+  if (liveTokens) return { content: liveTokens.text, label: roleLabel(liveTokens, skillTitle), streaming: true };
   const latest = transcript.at(-1);
-  if (!latest) {
-    return {
-      content: "堂上无声。择定议题与列席，鸣槌开庭。",
-      label: "候审",
-      streaming: false,
-    };
-  }
+  if (!latest) return { content: "堂上无声。择定议题与列席，鸣槌开庭。", label: "候审", streaming: false };
   return { content: latest.content, label: roleLabel(latest, skillTitle), streaming: false };
-}
-
-function CourtAdvocateSprite({ active }: { active: boolean }) {
-  return (
-    <svg className={cn("court-advocate", active && "court-advocate-active")} viewBox="0 0 780 720" aria-hidden>
-      <g className="court-advocate-shadow">
-        <ellipse cx="320" cy="690" rx="250" ry="34" />
-      </g>
-      <g className="court-advocate-body">
-        <path className="court-suit-dark" d="M172 704 226 378 392 360 462 704Z" />
-        <path className="court-suit-red" d="M224 402 332 372 446 704H214Z" />
-        <path className="court-suit-shadow" d="M228 430 316 404 286 704H196Z" />
-        <path className="court-suit-light" d="M344 386 420 684 386 672 326 430Z" />
-        <path className="court-shirt" d="M282 378 350 382 374 560 302 552Z" />
-        <path className="court-shirt-shadow" d="M346 390 372 558 340 538 330 416Z" />
-        <path className="court-tie" d="M319 410 360 412 348 570 300 556Z" />
-        <path className="court-tie-shadow" d="M348 418 360 414 348 570 324 562Z" />
-        <path className="court-neck" d="M272 318 358 322 354 392 286 404Z" />
-        <path className="court-neck-shadow" d="M308 326 358 322 354 382 292 366Z" />
-        <path className="court-face" d="M222 178 322 96 446 132 424 282 354 350 250 330 204 256Z" />
-        <path className="court-face-shadow" d="M222 256 250 330 354 350 424 282 416 322 360 374 244 350 202 274Z" />
-        <path className="court-face-light" d="M282 152 350 126 400 146 318 188 260 208Z" />
-        <path
-          className="court-hair"
-          d="M208 192 272 62 470 94 408 128 510 150 396 166 438 216 350 184 284 292 236 282Z"
-        />
-        <path className="court-hair-shine" d="M272 82 340 82 292 126 232 180Z" />
-        <path className="court-hair-shine" d="M372 102 456 112 402 132 336 136Z" />
-        <path className="court-hair-line" d="M270 78 326 150 390 108" />
-        <path className="court-hair-line" d="M232 182 310 170 282 292" />
-        <path className="court-ear" d="M406 202 452 210 430 270 398 262Z" />
-        <path className="court-ear-line" d="M420 220 438 232 414 252" />
-        <path className="court-eye" d="M312 206 376 198 376 220 316 226Z" />
-        <ellipse className="court-iris" cx="344" cy="210" rx="9" ry="7" />
-        <circle className="court-eye-glint" cx="348" cy="207" r="2.5" />
-        <path className="court-brow" d="M300 178 390 168 392 184 306 196Z" />
-        <path className="court-nose" d="M382 214 368 252 394 250" />
-        <path className="court-mouth" d="M322 284 386 274 386 286 320 300Z" />
-        <path className="court-jaw-line" d="M260 318 352 338 406 286" />
-        <path className="court-arm-sleeve" d="M400 330 504 250 678 140 704 190 536 328 430 412Z" />
-        <path className="court-sleeve-shadow" d="M520 254 678 140 704 190 552 300 536 274Z" />
-        <path className="court-sleeve-fold" d="M456 304 524 326" />
-        <path className="court-sleeve-fold" d="M506 256 548 286" />
-        <path className="court-cuff" d="M640 156 692 128 706 184 664 196Z" />
-        <ellipse className="court-bracelet" cx="646" cy="174" rx="28" ry="37" transform="rotate(-32 646 174)" />
-        <path className="court-bracelet-line" d="M620 160 672 190" />
-        <path className="court-hand" d="M666 138 742 120 724 176 760 190 706 204 672 192Z" />
-        <path className="court-hand-shadow" d="M706 174 760 190 706 204 672 192Z" />
-        <path className="court-finger-line" d="M704 142 740 128" />
-        <path className="court-finger-line" d="M696 158 724 176" />
-        <path className="court-finger-line" d="M708 188 744 192" />
-        <circle className="court-button" cx="264" cy="458" r="9" />
-        <circle className="court-button" cx="282" cy="548" r="8" />
-        <path className="court-lapel-line" d="M230 412 306 492 256 512" />
-        <path className="court-lapel-line" d="M348 392 396 518 368 506" />
-        <path className="court-pocket" d="M246 430 318 418 318 438 246 450Z" />
-        <path
-          className="court-outline"
-          d="M224 402 172 704h290L446 704 400 330l104-80 174-110 26 50-168 138-106 84 32 292"
-        />
-        <path className="court-outline" d="M222 178 322 96l124 36-22 150-70 68-104-20-46-74Z" />
-      </g>
-    </svg>
-  );
 }
 
 export function CourtroomStage({
@@ -124,13 +46,24 @@ export function CourtroomStage({
   phaseLabel,
 }: Props) {
   const reduce = useReducedMotion();
+  const stageRef = useRef<HTMLElement | null>(null);
   const activeSkillId = activeTurn?.role === "speaker" ? activeTurn.skillId : undefined;
   const targetSkillId = activeTurn?.target;
   const latest = useMemo(() => latestSpeaker(transcript, liveTokens, skillTitle), [liveTokens, skillTitle, transcript]);
   const spriteActive = !!liveTokens || activeTurn?.role === "speaker";
+  const roleState = {
+    moderator: activeTurn?.role === "moderator",
+    speaker: activeTurn?.role === "speaker" || !!liveTokens,
+    user: false,
+  };
+
+  useCourtStrikeEffect(activeTurn, stageRef);
 
   return (
-    <section className="court-stage court-stage-vn overflow-hidden bg-ink-900 text-paper-50 shadow-2xl">
+    <section
+      ref={stageRef}
+      className={cn("court-stage court-stage-vn overflow-hidden bg-ink-900 text-paper-50 shadow-2xl")}
+    >
       <div className="court-vn-bg" aria-hidden>
         <div className="court-vn-column court-vn-column-left" />
         <div className="court-vn-column court-vn-column-right" />
@@ -140,7 +73,6 @@ export function CourtroomStage({
         <div className="court-vn-bench" />
         <div className="court-vn-vignette" />
       </div>
-
       <div className="court-vn-hud">
         <span>
           第 {round} / {maxRounds} 庭 · {phaseLabel}
@@ -148,9 +80,14 @@ export function CourtroomStage({
         {activeSkillId ? <span>发言：{skillTitle(activeSkillId)}</span> : null}
         {targetSkillId ? <span>逼问：{skillTitle(targetSkillId)}</span> : null}
       </div>
-
+      <div className="court-vn-cast" aria-label="公堂角色">
+        <span className={cn("court-vn-cast-pill", roleState.moderator && "is-active")}>审判长</span>
+        <span className={cn("court-vn-cast-pill", roleState.speaker && "is-active")}>
+          {activeSkillId ? skillTitle(activeSkillId) : "列席辩士"}
+        </span>
+        <span className={cn("court-vn-cast-pill", roleState.user && "is-active")}>席上（你）</span>
+      </div>
       {activeTurn?.directive ? <div className="court-vn-directive">质询方向：{activeTurn.directive}</div> : null}
-
       <motion.div
         className="court-vn-sprite"
         animate={spriteActive && !reduce ? { x: [0, 8, 0] } : { x: 0 }}
@@ -158,7 +95,6 @@ export function CourtroomStage({
       >
         <CourtAdvocateSprite active={spriteActive} />
       </motion.div>
-
       <div className="court-vn-roster" aria-label="列席席位">
         {participantIds.slice(0, 6).map((id) => (
           <span
@@ -173,7 +109,6 @@ export function CourtroomStage({
           </span>
         ))}
       </div>
-
       <div className="court-dialogue">
         <div className="court-dialogue-name">{latest.label}</div>
         <div className="court-dialogue-copy">
@@ -184,7 +119,6 @@ export function CourtroomStage({
           <span className="court-dialogue-next" aria-hidden />
         </div>
       </div>
-
       <div className="court-vn-commands" aria-hidden>
         <span>
           <kbd>E</kbd> 法庭记录

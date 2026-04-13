@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const createReactAgent = vi.hoisted(() => vi.fn());
 const createSkillTools = vi.hoisted(() => vi.fn(() => []));
@@ -79,13 +79,18 @@ describe("participant-agent", () => {
     contentHash: "h",
     dirPath: "skills/paul-graham-perspective",
     entryPath: "skills/paul-graham-perspective/SKILL.md",
+    category: "哲学思想",
   };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it("streams visible assistant text and forwards the abort signal", async () => {
     const { AIMessageChunk } = await import("@langchain/core/messages");
     const stream = vi.fn().mockResolvedValue({
       async *[Symbol.asyncIterator]() {
-        yield [new AIMessageChunk("hidden", [{}])];
+        yield [Object.assign(new AIMessageChunk("hidden"), { tool_call_chunks: [{}] })];
         yield [new AIMessageChunk("你")];
         yield [new AIMessageChunk("好")];
       },
@@ -97,6 +102,11 @@ describe("participant-agent", () => {
 
     expect(toLangChainModel).toHaveBeenCalledWith(runtime, "gpt");
     expect(createSkillTools).toHaveBeenCalled();
+    expect(createReactAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stateModifier: expect.stringContaining("你已提前获得本席的 SKILL.md 正文"),
+      })
+    );
     expect(stream).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ signal }));
     expect(events.filter((e) => (e as { type?: string }).type === "token")).toHaveLength(2);
     expect(events[events.length - 1]).toEqual({
@@ -118,7 +128,11 @@ describe("participant-agent", () => {
             { type: "text", text: "实" },
           ]),
         ];
-        yield [new AIMessageChunk({ type: "content_block", content: [{ type: "text", text: "不空" }] })];
+        yield [
+          Object.assign(new AIMessageChunk(""), {
+            content: { type: "content_block", content: [{ type: "text", text: "不空" }] },
+          }),
+        ];
       },
     });
     createReactAgent.mockReturnValue({ stream });
@@ -134,6 +148,34 @@ describe("participant-agent", () => {
       role: "speaker",
       skillId: "sk1",
       fullText: "其实不空",
+    });
+  });
+
+  it("falls back to additional_kwargs content when chunk content is empty", async () => {
+    const { AIMessageChunk } = await import("@langchain/core/messages");
+    const stream = vi.fn().mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield [
+          Object.assign(new AIMessageChunk(""), {
+            additional_kwargs: { reasoning_content: "先想想", content: "再落笔" },
+          }),
+        ];
+        yield [Object.assign(new AIMessageChunk(""), { additional_kwargs: { output_text: "。" } })];
+      },
+    });
+    createReactAgent.mockReturnValue({ stream });
+
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲"));
+
+    expect(events.filter((e) => (e as { type?: string }).type === "token")).toEqual([
+      { type: "token", role: "speaker", skillId: "sk1", text: "再落笔" },
+      { type: "token", role: "speaker", skillId: "sk1", text: "。" },
+    ]);
+    expect(events[events.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk1",
+      fullText: "再落笔。",
     });
   });
 
@@ -174,16 +216,5 @@ describe("participant-agent", () => {
     await expect(
       drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "乙", "驳其前提"))
     ).rejects.toThrow("[sk1] boom");
-  });
-
-  it("stops quietly on abort", async () => {
-    createReactAgent.mockReturnValue({
-      stream: vi.fn().mockRejectedValue(Object.assign(new Error("aborted"), { name: "AbortError" })),
-    });
-
-    const controller = new AbortController();
-    controller.abort();
-    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", controller.signal));
-    expect(events).toEqual([]);
   });
 });

@@ -1,0 +1,91 @@
+.scroll-paper {
+  box-shadow: inset 0 0 80px rgba(28, 25, 20, 0.04);
+}
+
+.ring-border {
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.ring-brand {
+  box-shadow: 0 0 0 1px var(--cinnabar);
+}
+
+.ring-destructive {
+  box-shadow: 0 0 0 1px var(--destructive);
+}
+
+.ring-ring {
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.ring-warm {
+  box-shadow: 0 0 0 1px var(--ring-warm);
+}
+
+.ring-accent {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cinnabar) 20%, transparent);
+}
+
+.ring-invert {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.card-elevated {
+  box-shadow:
+    0 0 0 1px var(--border),
+    rgba(0, 0, 0, 0.05) 0 4px 24px;
+}
+
+.card-elevated-brand {
+  box-shadow:
+    0 0 0 1px var(--cinnabar),
+    rgba(0, 0, 0, 0.05) 0 4px 24px;
+}
+
+.card-dark-elevated {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 24px 60px rgba(0, 0, 0, 0.3);
+}
+
+.divider-b {
+  box-shadow: inset 0 -1px 0 0 var(--border);
+}
+
+.divider-t {
+  box-shadow: inset 0 1px 0 0 var(--border);
+}
+
+.divider-l {
+  box-shadow: inset 2px 0 0 0 var(--ring);
+}
+
+.ink-page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(ellipse 130% 55% at 50% -18%, rgba(255, 255, 255, 0.55), transparent 52%),
+    radial-gradient(circle at 88% 8%, rgba(28, 25, 20, 0.035), transparent 38%),
+    radial-gradient(circle at 6% 72%, rgba(182, 160, 110, 0.06), transparent 45%), var(--ink-paper-grain),
+    var(--ink-mist-pattern);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+  background-size:
+    100% 320px,
+    100% 100%,
+    100% 100%,
+    180px 180px,
+    140px 140px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -37,7 +37,7 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
       : `当前第 ${roundLabel} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n请根据「主持人记忆」推进：${state.moderatorMemory || "（无）"}\n提出本轮引导问题。`;
 
   let modOpen = "";
-  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, openUser)) {
+  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, openUser, Object.values(skillNames))) {
     if (ev.type === "turn_complete") modOpen = ev.fullText;
     yield ev;
   }
@@ -56,7 +56,14 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
     }
     const tctx = formatTranscriptForSeat(state.transcript, skillId, skillNames);
     let spoke = "";
-    for await (const ev of streamParticipantTurn(runtime, m, sk, tctx, skillNames[skillId])) {
+    for await (const ev of streamParticipantTurn(
+      runtime,
+      m,
+      sk,
+      tctx,
+      skillNames[skillId],
+      Object.values(skillNames)
+    )) {
       if (ev.type === "turn_complete") spoke = ev.fullText;
       yield ev;
     }
@@ -74,7 +81,13 @@ export async function* runRoundtableGraph(params: RunRoundtableParams): AsyncGen
   const wrapUser = `本轮发言已齐。请：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。记录中含席上用户插话须一并考虑。`;
 
   let wrap = "";
-  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, `${wrapUser}\n\n记录：\n${wrapCtx}`)) {
+  for await (const ev of streamModeratorTurn(
+    runtime,
+    m,
+    modPrompt,
+    `${wrapUser}\n\n记录：\n${wrapCtx}`,
+    Object.values(skillNames)
+  )) {
     if (ev.type === "turn_complete") wrap = ev.fullText;
     yield ev;
   }

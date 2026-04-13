@@ -39,7 +39,7 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
       : `当前第 ${roundLabel} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n主持人记忆：${state.moderatorMemory || "（无）"}\n请根据上轮交锋结果，提出本轮引导问题并输出新的调度指令。`;
 
   let modOpen = "";
-  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, openUser)) {
+  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, openUser, Object.values(skillNames))) {
     if (ev.type === "turn_complete") modOpen = ev.fullText;
     yield ev;
   }
@@ -70,7 +70,8 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
       tctx,
       skillNames[step.skillId],
       targetDisplay,
-      step.directive
+      step.directive,
+      Object.values(skillNames)
     )) {
       if (ev.type === "turn_complete") spoke = ev.fullText;
       yield ev;
@@ -90,7 +91,13 @@ export async function* runRoundtableDebate(params: RunRoundtableParams): AsyncGe
   const wrapUser = `本轮交锋已毕。请：1）指出论证最薄弱的一席及其逻辑漏洞；2）给「主持人记忆」一段话供下轮使用；3）提出下轮引导问题。记录中含席上用户插话须一并考虑。`;
 
   let wrap = "";
-  for await (const ev of streamModeratorTurn(runtime, m, modPrompt, `${wrapUser}\n\n记录：\n${wrapCtx}`)) {
+  for await (const ev of streamModeratorTurn(
+    runtime,
+    m,
+    modPrompt,
+    `${wrapUser}\n\n记录：\n${wrapCtx}`,
+    Object.values(skillNames)
+  )) {
     if (ev.type === "turn_complete") wrap = ev.fullText;
     yield ev;
   }
