@@ -70,6 +70,27 @@ pnpm dev
 - `vercel.json` 已固定 Next.js 框架，并为 `app/api/roundtable/turn/route.ts` 设置 Node runtime 的 `maxDuration`
 - 重编排与流式接口都应继续跑在 Node.js，不要改到 Edge
 
+### GitHub Actions 自动部署生产环境
+
+仓库已提供 GitHub Actions workflow：
+
+- 文件：`.github/workflows/deploy-production.yml`
+- 触发条件：有提交进入 `main` 时触发；常规 merge 到 `main` 会自动命中
+- 部署方式：CI 内执行 `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod`
+
+在 GitHub 仓库 Settings → Secrets and variables → Actions 中至少配置：
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+其中：
+
+- `VERCEL_TOKEN` 来自 Vercel 账号或 Team Token
+- `VERCEL_ORG_ID` 与 `VERCEL_PROJECT_ID` 可从本地执行 Vercel Link 后生成的 `.vercel/project.json` 中读取
+
+如果生产环境还依赖 Supabase、加密密钥或默认模型等变量，也要确保这些变量已经配置在 Vercel 的 Production Environment 中；该 workflow 不会代替你写入业务环境变量。
+
 部署前建议先执行：
 
 ```bash
