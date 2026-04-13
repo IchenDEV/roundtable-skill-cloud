@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { MarkdownContent } from "@/components/roundtable/markdown-content";
 import type { RoundtableActiveTurn } from "@/lib/roundtable/active-turn";
@@ -124,13 +124,78 @@ export function CourtroomStage({
   phaseLabel,
 }: Props) {
   const reduce = useReducedMotion();
+  const stageRef = useRef<HTMLElement | null>(null);
+  const audioRef = useRef<AudioContext | null>(null);
+  const strikeTimerRef = useRef<number | null>(null);
   const activeSkillId = activeTurn?.role === "speaker" ? activeTurn.skillId : undefined;
   const targetSkillId = activeTurn?.target;
   const latest = useMemo(() => latestSpeaker(transcript, liveTokens, skillTitle), [liveTokens, skillTitle, transcript]);
   const spriteActive = !!liveTokens || activeTurn?.role === "speaker";
+  const roleState = {
+    moderator: activeTurn?.role === "moderator",
+    speaker: activeTurn?.role === "speaker" || !!liveTokens,
+    user: activeTurn?.role === "user",
+  };
+
+  useEffect(() => {
+    return () => {
+      if (strikeTimerRef.current !== null) window.clearTimeout(strikeTimerRef.current);
+      const ctx = audioRef.current;
+      audioRef.current = null;
+      if (ctx) void ctx.close().catch(() => {});
+    };
+  }, []);
+
+  useEffect(() => {
+    const shouldStrike = !!activeTurn && (activeTurn.role === "moderator" || activeTurn.role === "speaker");
+    if (!shouldStrike || typeof window === "undefined") return;
+
+    stageRef.current?.classList.add("court-stage-strike");
+    if (strikeTimerRef.current !== null) window.clearTimeout(strikeTimerRef.current);
+    strikeTimerRef.current = window.setTimeout(() => stageRef.current?.classList.remove("court-stage-strike"), 240);
+
+    const Ctor =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return;
+    const ctx = audioRef.current ?? new Ctor();
+    audioRef.current = ctx;
+    void ctx.resume().catch(() => {});
+
+    const now = ctx.currentTime;
+    const tone = ctx.createOscillator();
+    const toneGain = ctx.createGain();
+    tone.type = "triangle";
+    tone.frequency.setValueAtTime(188, now);
+    tone.frequency.exponentialRampToValueAtTime(108, now + 0.14);
+    toneGain.gain.setValueAtTime(0.0001, now);
+    toneGain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+    toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+    tone.connect(toneGain);
+    toneGain.connect(ctx.destination);
+    tone.start(now);
+    tone.stop(now + 0.24);
+
+    const noiseFrames = 2400;
+    const buffer = ctx.createBuffer(1, noiseFrames, ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < noiseFrames; i += 1) samples[i] = (Math.random() * 2 - 1) * (1 - i / noiseFrames);
+    const noise = ctx.createBufferSource();
+    const noiseGain = ctx.createGain();
+    noise.buffer = buffer;
+    noiseGain.gain.setValueAtTime(0.11, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    noise.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.18);
+  }, [activeTurn]);
 
   return (
-    <section className="court-stage court-stage-vn overflow-hidden bg-ink-900 text-paper-50 shadow-2xl">
+    <section
+      ref={stageRef}
+      className={cn("court-stage court-stage-vn overflow-hidden bg-ink-900 text-paper-50 shadow-2xl")}
+    >
       <div className="court-vn-bg" aria-hidden>
         <div className="court-vn-column court-vn-column-left" />
         <div className="court-vn-column court-vn-column-right" />
@@ -147,6 +212,14 @@ export function CourtroomStage({
         </span>
         {activeSkillId ? <span>发言：{skillTitle(activeSkillId)}</span> : null}
         {targetSkillId ? <span>逼问：{skillTitle(targetSkillId)}</span> : null}
+      </div>
+
+      <div className="court-vn-cast" aria-label="公堂角色">
+        <span className={cn("court-vn-cast-pill", roleState.moderator && "is-active")}>审判长</span>
+        <span className={cn("court-vn-cast-pill", roleState.speaker && "is-active")}>
+          {activeSkillId ? skillTitle(activeSkillId) : "列席辩士"}
+        </span>
+        <span className={cn("court-vn-cast-pill", roleState.user && "is-active")}>席上（你）</span>
       </div>
 
       {activeTurn?.directive ? <div className="court-vn-directive">质询方向：{activeTurn.directive}</div> : null}
