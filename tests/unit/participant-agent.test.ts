@@ -137,6 +137,34 @@ describe("participant-agent", () => {
     });
   });
 
+  it("falls back to additional_kwargs content when chunk content is empty", async () => {
+    const { AIMessageChunk } = await import("@langchain/core/messages");
+    const stream = vi.fn().mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield [
+          Object.assign(new AIMessageChunk(""), {
+            additional_kwargs: { reasoning_content: "先想想", content: "再落笔" },
+          }),
+        ];
+        yield [Object.assign(new AIMessageChunk(""), { additional_kwargs: { output_text: "。" } })];
+      },
+    });
+    createReactAgent.mockReturnValue({ stream });
+
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲"));
+
+    expect(events.filter((e) => (e as { type?: string }).type === "token")).toEqual([
+      { type: "token", role: "speaker", skillId: "sk1", text: "再落笔" },
+      { type: "token", role: "speaker", skillId: "sk1", text: "。" },
+    ]);
+    expect(events[events.length - 1]).toEqual({
+      type: "turn_complete",
+      role: "speaker",
+      skillId: "sk1",
+      fullText: "再落笔。",
+    });
+  });
+
   it("accepts skills-superman paths and captures final AIMessage text after tool calls", async () => {
     const { AIMessage, ToolMessage } = await import("@langchain/core/messages");
     const supermanSkill = {
