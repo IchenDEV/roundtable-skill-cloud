@@ -29,7 +29,7 @@
 
 - `.generated/skills-manifest.json`
 
-当前仓库的 manifest 产物为 75 个 skill、7 个分类；以 `pnpm run build:skills` 的输出为准。
+manifest 数量会随 `skills-superman` 子模块版本变化；请以 `pnpm run build:skills` 的输出为准。
 
 ## 快速开始
 
