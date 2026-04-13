@@ -1,98 +1,22 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { RoundtableState, TurnResponseEvent, TurnStep } from "@/lib/spec/schema";
+import {
+  consumeTurnStream,
+  persistRoundtableState,
+  type DispatchStep,
+} from "@/lib/orchestrator/client/consume-turn-stream";
 import {
   buildModeratorActiveTurn,
   buildParticipantActiveTurn,
   type RoundtableActiveTurn,
 } from "@/lib/roundtable/active-turn";
-
-type DispatchStep = { skillId: string; target?: string; directive?: string };
+import type { RoundtableState } from "@/lib/spec/schema";
 
 function isAbortError(err: unknown): boolean {
   if (err instanceof DOMException) return err.name === "AbortError";
   if (!(err instanceof Error)) return false;
   return err.name === "AbortError" || /abort/i.test(err.message);
-}
-
-/** Read a single-turn SSE stream and call handlers for each event */
-async function consumeTurnStream(
-  state: RoundtableState,
-  step: TurnStep,
-  opts: { skillId?: string; target?: string; directive?: string },
-  handlers: {
-    onToken: (role: "moderator" | "speaker", text: string, skillId?: string) => void;
-    onTurnComplete: (role: "moderator" | "speaker", fullText: string, skillId?: string) => void;
-    onDispatch: (steps: DispatchStep[]) => void;
-    onMemory: (text: string) => void;
-    onSynthesis: (text: string) => void;
-    onError: (msg: string) => void;
-  },
-  signal: AbortSignal
-): Promise<void> {
-  const res = await fetch("/api/roundtable/turn", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ state, step, ...opts }),
-    signal,
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    let msg = "暂时无法开始，请稍后再试。";
-    try {
-      const j = JSON.parse(t) as { error?: unknown };
-      if (typeof j.error === "string") msg = j.error;
-    } catch {
-      /* keep default */
-    }
-    throw new Error(msg);
-  }
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error("连接未能建立，请重试。");
-  const dec = new TextDecoder();
-  let carry = "";
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (signal.aborted) return;
-    carry += dec.decode(value, { stream: true });
-    const parts = carry.split("\n\n");
-    carry = parts.pop() ?? "";
-    for (const block of parts) {
-      const line = block.trim();
-      if (!line.startsWith("data:")) continue;
-      const raw = line.slice(5).trim();
-      try {
-        const ev = JSON.parse(raw) as TurnResponseEvent;
-        switch (ev.type) {
-          case "token":
-            handlers.onToken(ev.role, ev.text, ev.skillId);
-            break;
-          case "turn_complete":
-            handlers.onTurnComplete(ev.role, ev.fullText, ev.skillId);
-            break;
-          case "dispatch":
-            handlers.onDispatch(ev.steps);
-            break;
-          case "memory":
-            handlers.onMemory(ev.text);
-            break;
-          case "synthesis_complete":
-            handlers.onSynthesis(ev.text);
-            break;
-          case "error":
-            handlers.onError(ev.message);
-            return;
-          case "done":
-            return;
-        }
-      } catch {
-        /* skip malformed SSE */
-      }
-    }
-  }
 }
 
 export type OrchestratorCallbacks = {
@@ -118,7 +42,6 @@ export function useRoundtableOrchestrator() {
     setActiveTurn(null);
   }, []);
 
-  /** Run a full round: moderator_open → each participant → moderator_wrap */
   const runRound = useCallback(async (state: RoundtableState, cbs: OrchestratorCallbacks) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -130,7 +53,6 @@ export function useRoundtableOrchestrator() {
     let s = { ...state };
 
     try {
-      // ── Step 1: Moderator Open ──
       setCurrentStep("主持开场");
       setActiveTurn(buildModeratorActiveTurn("moderator_open"));
       let modOpenText = "";
@@ -166,7 +88,6 @@ export function useRoundtableOrchestrator() {
       };
       cbs.onStateChange(s);
 
-      // ── Step 2: Participants ──
       const isDebate = s.mode === "debate";
       const participantSteps: { skillId: string; target?: string; directive?: string }[] =
         isDebate && dispatch ? dispatch : s.participantSkillIds.map((skillId) => ({ skillId }));
@@ -209,7 +130,6 @@ export function useRoundtableOrchestrator() {
         cbs.onStateChange(s);
       }
 
-      // ── Step 3: Moderator Wrap ──
       if (signal.aborted) return;
       setCurrentStep("主持收束");
       setActiveTurn(buildModeratorActiveTurn("moderator_wrap"));
@@ -249,16 +169,7 @@ export function useRoundtableOrchestrator() {
       };
       cbs.onStateChange(s);
 
-      // ── Persist ──
-      try {
-        await fetch("/api/roundtable/persist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: s }),
-        });
-      } catch {
-        /* persist failure is non-fatal */
-      }
+      await persistRoundtableState(s);
 
       cbs.onRoundComplete();
     } catch (e) {
@@ -276,7 +187,6 @@ export function useRoundtableOrchestrator() {
     }
   }, []);
 
-  /** Run synthesis (stop/seal) */
   const runSynthesis = useCallback(async (state: RoundtableState, cbs: OrchestratorCallbacks) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
@@ -317,16 +227,7 @@ export function useRoundtableOrchestrator() {
       s = { ...s, phase: "done" as const, synthesis: synText };
       cbs.onStateChange(s);
 
-      // Persist
-      try {
-        await fetch("/api/roundtable/persist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: s }),
-        });
-      } catch {
-        /* non-fatal */
-      }
+      await persistRoundtableState(s);
 
       cbs.onRoundComplete();
     } catch (e) {

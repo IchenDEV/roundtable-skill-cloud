@@ -5,7 +5,7 @@ import { buildRoundtableHref, filterAvailableSkillIds, HOME_QUICKSTART_EXAMPLES 
 export function HomeExamples({ availableSkillIds }: { availableSkillIds: string[] }) {
   const available = new Set(availableSkillIds);
   return (
-    <section className="mx-auto mt-20 max-w-5xl border-t border-ink-200/50 pt-12">
+    <section className="mt-20 w-full border-t border-ink-200/50 pt-12">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs tracking-[0.3em] text-ink-500">开席题引</p>

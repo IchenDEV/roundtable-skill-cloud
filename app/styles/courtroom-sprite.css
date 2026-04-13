@@ -1,0 +1,224 @@
+.court-vn-sprite {
+  position: absolute;
+  z-index: 6;
+  left: 0.35rem;
+  bottom: 3.15rem;
+  width: min(330px, 34%);
+  min-width: 210px;
+  max-width: 390px;
+  pointer-events: none;
+  transform-origin: 24% 80%;
+}
+
+.court-vn-sprite::before {
+  content: "";
+  position: absolute;
+  inset: 12% 13% 8% 8%;
+  border-radius: 2rem 2rem 1.4rem 1.4rem;
+  background:
+    linear-gradient(180deg, rgba(77, 63, 139, 0.34), rgba(18, 16, 36, 0.72) 64%, rgba(18, 16, 36, 0.18)),
+    linear-gradient(90deg, rgba(244, 239, 228, 0.12), transparent 35%);
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 239, 228, 0.12),
+    0 20px 44px rgba(11, 10, 20, 0.34);
+}
+
+.court-vn-sprite::after {
+  content: "";
+  position: absolute;
+  right: 14%;
+  bottom: 0;
+  left: 10%;
+  height: 18%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(12, 10, 10, 0.52) 0, rgba(12, 10, 10, 0.06) 72%);
+  filter: blur(10px);
+}
+
+.court-advocate {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.26)) saturate(1.05);
+}
+
+.court-advocate-active {
+  animation: court-sprite-flash 0.5s steps(2, end) 1;
+}
+
+.court-advocate-shadow {
+  fill: rgba(28, 25, 20, 0.34);
+}
+
+.court-suit-dark,
+.court-outline {
+  fill: none;
+  stroke: #141615;
+  stroke-width: 8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.court-suit-dark {
+  fill: #171a1a;
+}
+
+.court-suit-red {
+  fill: #a63d3d;
+}
+
+.court-suit-shadow {
+  fill: rgba(92, 24, 28, 0.72);
+}
+
+.court-suit-light {
+  fill: rgba(214, 82, 78, 0.32);
+}
+
+.court-shirt {
+  fill: #f1efe9;
+}
+
+.court-shirt-shadow {
+  fill: #d5dce0;
+}
+
+.court-tie {
+  fill: #0e7778;
+}
+
+.court-tie-shadow {
+  fill: #075356;
+}
+
+.court-neck,
+.court-face,
+.court-ear,
+.court-hand {
+  fill: #dca079;
+}
+
+.court-neck-shadow,
+.court-face-shadow,
+.court-hand-shadow {
+  fill: #b87356;
+}
+
+.court-face-light {
+  fill: rgba(248, 212, 184, 0.48);
+}
+
+.court-hair,
+.court-eye,
+.court-brow,
+.court-mouth {
+  fill: #151716;
+}
+
+.court-hair-shine {
+  fill: rgba(54, 57, 53, 0.7);
+}
+
+.court-arm-sleeve {
+  fill: #f1efe9;
+  stroke: #151716;
+  stroke-width: 7;
+  stroke-linejoin: round;
+}
+
+.court-sleeve-shadow {
+  fill: #cdd4d7;
+  stroke: #151716;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.court-cuff {
+  fill: #f6f3ec;
+  stroke: #151716;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.court-bracelet {
+  fill: #b59a34;
+  stroke: #151716;
+  stroke-width: 5;
+}
+
+.court-bracelet-line,
+.court-sleeve-fold,
+.court-finger-line,
+.court-lapel-line,
+.court-hair-line,
+.court-ear-line,
+.court-nose,
+.court-jaw-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.court-bracelet-line {
+  stroke: rgba(244, 239, 228, 0.45);
+  stroke-width: 5;
+}
+
+.court-sleeve-fold {
+  stroke: rgba(21, 23, 22, 0.36);
+  stroke-width: 5;
+}
+
+.court-finger-line,
+.court-ear-line,
+.court-nose,
+.court-jaw-line {
+  stroke: rgba(21, 23, 22, 0.62);
+  stroke-width: 5;
+}
+
+.court-lapel-line {
+  stroke: rgba(21, 23, 22, 0.72);
+  stroke-width: 6;
+}
+
+.court-hair-line {
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 7;
+}
+
+.court-iris {
+  fill: #596d56;
+  stroke: #151716;
+  stroke-width: 3;
+}
+
+.court-eye-glint {
+  fill: #f4efe4;
+}
+
+.court-button {
+  fill: #1a1c1b;
+  stroke: rgba(244, 239, 228, 0.22);
+  stroke-width: 3;
+}
+
+.court-pocket {
+  fill: rgba(166, 61, 61, 0.5);
+  stroke: #151716;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+@keyframes court-sprite-flash {
+  0%,
+  100% {
+    filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.26)) saturate(1.05) brightness(1);
+  }
+
+  50% {
+    filter: drop-shadow(18px 20px 0 rgba(28, 25, 20, 0.24)) saturate(1.12) brightness(1.14);
+  }
+}

@@ -4,59 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRoundtableReadiness } from "@/components/roundtable/use-roundtable-readiness";
 import { useRoundtableOrchestrator } from "@/components/roundtable/use-roundtable-orchestrator";
 import { useTokenBuffer } from "@/components/roundtable/use-token-buffer";
-import { cloneStateForFork } from "@/lib/roundtable/clone-for-fork";
 import { buildRoundtableMarkdown } from "@/lib/roundtable/export-markdown";
-import type { SharePayload } from "@/lib/spec/share-payload";
+import { fetchResumedSession, fetchSharedSession } from "@/lib/roundtable/session-loaders";
+import {
+  buildEmptyState,
+  buildSessionErrorState,
+  clampMaxRounds,
+  pickSelectedSkillIds,
+  type SessionMode as RoundtableMode,
+  type SkillOption as SkillOpt,
+} from "@/lib/roundtable/session-state";
 import type { RoundtableState } from "@/lib/spec/schema";
-import { MAX_ROUND_ROUNDS } from "@/lib/spec/constants";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
 
-export type SkillOpt = { skillId: string; name: string; description: string; category: string };
-export type RoundtableMode = RoundtableState["mode"];
-
-function pickSelectedSkillIds(ids: string[], skills: SkillOpt[]) {
-  return ids.filter((id) => skills.some((skill) => skill.skillId === id));
-}
-
-function buildSessionErrorState(
-  sessionId: string,
-  mode: RoundtableMode,
-  topic: string,
-  error: string
-): RoundtableState {
-  return {
-    sessionId,
-    mode,
-    topic,
-    round: 0,
-    maxRounds: 3,
-    phase: "error",
-    participantSkillIds: [],
-    transcript: [],
-    moderatorMemory: "",
-    error,
-  };
-}
-
-function emptyState(
-  topic: string,
-  ids: string[],
-  maxRounds: number,
-  sessionId: string,
-  mode: RoundtableMode
-): RoundtableState {
-  return {
-    sessionId,
-    mode,
-    topic,
-    round: 0,
-    maxRounds,
-    phase: "running",
-    participantSkillIds: ids,
-    transcript: [],
-    moderatorMemory: "",
-  };
-}
+export type { SkillOpt, RoundtableMode };
 
 type UseRoundtableSessionOptions = {
   skills: SkillOpt[];
@@ -95,9 +56,7 @@ export function useRoundtableSession({
     }
     return [];
   });
-  const [maxRounds, setMaxRounds] = useState(() =>
-    initialMaxRounds ? Math.min(initialMaxRounds, MAX_ROUND_ROUNDS) : 3
-  );
+  const [maxRounds, setMaxRounds] = useState(() => clampMaxRounds(initialMaxRounds));
   const [mode, setModeState] = useState<RoundtableMode>(effectiveInitialMode);
   const [userDraft, setUserDraft] = useState("");
   const [state, setState] = useState<RoundtableState | null>(null);
@@ -121,7 +80,7 @@ export function useRoundtableSession({
       setModeState(next.mode);
       setTopic(next.topic);
       setSelected(() => pickSelectedSkillIds(next.participantSkillIds, skillsRef.current));
-      setMaxRounds(Math.min(next.maxRounds, MAX_ROUND_ROUNDS));
+      setMaxRounds(clampMaxRounds(next.maxRounds));
     },
     [applyModePolicy]
   );
@@ -150,10 +109,9 @@ export function useRoundtableSession({
     let cancelled = false;
     void (async () => {
       resetStreamingState();
-      const res = await fetch(`/api/roundtable/sessions/${resumeSessionId.trim()}`);
-      const data = (await res.json()) as { state?: RoundtableState; error?: string };
+      const data = await fetchResumedSession(resumeSessionId);
       if (cancelled) return;
-      if (!res.ok || !data.state) {
+      if (!data.ok || !data.state) {
         setState(
           buildSessionErrorState(
             resumeSessionId,
@@ -177,10 +135,9 @@ export function useRoundtableSession({
     let cancelled = false;
     void (async () => {
       resetStreamingState();
-      const res = await fetch(`/api/roundtable/share/${fromShareToken.trim()}`);
-      const data = (await res.json()) as { payload?: SharePayload; error?: string };
+      const data = await fetchSharedSession(fromShareToken);
       if (cancelled) return;
-      if (!res.ok || !data.payload) {
+      if (!data.ok || !data.state) {
         setState(
           buildSessionErrorState(
             crypto.randomUUID(),
@@ -191,7 +148,7 @@ export function useRoundtableSession({
         );
         return;
       }
-      hydrateImportedState(cloneStateForFork(data.payload.state));
+      hydrateImportedState(data.state);
     })();
     return () => {
       cancelled = true;
@@ -216,13 +173,7 @@ export function useRoundtableSession({
 
   const startFresh = useCallback(() => {
     if (!topic.trim() || selected.length === 0) return;
-    const s = emptyState(
-      topic.trim(),
-      selected,
-      Math.min(maxRounds, MAX_ROUND_ROUNDS),
-      crypto.randomUUID(),
-      forcedMode ?? mode
-    );
+    const s = buildEmptyState(topic.trim(), selected, maxRounds, crypto.randomUUID(), forcedMode ?? mode);
     setState(s);
     clearBuffer();
     void runRound(s, buildCallbacks());
@@ -268,7 +219,6 @@ export function useRoundtableSession({
   );
   const skillNameRecord = useMemo(() => Object.fromEntries(skills.map((s) => [s.skillId, s.name])), [skills]);
   const effectiveMode = forcedMode ?? mode;
-
   return {
     activeTurn,
     canStartRoundtable,

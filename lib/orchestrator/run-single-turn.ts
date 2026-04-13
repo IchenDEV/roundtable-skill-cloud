@@ -55,7 +55,14 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
       }
 
       let fullText = "";
-      for await (const ev of streamModeratorTurn(runtime, model, modPrompt, openUser, signal)) {
+      for await (const ev of streamModeratorTurn(
+        runtime,
+        model,
+        modPrompt,
+        openUser,
+        Object.values(skillNames),
+        signal
+      )) {
         if (ev.type === "turn_complete") fullText = ev.fullText;
         yield ev as TurnResponseEvent;
       }
@@ -89,12 +96,21 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           displayName,
           targetDisplay,
           directive,
+          Object.values(skillNames),
           signal
         )) {
           yield ev as TurnResponseEvent;
         }
       } else {
-        for await (const ev of streamParticipantTurn(runtime, model, sk, tctx, displayName, signal)) {
+        for await (const ev of streamParticipantTurn(
+          runtime,
+          model,
+          sk,
+          tctx,
+          displayName,
+          Object.values(skillNames),
+          signal
+        )) {
           yield ev as TurnResponseEvent;
         }
       }
@@ -115,6 +131,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
         model,
         modPrompt,
         `${wrapUser}\n\n记录：\n${wrapCtx}`,
+        Object.values(skillNames),
         signal
       )) {
         if (ev.type === "turn_complete") wrap = ev.fullText;

@@ -13,8 +13,6 @@ export const SKILL_DISPLAY: Record<string, { label: string; brief: string }> = {
   "naval-perspective": { label: "纳瓦尔", brief: "杠杆、特定知识与财富哲学" },
   "taleb-perspective": { label: "塔勒布", brief: "反脆弱、黑天鹅与风险管理" },
   "zhangxuefeng-perspective": { label: "张雪峰", brief: "教育选择、职业规划与阶层流动" },
-  "legalist-perspective": { label: "法家", brief: "信赏必罚，规则与激励结构" },
-  "sage-perspective": { label: "道家", brief: "无为守柔，顺势与反身思考" },
   "drucker-perspective": { label: "德鲁克", brief: "管理学之父，组织效能与知识工作者" },
   "karl-marx-perspective": { label: "马克思", brief: "结构分析、矛盾分析与实践检验" },
   "laozi-perspective": { label: "老子", brief: "道法自然，反身观照与柔弱胜刚" },
