@@ -50,8 +50,27 @@ function extractVisibleAssistantText(message: unknown): string {
     return "";
   }
 
-  const content = "content" in message ? message.content : undefined;
-  return extractMessageText(content);
+  const primary = "content" in message ? extractMessageText(message.content) : "";
+  if (primary) return primary;
+
+  const fallbackFields: unknown[] = [
+    "text" in message ? message.text : undefined,
+    "additional_kwargs" in message && isRecord(message.additional_kwargs)
+      ? message.additional_kwargs.content
+      : undefined,
+    "additional_kwargs" in message && isRecord(message.additional_kwargs)
+      ? message.additional_kwargs.output_text
+      : undefined,
+    "kwargs" in message && isRecord(message.kwargs) ? message.kwargs.content : undefined,
+    "lc_kwargs" in message && isRecord(message.lc_kwargs) ? message.lc_kwargs.content : undefined,
+  ];
+
+  for (const candidate of fallbackFields) {
+    const text = extractMessageText(candidate);
+    if (text) return text;
+  }
+
+  return "";
 }
 
 /* ------------------------------------------------------------------ */
