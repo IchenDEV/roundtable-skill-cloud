@@ -21,7 +21,7 @@ export async function AppNav() {
   return (
     <FadeIn>
       <nav className="divider-b bg-paper-50/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3.5">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3.5">
           <Link
             href="/"
             className="flex items-center gap-2.5 font-serif text-lg tracking-widest text-ink-900 transition-opacity duration-150 hover:opacity-80"
@@ -36,8 +36,11 @@ export async function AppNav() {
             <Link href="/roundtable" className={navClass}>
               圆桌
             </Link>
-            <Link href="/court" className={navClass}>
-              公堂
+            <Link href="/court" className={cn(navClass, "inline-flex items-center gap-1.5")}>
+              <span>公堂</span>
+              <span className="rounded-full border border-cinnabar-600/25 bg-cinnabar-600/8 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-cinnabar-700">
+                Beta
+              </span>
             </Link>
             <Link href="/roundtable/jiuxi" className={navClass}>
               旧席录

@@ -20,7 +20,7 @@ function orderCategories(a: string, b: string) {
 export function HomeSkillIntro({ skills }: { skills: SkillRow[] }) {
   if (skills.length === 0) {
     return (
-      <section className="mx-auto mt-16 max-w-2xl border-t border-ink-200/40 pt-12 text-sm text-ink-600">
+      <section className="mt-16 w-full border-t border-ink-200/40 pt-12 text-sm text-ink-600">
         内置视角名录暂未载入，请稍后再看序页或联系维护者。
       </section>
     );
@@ -50,7 +50,7 @@ export function HomeSkillIntro({ skills }: { skills: SkillRow[] }) {
     }));
 
   return (
-    <section className="mx-auto mt-20 max-w-5xl border-t border-ink-200/50 pt-12">
+    <section className="mt-20 w-full border-t border-ink-200/50 pt-12">
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs tracking-[0.32em] text-ink-500">人物卷册</p>

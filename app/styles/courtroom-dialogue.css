@@ -1,0 +1,268 @@
+.court-vn-roster {
+  top: 5.9rem;
+  right: 1rem;
+  display: flex;
+  max-width: min(34rem, 48%);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.court-vn-roster-pill {
+  padding: 0.32rem 0.55rem;
+  color: rgba(244, 239, 228, 0.76);
+  font-size: 0.72rem;
+}
+
+.court-vn-roster-pill.is-active {
+  border-color: #f4d878;
+  background: rgba(166, 61, 61, 0.74);
+  color: #f4efe4;
+}
+
+.court-vn-roster-pill.is-target {
+  border-color: #0e7778;
+  color: #e3ffff;
+}
+
+.court-dialogue {
+  right: 0;
+  bottom: 2.55rem;
+  left: 0;
+  min-height: 204px;
+  border-top: 1px solid rgba(244, 239, 228, 0.12);
+  background:
+    linear-gradient(90deg, rgba(54, 45, 104, 0.3), rgba(10, 10, 10, 0.9) 32%, rgba(10, 10, 10, 0.88)),
+    linear-gradient(180deg, rgba(244, 239, 228, 0.08), transparent 28%);
+  box-shadow:
+    0 -16px 28px rgba(10, 10, 10, 0.16),
+    inset 0 2px 0 rgba(244, 239, 228, 0.18),
+    inset 0 -2px 0 rgba(244, 239, 228, 0.12);
+}
+
+.court-dialogue::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(244, 239, 228, 0.1), transparent 26%),
+    linear-gradient(180deg, rgba(244, 216, 120, 0.08), transparent 22%);
+}
+
+.court-dialogue::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(14rem, 33%, 20rem);
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(67, 54, 127, 0.18), rgba(18, 16, 36, 0.08) 72%, transparent),
+    linear-gradient(180deg, rgba(244, 239, 228, 0.05), transparent 32%);
+  box-shadow: inset -1px 0 0 rgba(244, 239, 228, 0.08);
+}
+
+.court-dialogue-name {
+  position: absolute;
+  z-index: 7;
+  top: 1rem;
+  left: clamp(13.5rem, 31%, 18rem);
+  min-width: 8.6rem;
+  padding: 0.65rem 1rem 0.7rem;
+  border-right: 2px solid rgba(244, 239, 228, 0.12);
+  border-bottom: 1px solid rgba(244, 239, 228, 0.12);
+  border-radius: 1rem 1rem 0.6rem 0.6rem;
+  background: linear-gradient(180deg, rgba(82, 72, 150, 0.94), rgba(56, 48, 109, 0.9));
+  color: #f4efe4;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  box-shadow: 0 12px 20px rgba(12, 10, 10, 0.18);
+}
+
+.court-dialogue-copy {
+  position: relative;
+  min-height: 204px;
+  padding: 4.75rem 4.75rem 2rem clamp(18rem, 39%, 25.5rem);
+  color: #f4efe4;
+}
+
+.court-dialogue-scroll {
+  max-height: 7.4rem;
+  overflow-y: auto;
+  padding-right: 0.8rem;
+}
+
+.court-dialogue .prose-roundtable {
+  color: #f4efe4;
+  font-size: clamp(1.2rem, 1.6vw, 1.48rem);
+  line-height: 1.62;
+  text-shadow: 0 2px 0 rgba(28, 25, 20, 0.8);
+}
+
+.court-dialogue .prose-roundtable strong,
+.court-dialogue .prose-roundtable h1,
+.court-dialogue .prose-roundtable h2,
+.court-dialogue .prose-roundtable h3,
+.court-dialogue .prose-roundtable h4 {
+  color: #fff8dc;
+}
+
+.court-dialogue .prose-roundtable code,
+.court-dialogue .prose-roundtable pre {
+  background: rgba(244, 239, 228, 0.1);
+}
+
+.court-dialogue-status {
+  position: absolute;
+  top: 1.3rem;
+  right: 4.3rem;
+  color: #f4d878;
+  font-size: 0.75rem;
+}
+
+.court-dialogue-next {
+  position: absolute;
+  right: 3rem;
+  bottom: 2.4rem;
+  width: 0;
+  height: 0;
+  border-top: 1.2rem solid transparent;
+  border-bottom: 1.2rem solid transparent;
+  border-left: 1.55rem solid rgba(244, 239, 228, 0.86);
+  animation: court-next 0.9s steps(2, end) infinite;
+  filter: drop-shadow(0 0 12px rgba(244, 239, 228, 0.28));
+}
+
+.court-vn-commands {
+  z-index: 7;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  min-height: 2.35rem;
+  justify-content: center;
+  gap: 2.6rem;
+  padding-top: 0.45rem;
+  background: rgba(28, 25, 20, 0.7);
+  color: rgba(244, 239, 228, 0.88);
+  font-size: 0.9rem;
+}
+
+.court-vn-commands kbd {
+  margin-right: 0.45rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 3px;
+  background: rgba(244, 239, 228, 0.92);
+  color: #1c1914;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .court-stage-vn {
+    height: auto;
+    min-height: 640px;
+  }
+
+  .court-vn-sprite {
+    left: -1.35rem;
+    bottom: 4.1rem;
+    width: min(320px, 68%);
+    min-width: 220px;
+    opacity: 0.96;
+  }
+
+  .court-vn-cast {
+    top: 7.2rem;
+  }
+
+  .court-vn-roster {
+    top: 9.9rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  .court-vn-directive {
+    top: 12.8rem;
+  }
+
+  .court-dialogue {
+    min-height: 250px;
+  }
+
+  .court-dialogue-name {
+    top: 0.85rem;
+    left: 0.85rem;
+    min-width: 8.6rem;
+    font-size: 1.05rem;
+  }
+
+  .court-dialogue-copy {
+    min-height: 250px;
+    padding: 4.45rem 3.35rem 2.4rem 1.1rem;
+  }
+
+  .court-dialogue::after {
+    width: 100%;
+    background: linear-gradient(180deg, rgba(67, 54, 127, 0.08), transparent 36%);
+    box-shadow: none;
+  }
+
+  .court-dialogue-scroll {
+    max-height: 9.5rem;
+  }
+
+  .court-dialogue .prose-roundtable {
+    font-size: 1rem;
+  }
+
+  .court-vn-commands {
+    justify-content: flex-start;
+    gap: 0.8rem;
+    overflow-x: auto;
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+    white-space: nowrap;
+  }
+}
+
+@keyframes court-stage-hit {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(1.5px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes court-stage-hit-flash {
+  0% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes court-next {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

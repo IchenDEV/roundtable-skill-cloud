@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className={cn(geist.variable, notoSerif.variable)}>
-      <body className={cn("min-h-screen font-serif antialiased")}>
+      <body className={cn("min-h-screen bg-paper-50 font-serif antialiased")}>
         <div className="ink-page-bg" aria-hidden />
         <div className="relative z-[1] flex min-h-screen flex-col">
           <AppNav />
