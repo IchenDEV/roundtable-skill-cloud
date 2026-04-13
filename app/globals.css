@@ -560,6 +560,24 @@
   isolation: isolate;
 }
 
+.court-stage-vn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at 54% 68%, rgba(244, 216, 120, 0.28), transparent 42%);
+  opacity: 0;
+}
+
+.court-stage-strike {
+  animation: court-stage-hit 0.2s ease-out;
+}
+
+.court-stage-strike::after {
+  animation: court-stage-hit-flash 0.24s ease-out;
+}
+
 .court-vn-bg {
   position: absolute;
   inset: 0;
@@ -661,6 +679,7 @@
 
 .court-vn-hud,
 .court-vn-directive,
+.court-vn-cast,
 .court-vn-roster,
 .court-vn-commands,
 .court-dialogue {
@@ -693,7 +712,7 @@
 }
 
 .court-vn-directive {
-  top: 3.75rem;
+  top: 8.3rem;
   left: 1rem;
   max-width: min(38rem, calc(100% - 2rem));
   padding: 0.4rem 0.65rem;
@@ -701,12 +720,36 @@
   font-size: 0.78rem;
 }
 
+.court-vn-cast {
+  top: 5.9rem;
+  left: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  max-width: min(32rem, calc(100% - 2rem));
+}
+
+.court-vn-cast-pill {
+  padding: 0.32rem 0.55rem;
+  border: 1px solid rgba(244, 239, 228, 0.24);
+  border-radius: 999px;
+  background: rgba(16, 19, 18, 0.62);
+  color: rgba(244, 239, 228, 0.72);
+  font-size: 0.72rem;
+}
+
+.court-vn-cast-pill.is-active {
+  border-color: rgba(244, 216, 120, 0.65);
+  background: rgba(166, 61, 61, 0.72);
+  color: #fff8dc;
+}
+
 .court-vn-sprite {
   position: absolute;
   z-index: 3;
-  left: 9%;
-  bottom: -18%;
-  width: min(700px, 58%);
+  left: 6%;
+  bottom: -23%;
+  width: min(640px, 52%);
   max-width: 760px;
   pointer-events: none;
   transform-origin: 24% 80%;
@@ -888,7 +931,7 @@
 }
 
 .court-vn-roster {
-  top: 1rem;
+  top: 5.9rem;
   right: 1rem;
   display: flex;
   max-width: min(34rem, 48%);
@@ -915,11 +958,12 @@
 }
 
 .court-dialogue {
-  left: 0;
+  left: 18%;
   right: 0;
-  bottom: 2.35rem;
+  bottom: 2.55rem;
   min-height: 190px;
-  background: linear-gradient(90deg, rgba(54, 45, 104, 0.84) 0 31%, rgba(10, 10, 10, 0.85) 31%);
+  border-left: 1px solid rgba(244, 239, 228, 0.14);
+  background: linear-gradient(90deg, rgba(54, 45, 104, 0.82) 0 25%, rgba(10, 10, 10, 0.87) 25%);
   box-shadow:
     inset 0 2px 0 rgba(244, 239, 228, 0.18),
     inset 0 -2px 0 rgba(244, 239, 228, 0.12);
@@ -936,7 +980,7 @@
 .court-dialogue-name {
   position: absolute;
   top: 0;
-  left: 14%;
+  left: 0;
   min-width: 12rem;
   padding: 0.55rem 1.2rem 0.65rem;
   color: #f4efe4;
@@ -950,7 +994,7 @@
 .court-dialogue-copy {
   position: relative;
   min-height: 190px;
-  padding: 4.6rem 6rem 2rem 28%;
+  padding: 4.6rem 5.2rem 2rem 22%;
   color: #f4efe4;
 }
 
@@ -1038,15 +1082,24 @@
     opacity: 0.9;
   }
 
+  .court-vn-cast {
+    top: 7.2rem;
+  }
+
   .court-vn-roster {
-    top: 4.2rem;
+    top: 9.9rem;
     left: 1rem;
     right: 1rem;
     max-width: none;
     justify-content: flex-start;
   }
 
+  .court-vn-directive {
+    top: 12.8rem;
+  }
+
   .court-dialogue {
+    left: 0;
     min-height: 250px;
   }
 
@@ -1076,6 +1129,27 @@
     padding-left: 0.8rem;
     padding-right: 0.8rem;
     white-space: nowrap;
+  }
+}
+
+@keyframes court-stage-hit {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1.5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes court-stage-hit-flash {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
