@@ -27,21 +27,19 @@ type Props = {
   onRefresh: () => void;
 };
 
-const courtUserPanelLayoutClassName = "relative z-10 mx-3 -mt-3 sm:mx-4 lg:mx-0 lg:-mt-5 lg:ml-6 lg:max-w-[44rem]";
+const courtUserPanelLayoutClassName = "relative z-10";
 
 const courtUserPanelStyles = {
-  container:
-    "rounded-[1.6rem] border border-ink-900/10 bg-[linear-gradient(180deg,rgba(244,239,228,0.97),rgba(236,226,205,0.95))] text-ink-800 shadow-[0_-12px_30px_rgba(28,25,20,0.14),0_18px_34px_rgba(28,25,20,0.1),inset_0_1px_0_rgba(255,255,255,0.55)]",
-  title: "font-serif text-[0.95rem] tracking-[0.14em] text-cinnabar-700",
-  description: "text-[0.78rem] leading-6 text-ink-500",
+  container: "rounded-2xl bg-card p-5 text-ink-800 card-elevated",
+  title: "font-sans text-xs tracking-[0.24em] text-ink-500",
+  description: "mt-3 text-sm leading-7 text-ink-600",
   textarea:
-    "mt-3 min-h-[4.8rem] border-ink-900/10 bg-paper-50/92 shadow-[inset_0_1px_3px_rgba(28,25,20,0.06)] focus:border-cinnabar-600/30 focus:ring-2 focus:ring-cinnabar-600/15",
-  actions: "mt-3 gap-2.5",
-  submit:
-    "rounded-xl bg-cinnabar-600 text-paper-50 shadow-[0_8px_18px_rgba(166,61,61,0.22)] hover:bg-cinnabar-700 active:scale-[0.99]",
+    "mt-4 min-h-[4.8rem] border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 shadow-[inset_0_1px_3px_rgba(28,25,20,0.04)] focus:border-cinnabar-600/30 focus:ring-1 focus:ring-gold-500",
+  actions: "mt-4 gap-2.5",
+  submit: "rounded-xl bg-cinnabar-600 text-card hover:bg-cinnabar-700 active:scale-[0.99]",
   continue:
-    "rounded-xl border-ink-900/10 bg-paper-50/76 text-ink-700 hover:border-cinnabar-600/30 hover:bg-paper-50 hover:text-ink-900 active:scale-[0.99]",
-  seal: "rounded-xl border-cinnabar-600/30 bg-cinnabar-600/8 text-cinnabar-700 hover:bg-cinnabar-600/12 hover:text-cinnabar-800 active:scale-[0.99]",
+    "rounded-xl border-ink-200/60 bg-card text-ink-800 hover:border-cinnabar-600/40 hover:bg-paper-50 active:scale-[0.99]",
+  seal: "rounded-xl border-cinnabar-600/50 bg-card text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]",
 };
 
 export function CourtroomMainPanel({
