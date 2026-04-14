@@ -15,14 +15,17 @@ describe("resolvePublicOrigin", () => {
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
     delete process.env.VERCEL_URL;
-    process.env.NODE_ENV = "test";
+    process.env = { ...process.env, NODE_ENV: "test" };
     vi.mocked(headers).mockReset();
   });
 
   afterEach(() => {
-    process.env.NEXT_PUBLIC_SITE_URL = prevSite;
-    process.env.VERCEL_URL = prevVercel;
-    process.env.NODE_ENV = prevNode;
+    process.env = {
+      ...process.env,
+      NEXT_PUBLIC_SITE_URL: prevSite,
+      VERCEL_URL: prevVercel,
+      NODE_ENV: prevNode,
+    };
   });
 
   it("prefers NEXT_PUBLIC_SITE_URL", async () => {
@@ -40,7 +43,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("rejects host not in allowlist (production)", async () => {
-    process.env.NODE_ENV = "production";
+    process.env = { ...process.env, NODE_ENV: "production" };
     const h = new Headers();
     h.set("x-forwarded-host", "evil.example");
     h.set("x-forwarded-proto", "https");
@@ -49,7 +52,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("allows localhost in development", async () => {
-    process.env.NODE_ENV = "development";
+    process.env = { ...process.env, NODE_ENV: "development" };
     const h = new Headers();
     h.set("host", "localhost:3000");
     vi.mocked(headers).mockResolvedValue(h as never);

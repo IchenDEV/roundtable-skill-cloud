@@ -9,6 +9,7 @@ import { createSupabaseServiceRole } from "@/lib/supabase/server";
 import { fetchSharePayloadByToken, insertShareSnapshot } from "@/lib/db/share-snapshot";
 
 const minimalState: SharePayload["state"] = {
+  mode: "discussion",
   topic: "t",
   round: 0,
   maxRounds: 2,

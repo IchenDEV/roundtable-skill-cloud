@@ -1,8 +1,8 @@
 import "server-only";
-import { createSupabaseServerClient } from "../supabase/server";
 import type { RoundtableState, TranscriptEntry } from "../spec/schema";
 import { roundtablePhaseSchema } from "../spec/schema";
 import type { SessionListItem } from "../roundtable/session-types";
+import type { ServerUserContext } from "../server/request-context";
 
 export type { SessionListItem };
 
@@ -33,21 +33,14 @@ function rowToTranscript(
   });
 }
 
-export type ListSessionsResult =
-  | { ok: true; sessions: SessionListItem[] }
-  | { ok: false; reason: "no_db" | "unauthorized" | "query_failed" };
+export type ListSessionsResult = { ok: true; sessions: SessionListItem[] } | { ok: false; reason: "query_failed" };
 
-export async function listRoundtableSessions(): Promise<ListSessionsResult> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return { ok: false, reason: "no_db" };
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, reason: "unauthorized" };
-
+export async function listRoundtableSessions(ctx: ServerUserContext): Promise<ListSessionsResult> {
+  const { supabase, userId } = ctx;
   const { data, error } = await supabase
     .from("roundtable_sessions")
     .select("id, topic, phase, current_round, max_rounds, updated_at, created_at")
+    .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(100);
 
@@ -70,19 +63,16 @@ export async function listRoundtableSessions(): Promise<ListSessionsResult> {
   };
 }
 
-export async function getRoundtableSessionState(sessionId: string): Promise<RoundtableState | null> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
+export async function getRoundtableSessionState(
+  ctx: ServerUserContext,
+  sessionId: string
+): Promise<RoundtableState | null> {
+  const { supabase, userId } = ctx;
   const { data: sess, error: sErr } = await supabase
     .from("roundtable_sessions")
     .select("id, topic, mode, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis")
     .eq("id", sessionId)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (sErr || !sess) {
@@ -115,15 +105,9 @@ export async function getRoundtableSessionState(sessionId: string): Promise<Roun
   };
 }
 
-export async function deleteRoundtableSession(sessionId: string): Promise<boolean> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return false;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { error } = await supabase.from("roundtable_sessions").delete().eq("id", sessionId).eq("user_id", user.id);
+export async function deleteRoundtableSession(ctx: ServerUserContext, sessionId: string): Promise<boolean> {
+  const { supabase, userId } = ctx;
+  const { error } = await supabase.from("roundtable_sessions").delete().eq("id", sessionId).eq("user_id", userId);
   if (error) {
     console.error("delete session", error.message);
     return false;

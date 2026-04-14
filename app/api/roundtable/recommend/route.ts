@@ -2,6 +2,7 @@ import { z } from "zod";
 import { resolveLlm } from "@/lib/server/resolve-llm";
 import { chatComplete, chatToolCall, type Msg } from "@/lib/llm/stream-chat";
 import { parseJsonBody } from "@/lib/server/parse-json-body";
+import { buildServerRequestContext, jsonError, requireAuthenticatedUser } from "@/lib/server/request-context";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
 
 export const runtime = "nodejs";
@@ -81,17 +82,23 @@ function hasRecommendationShape(payload: unknown): boolean {
 export async function POST(req: Request) {
   const body = await parseJsonBody(req, bodySchema);
   if (!body.ok) {
-    return Response.json({ error: body.error }, { status: body.status });
+    return jsonError(body.error, body.status);
   }
 
   const { topic, availableSkillIds } = body.data;
+  const ctx = await buildServerRequestContext(req, { allowDevBypass: true });
+  const authError = requireAuthenticatedUser(ctx, {
+    noStoreMessage: "本站账户库尚未接通，暂时无法推荐。",
+    unauthenticatedMessage: "请先登入，并在砚台里保存你的执笔授权。",
+  });
+  if (authError) return authError;
 
   let llm: Awaited<ReturnType<typeof resolveLlm>>;
   try {
-    llm = await resolveLlm();
+    llm = await resolveLlm(ctx);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "推荐引擎初始化失败。";
-    return Response.json({ error: msg }, { status: 503 });
+    return jsonError(msg, 503);
   }
 
   const safeTopic = topic.replace(/[\x00-\x1f\x7f]/g, " ").trim();
@@ -136,7 +143,6 @@ ${roster}`,
 
   try {
     let raw: unknown = null;
-    let fallbackRaw: unknown = null;
     try {
       const toolResult = await chatToolCall(
         llm.runtime,
@@ -148,34 +154,21 @@ ${roster}`,
       );
       raw = toolResult.input ?? toolResult.text;
     } catch {
-      const fallbackText = await chatComplete(llm.runtime, llm.model, [
-        ...messages,
-        {
-          role: "user",
-          content:
-            '若你无法调用工具，则只返回一个 JSON 数组，包含候选 skillId 字符串，例如：["sun-wu-perspective","plato-perspective"]',
-        },
-      ]);
-      fallbackRaw = fallbackText.trim();
-      raw = fallbackRaw;
+      raw = (
+        await chatComplete(llm.runtime, llm.model, [
+          ...messages,
+          {
+            role: "user",
+            content:
+              '若你无法调用工具，则只返回一个 JSON 数组，包含候选 skillId 字符串，例如：["sun-wu-perspective","plato-perspective"]',
+          },
+        ])
+      ).trim();
     }
 
-    let recommendedSkillIds = normalizeRecommendedSkillIds(raw, availableSkillIds);
+    const recommendedSkillIds = normalizeRecommendedSkillIds(raw, availableSkillIds);
     if (recommendedSkillIds.length === 0) {
-      const fallbackText = await chatComplete(llm.runtime, llm.model, [
-        ...messages,
-        {
-          role: "user",
-          content:
-            '请仅输出 JSON。优先返回 {"recommendedSkillIds":["..."]}，也接受直接返回 skillId 数组；不要解释，不要 markdown 代码块。',
-        },
-      ]);
-      fallbackRaw = fallbackText;
-      recommendedSkillIds = normalizeRecommendedSkillIds(fallbackRaw, availableSkillIds);
-    }
-
-    if (recommendedSkillIds.length === 0) {
-      const invalidShape = !hasRecommendationShape(raw) && !hasRecommendationShape(fallbackRaw);
+      const invalidShape = !hasRecommendationShape(raw);
       return Response.json(
         { error: invalidShape ? "推荐引擎返回格式异常，请重试。" : "推荐引擎未能找到合适人物，请手动选择。" },
         { status: 422 }

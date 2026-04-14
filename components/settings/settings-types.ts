@@ -7,7 +7,6 @@ export type CredentialStatus = {
   apiBaseUrl?: string | null;
   providersSaved?: string[];
   hasCredential?: boolean;
-  hasOpenai?: boolean;
   updatedAt?: string | null;
   hasCustomBaseUrl?: boolean;
 } | null;

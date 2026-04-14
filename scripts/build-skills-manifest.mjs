@@ -54,6 +54,67 @@ function buildCategoryMap() {
   return map;
 }
 
+function firstNonEmptyLine(text) {
+  return String(text)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+}
+
+function deriveDisplayName({ skillId, rawName, description, content, data }) {
+  const explicit = [data.display_name, data.displayName, data.label].find(
+    (value) => typeof value === "string" && value.trim()
+  );
+  if (explicit) return explicit.trim();
+
+  if (typeof rawName === "string" && rawName.trim() && rawName !== skillId) {
+    return rawName.trim();
+  }
+
+  const intro = firstNonEmptyLine(description) ?? "";
+  const introMatch = intro.match(/^(.+?)(?:（[^）]+）)?的思维框架与表达方式/);
+  if (introMatch?.[1]?.trim()) return introMatch[1].trim();
+
+  const heading = content.match(/^#\s+(.+)$/m)?.[1]?.trim();
+  if (heading) {
+    const title = heading.split(/\s+[·•｜|—-]\s+/)[0]?.trim();
+    if (title) return title;
+  }
+
+  return skillId;
+}
+
+function deriveDisplayBrief({ description, data }) {
+  const explicit = [data.display_brief, data.displayBrief, data.brief, data.summary].find(
+    (value) => typeof value === "string" && value.trim()
+  );
+  if (explicit) return explicit.trim();
+
+  const normalized = String(description).replace(/\r/g, "").trim();
+  if (!normalized) return "";
+
+  const usageMatch = normalized.match(/用途[：:]\s*([\s\S]*?)(?:\n(?:当用户|也适用于|即使|不在|适用场景)|$)/);
+  let brief = usageMatch?.[1] ?? "";
+  if (!brief) {
+    const sentences = normalized
+      .split(/[。！？]\s*/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    brief = sentences[1] ?? sentences[0] ?? "";
+  }
+
+  brief = brief.replace(/\s+/g, " ").trim();
+  brief = brief.replace(/^作为思维顾问，?/, "");
+  brief = brief.replace(/[。；;，,]\s*$/, "");
+
+  if (brief.length > 36) {
+    const firstClause = brief.split(/[，；;]/)[0]?.trim();
+    if (firstClause && firstClause.length >= 8) brief = firstClause;
+  }
+
+  return brief;
+}
+
 function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -70,16 +131,20 @@ function main() {
       seen.add(skillId);
 
       const raw = fs.readFileSync(file, "utf8");
-      const { data } = matter(raw);
+      const { data, content } = matter(raw);
       const contentHash = hashDir(dir);
       const name = typeof data.name === "string" ? data.name : skillId;
       const description = typeof data.description === "string" ? data.description : "";
+      const displayName = deriveDisplayName({ skillId, rawName: name, description, content, data });
+      const displayBrief = deriveDisplayBrief({ description, data });
       const category = categoryMap[skillId] ?? "其他";
 
       skills.push({
         skillId,
         name,
         description,
+        displayName,
+        displayBrief,
         contentHash,
         dirPath: path.relative(root, dir),
         entryPath: path.relative(root, file),

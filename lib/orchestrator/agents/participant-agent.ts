@@ -7,12 +7,7 @@ import { toLangChainModel } from "../../llm/to-langchain-model";
 import { chatComplete } from "../../llm/stream-chat";
 import { createSkillTools } from "./skill-tools";
 import { extractMessageText } from "./extract-message-text";
-import {
-  buildDebateUserMessage,
-  buildSystemPrompt,
-  buildUserMessage,
-  loadEmbeddedSkillMarkdown,
-} from "./participant-prompt";
+import { buildDebateUserMessage, buildSystemPrompt, buildUserMessage } from "./participant-prompt";
 import { hasParticipantBoundaryViolation } from "./role-guard";
 
 type SkillRow = SkillManifest["skills"][0];
@@ -100,13 +95,12 @@ async function* streamReactAgent(
 ): AsyncGenerator<StreamEvent> {
   const llm = toLangChainModel(runtime, model);
   const absDir = resolveSkillDir(skill.dirPath);
-  const skillMarkdown = loadEmbeddedSkillMarkdown(absDir);
   const tools = createSkillTools(absDir);
 
   const agent = createReactAgent({
     llm,
     tools: [...tools],
-    stateModifier: buildSystemPrompt(displayName, skillMarkdown),
+    stateModifier: buildSystemPrompt(displayName),
   });
 
   let fullText = "";
@@ -141,7 +135,7 @@ async function* streamReactAgent(
         [
           {
             role: "system",
-            content: `${buildSystemPrompt(displayName, skillMarkdown)}\n\n补充硬约束：绝不允许输出任何「【...】」或「某人：」式标签；绝不允许代主持人或其他列席发言。`,
+            content: `${buildSystemPrompt(displayName)}\n\n补充硬约束：绝不允许输出任何「【...】」或「某人：」式标签；绝不允许代主持人或其他列席发言。`,
           },
           {
             role: "user",
@@ -176,12 +170,13 @@ export async function* streamParticipantTurn(
   skill: SkillRow,
   formattedTranscript: string,
   displayName: string,
+  userInterjectionNote: string,
   participantNamesOrSignal?: string[] | AbortSignal,
   signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   const participantNames = Array.isArray(participantNamesOrSignal) ? participantNamesOrSignal : [];
   const actualSignal = isAbortSignalLike(participantNamesOrSignal) ? participantNamesOrSignal : signal;
-  const userContent = buildUserMessage(formattedTranscript, displayName);
+  const userContent = buildUserMessage(formattedTranscript, displayName, userInterjectionNote);
   yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, actualSignal);
 }
 
@@ -192,6 +187,7 @@ export async function* streamDebateParticipantTurn(
   skill: SkillRow,
   formattedTranscript: string,
   displayName: string,
+  userInterjectionNote: string,
   target?: string,
   directive?: string,
   participantNamesOrSignal?: string[] | AbortSignal,
@@ -199,6 +195,6 @@ export async function* streamDebateParticipantTurn(
 ): AsyncGenerator<StreamEvent> {
   const participantNames = Array.isArray(participantNamesOrSignal) ? participantNamesOrSignal : [];
   const actualSignal = isAbortSignalLike(participantNamesOrSignal) ? participantNamesOrSignal : signal;
-  const userContent = buildDebateUserMessage(formattedTranscript, displayName, target, directive);
+  const userContent = buildDebateUserMessage(formattedTranscript, displayName, userInterjectionNote, target, directive);
   yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, actualSignal);
 }

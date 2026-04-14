@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { getSkillDisplay } from "@/lib/skills/skill-display";
 
 describe("getSkillDisplay", () => {
-  it("returns curated label when known", () => {
+  it("returns manifest-derived display metadata when known", () => {
     expect(getSkillDisplay("paul-graham-perspective")).toEqual({
-      label: "保罗·格雷厄姆",
-      brief: "YC 创始人，创业、写作与产品哲学",
+      label: "Paul Graham",
+      brief: "用PG的视角分析创业、写作、产品和人生选择",
     });
   });
 

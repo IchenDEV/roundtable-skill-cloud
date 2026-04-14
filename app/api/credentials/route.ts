@@ -1,35 +1,41 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { encryptSecret } from "@/lib/crypto/byok-crypto";
+import { parseJsonBody } from "@/lib/server/parse-json-body";
+import {
+  asServerUserContext,
+  buildServerRequestContext,
+  jsonError,
+  requireAuthenticatedUser,
+} from "@/lib/server/request-context";
 import { userCredentialInputSchema } from "@/lib/spec/schema";
 import type { ByokProvider } from "@/lib/spec/constants";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
+  const ctx = await buildServerRequestContext(undefined, { allowDevBypass: true });
+  if (!ctx.supabase) {
     return Response.json({
       configured: false,
-      devBypass: !!process.env.DEV_LLM_API_KEY,
+      devBypass: ctx.devBypass,
     });
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  if (!ctx.userId) {
     return Response.json({ configured: true, authenticated: false });
   }
+
+  const userCtx = asServerUserContext(ctx)!;
+  const { supabase, userId } = userCtx;
 
   const { data: settings } = await supabase
     .from("user_llm_settings")
     .select("active_provider, default_model")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   const { data: creds } = await supabase
     .from("user_provider_credentials")
     .select("provider, updated_at, api_base_url")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   const active = (settings?.active_provider as ByokProvider) || "openai";
   const activeRow = creds?.find((c) => c.provider === active);
@@ -48,29 +54,23 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    return Response.json({ error: "本站账户库尚未接通，暂时无法保存。" }, { status: 503 });
-  }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return Response.json({ error: "请先登入。" }, { status: 401 });
-  }
+  const ctx = await buildServerRequestContext();
+  const authError = requireAuthenticatedUser(ctx, {
+    noStoreMessage: "本站账户库尚未接通，暂时无法保存。",
+    unauthenticatedMessage: "请先登入。",
+  });
+  if (authError) return authError;
 
-  const json = await req.json();
-  const parsed = userCredentialInputSchema.safeParse(json);
-  if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    return Response.json({ error: first?.message ?? "请检查输入内容后重试。" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(req, userCredentialInputSchema);
+  if (!parsed.ok) return jsonError(parsed.error, parsed.status);
+
+  const { supabase, userId } = asServerUserContext(ctx)!;
 
   let ciphertext: string;
   try {
     ciphertext = encryptSecret(parsed.data.apiKey);
   } catch {
-    return Response.json({ error: "保存时受阻，请联系站点维护者。" }, { status: 500 });
+    return jsonError("保存时受阻，请联系站点维护者。", 500);
   }
 
   const apiBase = parsed.data.apiBaseUrl?.trim() || null;
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     .from("user_provider_credentials")
     .upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         provider: parsed.data.provider,
         ciphertext,
         label: parsed.data.label ?? null,
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
     .from("user_llm_settings")
     .upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         active_provider: parsed.data.provider,
         default_model: parsed.data.defaultModel?.trim() || null,
         updated_at: new Date().toISOString(),
@@ -117,25 +117,22 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE() {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    return Response.json({ error: "本站账户库尚未接通，暂时无法保存。" }, { status: 503 });
-  }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return Response.json({ error: "请先登入。" }, { status: 401 });
-  }
+  const ctx = await buildServerRequestContext();
+  const authError = requireAuthenticatedUser(ctx, {
+    noStoreMessage: "本站账户库尚未接通，暂时无法保存。",
+    unauthenticatedMessage: "请先登入。",
+  });
+  if (authError) return authError;
+  const { supabase, userId } = asServerUserContext(ctx)!;
 
   const { data: settings } = await supabase
     .from("user_llm_settings")
     .select("active_provider")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   const active = settings?.active_provider ?? "openai";
-  await supabase.from("user_provider_credentials").delete().eq("user_id", user.id).eq("provider", active);
+  await supabase.from("user_provider_credentials").delete().eq("user_id", userId).eq("provider", active);
 
   return Response.json({ ok: true });
 }

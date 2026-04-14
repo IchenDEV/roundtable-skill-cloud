@@ -4,6 +4,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { HomeSkillIntro } from "@/components/home/home-skill-intro";
 import { HOME_HIGHLIGHT_CONFIG, HOME_PROCESS_STEPS } from "@/lib/home/home-page-data";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
+import { toSkillSummaries } from "@/lib/skills/presentable-skills";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -22,13 +23,7 @@ export default async function Home() {
 
   let skills: { skillId: string; name: string; description: string; category: string }[] = [];
   try {
-    const manifest = loadSkillManifest();
-    skills = manifest.skills.map((skill) => ({
-      skillId: skill.skillId,
-      name: skill.name,
-      description: skill.description,
-      category: skill.category,
-    }));
+    skills = toSkillSummaries(loadSkillManifest());
   } catch {
     skills = [];
   }

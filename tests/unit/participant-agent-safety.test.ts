@@ -72,9 +72,9 @@ describe("participant-agent safety", () => {
 
     const controller = new AbortController();
     controller.abort();
-    await expect(drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", controller.signal))).resolves.toEqual(
-      []
-    );
+    await expect(
+      drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", controller.signal))
+    ).resolves.toEqual([]);
   });
 
   it("repairs participant output when it starts speaking as主持 or another seat", async () => {
@@ -87,7 +87,7 @@ describe("participant-agent safety", () => {
     chatComplete.mockResolvedValueOnce("我只说我这一席的判断。\n\n**简言之**：回到本席。");
     createReactAgent.mockReturnValue({ stream });
 
-    const events = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", ["甲", "乙"]));
+    const events = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", ["甲", "乙"]));
 
     expect(chatComplete).toHaveBeenCalled();
     expect(events[events.length - 1]).toEqual({
