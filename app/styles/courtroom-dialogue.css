@@ -26,6 +26,7 @@
 }
 
 .court-dialogue {
+  z-index: 8;
   right: 0;
   bottom: 2.55rem;
   left: 0;
@@ -59,8 +60,8 @@
   width: clamp(14rem, 33%, 20rem);
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(67, 54, 127, 0.18), rgba(18, 16, 36, 0.08) 72%, transparent),
-    linear-gradient(180deg, rgba(244, 239, 228, 0.05), transparent 32%);
+    linear-gradient(90deg, rgba(52, 43, 102, 0.42), rgba(18, 16, 36, 0.18) 72%, transparent),
+    linear-gradient(180deg, rgba(244, 239, 228, 0.08), transparent 32%);
   box-shadow: inset -1px 0 0 rgba(244, 239, 228, 0.08);
 }
 
@@ -144,7 +145,7 @@
 }
 
 .court-vn-commands {
-  z-index: 7;
+  z-index: 9;
   right: 0;
   bottom: 0;
   left: 0;
@@ -172,6 +173,10 @@
   .court-stage-vn {
     height: auto;
     min-height: 640px;
+  }
+
+  .court-vn-portraits {
+    clip-path: inset(0 0 16.9rem 0);
   }
 
   .court-vn-speaker {

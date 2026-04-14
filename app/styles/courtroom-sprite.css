@@ -3,6 +3,8 @@
   position: absolute;
   inset: 0;
   z-index: 6;
+  /* 对白区始终是最高优先级，人物进入底部台词区域时直接裁掉，避免透过半透明蒙层压住文字。 */
+  clip-path: inset(0 0 15.3rem 0);
   pointer-events: none;
 }
 
