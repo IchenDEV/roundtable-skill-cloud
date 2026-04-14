@@ -5,6 +5,7 @@ import { cva } from "class-variance-authority";
 import { motion, useReducedMotion } from "framer-motion";
 import { CourtPortraitCard } from "@/components/court/court-portrait-card";
 import { buildCourtStageScene } from "@/components/court/court-stage-scene";
+import { useCourtDialogueAutoScroll } from "@/components/court/use-court-dialogue-autoscroll";
 import { useCourtStrikeEffect } from "@/components/court/use-court-strike-effect";
 import { MarkdownContent } from "@/components/roundtable/markdown-content";
 import type { RoundtableActiveTurn } from "@/lib/roundtable/active-turn";
@@ -72,6 +73,7 @@ export function CourtroomStage({
 }: Props) {
   const reduce = useReducedMotion();
   const stageRef = useRef<HTMLElement | null>(null);
+  const dialogueScrollRef = useRef<HTMLDivElement | null>(null);
   const activeRole = activeTurn?.role;
   const activeSkillId = activeTurn?.role === "speaker" ? activeTurn.skillId : undefined;
   const targetSkillId = activeTurn?.target;
@@ -91,8 +93,10 @@ export function CourtroomStage({
   );
   // 前景陈词者只在真正的 speaker 回合或 speaker token 到来时激活，避免主持人口述时误亮主辩席。
   const spriteActive = activeTurn?.role === "speaker" || liveTokens?.role === "speaker";
+  const dialogueScrollKey = `${transcript.length}:${scene.latest.label}:${scene.latest.streaming ? "1" : "0"}:${scene.latest.content.length}`;
 
   useCourtStrikeEffect(activeTurn, stageRef);
+  useCourtDialogueAutoScroll(dialogueScrollRef, dialogueScrollKey);
 
   return (
     <section
@@ -175,7 +179,7 @@ export function CourtroomStage({
       <div className="court-dialogue">
         <div className="court-dialogue-name">{scene.latest.label}</div>
         <div className={dialogueCopyVariants({ placeholder: scene.latest.placeholder })}>
-          <div className="court-dialogue-scroll">
+          <div ref={dialogueScrollRef} className="court-dialogue-scroll">
             <MarkdownContent content={scene.latest.content} streaming={scene.latest.streaming} />
           </div>
           {scene.latest.streaming ? <span className="court-dialogue-status">记录中</span> : null}
