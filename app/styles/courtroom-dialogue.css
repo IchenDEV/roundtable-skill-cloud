@@ -53,29 +53,19 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(244, 239, 228, 0.1), transparent 26%),
-    linear-gradient(180deg, rgba(244, 216, 120, 0.08), transparent 22%);
+    linear-gradient(180deg, rgba(244, 216, 120, 0.08), transparent 22%),
+    linear-gradient(90deg, rgba(244, 239, 228, 0.04), transparent 18%, transparent 82%, rgba(244, 239, 228, 0.02));
 }
 
 .court-dialogue::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: clamp(14rem, 33%, 20rem);
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(46, 38, 92, 0.88), rgba(18, 16, 36, 0.42) 72%, transparent),
-    linear-gradient(180deg, rgba(244, 239, 228, 0.1), transparent 32%);
-  box-shadow: inset -1px 0 0 rgba(244, 239, 228, 0.08);
+  display: none;
 }
 
 .court-dialogue-name {
   position: absolute;
   z-index: 7;
   top: 1rem;
-  left: clamp(13.5rem, 31%, 18rem);
+  left: 1.25rem;
   min-width: 8.6rem;
   padding: 0.65rem 1rem 0.7rem;
   border-right: 2px solid rgba(244, 239, 228, 0.12);
@@ -93,7 +83,7 @@
 .court-dialogue-copy {
   position: relative;
   min-height: 218px;
-  padding: 4.35rem 4.2rem 1.8rem clamp(16rem, 34%, 22.5rem);
+  padding: 4.35rem 4.2rem 1.8rem 1.25rem;
   color: #f4efe4;
 }
 
@@ -209,6 +199,7 @@
 
   .court-vn-directive {
     top: 12.8rem;
+    max-width: calc(100% - 2rem);
   }
 
   .court-vn-attendees {
@@ -262,12 +253,6 @@
   .court-dialogue-copy {
     min-height: 232px;
     padding: 4.2rem 3.1rem 2rem 1rem;
-  }
-
-  .court-dialogue::after {
-    width: 100%;
-    background: linear-gradient(180deg, rgba(67, 54, 127, 0.08), transparent 36%);
-    box-shadow: none;
   }
 
   .court-dialogue-scroll {
