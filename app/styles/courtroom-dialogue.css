@@ -225,14 +225,14 @@
   }
 
   .court-vn-portrait-tag {
-    top: 0.22rem;
+    top: 0.7rem;
     min-width: 4.4rem;
     padding: 0.18rem 0.4rem;
     font-size: 0.6rem;
   }
 
   .court-vn-card-ribbon {
-    top: -0.08rem;
+    top: -0.22rem;
     min-width: 2.6rem;
     padding: 0.12rem 0.42rem;
     font-size: 0.48rem;

@@ -116,7 +116,6 @@
 .court-vn-card-ribbon,
 .court-vn-portrait-tag {
   position: absolute;
-  z-index: 2;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -126,7 +125,8 @@
 }
 
 .court-vn-card-ribbon {
-  top: -0.2rem;
+  z-index: 4;
+  top: -0.42rem;
   min-width: 3.1rem;
   max-width: calc(100% - 2rem);
   padding: 0.15rem 0.55rem;
@@ -152,7 +152,8 @@
 }
 
 .court-vn-portrait-tag {
-  top: 0.45rem;
+  z-index: 3;
+  top: 1rem;
   min-width: 5.5rem;
   max-width: calc(100% - 1rem);
   padding: 0.25rem 0.55rem;
