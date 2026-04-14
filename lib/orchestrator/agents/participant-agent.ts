@@ -42,6 +42,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function collectVisibleFallbackCandidates(source: Record<string, unknown> | undefined) {
+  if (!source) return [];
+  return [
+    source.content,
+    source.output_text,
+    source.output,
+    source.text,
+    source.value,
+    source.message,
+    source.messages,
+    source.parts,
+    source.items,
+    source.completion,
+  ];
+}
+
 function extractVisibleAssistantText(message: unknown): string {
   if (!isRecord(message)) return "";
 
@@ -62,14 +78,16 @@ function extractVisibleAssistantText(message: unknown): string {
 
   const fallbackFields: unknown[] = [
     "text" in message ? message.text : undefined,
-    "additional_kwargs" in message && isRecord(message.additional_kwargs)
-      ? message.additional_kwargs.content
-      : undefined,
-    "additional_kwargs" in message && isRecord(message.additional_kwargs)
-      ? message.additional_kwargs.output_text
-      : undefined,
-    "kwargs" in message && isRecord(message.kwargs) ? message.kwargs.content : undefined,
-    "lc_kwargs" in message && isRecord(message.lc_kwargs) ? message.lc_kwargs.content : undefined,
+    ...collectVisibleFallbackCandidates(
+      "additional_kwargs" in message && isRecord(message.additional_kwargs) ? message.additional_kwargs : undefined
+    ),
+    ...collectVisibleFallbackCandidates("kwargs" in message && isRecord(message.kwargs) ? message.kwargs : undefined),
+    ...collectVisibleFallbackCandidates(
+      "lc_kwargs" in message && isRecord(message.lc_kwargs) ? message.lc_kwargs : undefined
+    ),
+    ...collectVisibleFallbackCandidates(
+      "response_metadata" in message && isRecord(message.response_metadata) ? message.response_metadata : undefined
+    ),
   ];
 
   for (const candidate of fallbackFields) {

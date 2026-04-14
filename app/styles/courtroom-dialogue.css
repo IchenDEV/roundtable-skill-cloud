@@ -90,6 +90,10 @@
   color: #f4efe4;
 }
 
+.court-dialogue-copy.is-placeholder .prose-roundtable {
+  color: rgba(244, 239, 228, 0.78);
+}
+
 .court-dialogue-scroll {
   max-height: 7.4rem;
   overflow-y: auto;
@@ -168,12 +172,18 @@
     min-height: 640px;
   }
 
-  .court-vn-sprite {
+  .court-vn-speaker {
     left: -1.35rem;
     bottom: 4.1rem;
     width: min(320px, 68%);
     min-width: 220px;
-    opacity: 0.96;
+    opacity: 0.98;
+  }
+
+  .court-vn-judge-wrap {
+    top: 6.1rem;
+    width: min(168px, 33%);
+    min-width: 118px;
   }
 
   .court-vn-cast {
@@ -190,6 +200,43 @@
 
   .court-vn-directive {
     top: 12.8rem;
+  }
+
+  .court-vn-attendees {
+    right: 0.8rem;
+    bottom: 15.2rem;
+    gap: 0.5rem;
+  }
+
+  .court-vn-attendee {
+    width: min(96px, 22vw);
+    min-width: 76px;
+  }
+
+  .court-vn-attendee.is-rear {
+    margin-bottom: 0.5rem;
+  }
+
+  .court-vn-portrait-tag {
+    top: 0.22rem;
+    min-width: 4.4rem;
+    padding: 0.18rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .court-vn-card-ribbon {
+    top: -0.08rem;
+    min-width: 2.6rem;
+    padding: 0.12rem 0.42rem;
+    font-size: 0.48rem;
+  }
+
+  .court-vn-card-emblem {
+    right: 0.22rem;
+    bottom: 1.3rem;
+    width: 1.45rem;
+    height: 1.45rem;
+    font-size: 0.72rem;
   }
 
   .court-dialogue {

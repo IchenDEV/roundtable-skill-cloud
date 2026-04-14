@@ -1,224 +1,379 @@
-.court-vn-sprite {
+/* 人物层拆成审判长、前景陈词者、侧席三组，方便继续换皮而不影响舞台逻辑。 */
+.court-vn-portraits {
   position: absolute;
+  inset: 0;
   z-index: 6;
+  pointer-events: none;
+}
+
+.court-vn-card,
+.court-vn-speaker {
+  position: absolute;
+}
+
+.court-vn-judge-wrap {
+  top: 5.7rem;
+  left: 50%;
+  width: min(192px, 19%);
+  min-width: 138px;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 10px 22px rgba(25, 14, 12, 0.28));
+}
+
+.court-vn-speaker {
   left: 0.35rem;
   bottom: 3.15rem;
-  width: min(330px, 34%);
+  width: min(332px, 34%);
   min-width: 210px;
   max-width: 390px;
-  pointer-events: none;
   transform-origin: 24% 80%;
 }
 
-.court-vn-sprite::before {
+.court-vn-speaker::before,
+.court-vn-card::before {
   content: "";
   position: absolute;
   inset: 12% 13% 8% 8%;
   border-radius: 2rem 2rem 1.4rem 1.4rem;
   background:
-    linear-gradient(180deg, rgba(77, 63, 139, 0.34), rgba(18, 16, 36, 0.72) 64%, rgba(18, 16, 36, 0.18)),
-    linear-gradient(90deg, rgba(244, 239, 228, 0.12), transparent 35%);
+    linear-gradient(180deg, rgba(77, 63, 139, 0.3), rgba(18, 16, 36, 0.68) 64%, rgba(18, 16, 36, 0.16)),
+    linear-gradient(90deg, rgba(244, 239, 228, 0.12), transparent 35%),
+    repeating-linear-gradient(135deg, rgba(244, 239, 228, 0.02) 0 7px, transparent 7px 14px);
   box-shadow:
     inset 0 0 0 1px rgba(244, 239, 228, 0.12),
     0 20px 44px rgba(11, 10, 20, 0.34);
 }
 
-.court-vn-sprite::after {
+.court-vn-judge-wrap::before {
   content: "";
   position: absolute;
-  right: 14%;
-  bottom: 0;
-  left: 10%;
-  height: 18%;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(12, 10, 10, 0.52) 0, rgba(12, 10, 10, 0.06) 72%);
-  filter: blur(10px);
+  inset: 18% 10% 5%;
+  border-radius: 1.6rem 1.6rem 1rem 1rem;
+  background:
+    linear-gradient(180deg, rgba(166, 61, 61, 0.18), rgba(25, 16, 14, 0.6)),
+    linear-gradient(90deg, rgba(244, 216, 120, 0.14), transparent 45%);
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 239, 228, 0.12),
+    0 16px 34px rgba(18, 10, 10, 0.28);
 }
 
-.court-advocate {
+.court-vn-judge-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 12% 18% 26%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(244, 216, 120, 0.18), transparent 72%);
+  filter: blur(12px);
+}
+
+.court-vn-attendees {
+  position: absolute;
+  right: 1.4rem;
+  bottom: 13.8rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+
+.court-vn-attendee {
+  width: min(142px, 14vw);
+  min-width: 92px;
+  max-width: 154px;
+  opacity: 0.92;
+}
+
+.court-vn-attendee.is-rear {
+  margin-bottom: 0.8rem;
+  opacity: 0.82;
+}
+
+.court-vn-attendee.is-active {
+  opacity: 1;
+}
+
+.court-vn-card.is-target::before {
+  box-shadow:
+    inset 0 0 0 1px rgba(179, 231, 232, 0.32),
+    0 16px 30px rgba(12, 29, 34, 0.26);
+}
+
+.court-vn-speaker::after,
+.court-vn-card::after {
+  content: "";
+  position: absolute;
+  right: 16%;
+  bottom: 2%;
+  left: 16%;
+  height: 14%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(11, 10, 20, 0.34), rgba(11, 10, 20, 0.02) 72%);
+  filter: blur(9px);
+}
+
+.court-vn-card-ribbon,
+.court-vn-portrait-tag {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.court-vn-card-ribbon {
+  top: -0.2rem;
+  min-width: 3.1rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  box-shadow: 0 6px 12px rgba(16, 12, 10, 0.22);
+}
+
+.court-vn-card-ribbon.is-gold {
+  background: linear-gradient(180deg, rgba(231, 196, 110, 0.95), rgba(162, 118, 43, 0.9));
+  color: #2b180f;
+}
+
+.court-vn-card-ribbon.is-crimson {
+  background: linear-gradient(180deg, rgba(190, 91, 91, 0.95), rgba(113, 45, 54, 0.9));
+  color: #fff2dd;
+}
+
+.court-vn-card-ribbon.is-jade {
+  background: linear-gradient(180deg, rgba(111, 170, 160, 0.94), rgba(42, 88, 82, 0.92));
+  color: #effaf6;
+}
+
+.court-vn-portrait-tag {
+  top: 0.45rem;
+  min-width: 5.5rem;
+  max-width: calc(100% - 1rem);
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(244, 239, 228, 0.22);
+  border-radius: 999px;
+  background: rgba(16, 19, 18, 0.82);
+  color: rgba(244, 239, 228, 0.9);
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.court-vn-card-emblem {
+  position: absolute;
+  z-index: 2;
+  right: 0.45rem;
+  bottom: 2rem;
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 239, 228, 0.16),
+    0 8px 18px rgba(20, 14, 12, 0.22);
+}
+
+.court-vn-card-emblem.is-gold {
+  background: linear-gradient(180deg, rgba(231, 196, 110, 0.92), rgba(150, 106, 36, 0.88));
+  color: #2e1b10;
+}
+
+.court-vn-card-emblem.is-crimson {
+  background: linear-gradient(180deg, rgba(184, 86, 91, 0.92), rgba(101, 39, 44, 0.9));
+  color: #fff4e8;
+}
+
+.court-vn-card-emblem.is-jade {
+  background: linear-gradient(180deg, rgba(109, 172, 160, 0.92), rgba(34, 84, 77, 0.9));
+  color: #effcf8;
+}
+
+.court-character {
   display: block;
   position: relative;
   z-index: 1;
   width: 100%;
   height: auto;
-  filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.26)) saturate(1.05);
+  filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.24)) saturate(1.04) contrast(1.02);
 }
 
-.court-advocate-active {
-  animation: court-sprite-flash 0.5s steps(2, end) 1;
+.court-character-mirror {
+  transform: scaleX(-1);
 }
 
-.court-advocate-shadow {
+.court-character-active {
+  animation: court-character-flash 0.5s steps(2, end) 1;
+}
+
+.court-character-shadow {
   fill: rgba(28, 25, 20, 0.34);
 }
 
-.court-suit-dark,
-.court-outline {
+.court-character-glow {
+  fill: var(--court-glow);
+}
+
+.court-character-robe {
+  fill: var(--court-robe);
+}
+
+.court-character-robe-shade {
+  fill: var(--court-robe-shade);
+}
+
+.court-character-collar {
+  fill: #efe8dd;
+}
+
+.court-character-collar-shadow {
+  fill: #d6d3cf;
+}
+
+.court-character--judge .court-character-collar {
+  fill: #f5e8cc;
+}
+
+.court-character--judge .court-character-collar-shadow {
+  fill: #decdad;
+}
+
+.court-character-accent {
+  fill: var(--court-accent);
+}
+
+.court-character-accent-shadow {
+  fill: var(--court-accent-shade);
+}
+
+.court-character-neck,
+.court-character-face,
+.court-character-hand {
+  fill: var(--court-skin);
+}
+
+.court-character-neck-shade,
+.court-character-face-shade,
+.court-character-hand-shade {
+  fill: var(--court-skin-shade);
+}
+
+.court-character-face-highlight {
+  fill: rgba(248, 212, 184, 0.44);
+}
+
+.court-character--judge .court-character-face-highlight {
+  fill: rgba(255, 233, 201, 0.48);
+}
+
+.court-character-hair {
+  fill: var(--court-hair);
+}
+
+.court-character-hair-shade {
+  fill: var(--court-hair-shade);
+}
+
+.court-character-headpiece {
+  fill: rgba(18, 18, 18, 0.82);
+  stroke: rgba(244, 216, 120, 0.34);
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.court-character-eye {
+  fill: #181918;
+}
+
+.court-character-eye-glint {
+  fill: rgba(244, 239, 228, 0.92);
+}
+
+.court-character-sleeve {
+  fill: color-mix(in srgb, var(--court-robe) 72%, #f0ece6 28%);
+}
+
+.court-character-sleeve-shade {
+  fill: color-mix(in srgb, var(--court-robe-shade) 78%, #1f1d1a 22%);
+}
+
+.court-character-scroll {
+  fill: rgba(243, 237, 224, 0.96);
+  stroke: rgba(28, 25, 20, 0.72);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.court-character-scroll-line {
   fill: none;
-  stroke: #141615;
-  stroke-width: 8;
-  stroke-linejoin: round;
+  stroke: rgba(28, 25, 20, 0.35);
   stroke-linecap: round;
+  stroke-width: 4;
 }
 
-.court-suit-dark {
-  fill: #171a1a;
+.court-character-accessory {
+  fill: color-mix(in srgb, var(--court-accent) 82%, #f5efe4 18%);
 }
 
-.court-suit-red {
-  fill: #a63d3d;
+.court-character-accessory-head {
+  fill: color-mix(in srgb, var(--court-trim) 78%, #6b3b3f 22%);
 }
 
-.court-suit-shadow {
-  fill: rgba(92, 24, 28, 0.72);
-}
-
-.court-suit-light {
-  fill: rgba(214, 82, 78, 0.32);
-}
-
-.court-shirt {
-  fill: #f1efe9;
-}
-
-.court-shirt-shadow {
-  fill: #d5dce0;
-}
-
-.court-tie {
-  fill: #0e7778;
-}
-
-.court-tie-shadow {
-  fill: #075356;
-}
-
-.court-neck,
-.court-face,
-.court-ear,
-.court-hand {
-  fill: #dca079;
-}
-
-.court-neck-shadow,
-.court-face-shadow,
-.court-hand-shadow {
-  fill: #b87356;
-}
-
-.court-face-light {
-  fill: rgba(248, 212, 184, 0.48);
-}
-
-.court-hair,
-.court-eye,
-.court-brow,
-.court-mouth {
-  fill: #151716;
-}
-
-.court-hair-shine {
-  fill: rgba(54, 57, 53, 0.7);
-}
-
-.court-arm-sleeve {
-  fill: #f1efe9;
-  stroke: #151716;
-  stroke-width: 7;
+.court-character-hand-pose {
+  fill: rgba(243, 237, 224, 0.9);
+  stroke: rgba(28, 25, 20, 0.72);
+  stroke-width: 4;
   stroke-linejoin: round;
 }
 
-.court-sleeve-shadow {
-  fill: #cdd4d7;
-  stroke: #151716;
-  stroke-width: 5;
-  stroke-linejoin: round;
-}
-
-.court-cuff {
-  fill: #f6f3ec;
-  stroke: #151716;
-  stroke-width: 5;
-  stroke-linejoin: round;
-}
-
-.court-bracelet {
-  fill: #b59a34;
-  stroke: #151716;
-  stroke-width: 5;
-}
-
-.court-bracelet-line,
-.court-sleeve-fold,
-.court-finger-line,
-.court-lapel-line,
-.court-hair-line,
-.court-ear-line,
-.court-nose,
-.court-jaw-line {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.court-bracelet-line {
-  stroke: rgba(244, 239, 228, 0.45);
-  stroke-width: 5;
-}
-
-.court-sleeve-fold {
-  stroke: rgba(21, 23, 22, 0.36);
-  stroke-width: 5;
-}
-
-.court-finger-line,
-.court-ear-line,
-.court-nose,
-.court-jaw-line {
-  stroke: rgba(21, 23, 22, 0.62);
-  stroke-width: 5;
-}
-
-.court-lapel-line {
-  stroke: rgba(21, 23, 22, 0.72);
-  stroke-width: 6;
-}
-
-.court-hair-line {
-  stroke: rgba(0, 0, 0, 0.5);
-  stroke-width: 7;
-}
-
-.court-iris {
-  fill: #596d56;
-  stroke: #151716;
-  stroke-width: 3;
-}
-
-.court-eye-glint {
-  fill: #f4efe4;
-}
-
-.court-button {
-  fill: #1a1c1b;
+.court-character-button {
+  fill: rgba(21, 22, 21, 0.95);
   stroke: rgba(244, 239, 228, 0.22);
   stroke-width: 3;
 }
 
-.court-pocket {
-  fill: rgba(166, 61, 61, 0.5);
-  stroke: #151716;
-  stroke-width: 5;
+.court-character-outline,
+.court-character-brow,
+.court-character-mouth,
+.court-character-nose,
+.court-character-trim-line {
+  fill: none;
+  stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-@keyframes court-sprite-flash {
+.court-character-outline {
+  stroke: rgba(20, 22, 21, 0.82);
+  stroke-width: 6;
+}
+
+.court-character--speaker .court-character-outline {
+  stroke: rgba(28, 18, 16, 0.82);
+}
+
+.court-character-brow,
+.court-character-mouth,
+.court-character-nose {
+  stroke: rgba(20, 22, 21, 0.68);
+  stroke-width: 4.5;
+}
+
+.court-character-trim-line {
+  stroke: color-mix(in srgb, var(--court-trim) 80%, transparent);
+  stroke-width: 4;
+}
+
+@keyframes court-character-flash {
   0%,
   100% {
-    filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.26)) saturate(1.05) brightness(1);
+    filter: drop-shadow(16px 18px 0 rgba(28, 25, 20, 0.24)) saturate(1.02) brightness(1);
   }
 
   50% {
-    filter: drop-shadow(18px 20px 0 rgba(28, 25, 20, 0.24)) saturate(1.12) brightness(1.14);
+    filter: drop-shadow(18px 20px 0 rgba(28, 25, 20, 0.2)) saturate(1.08) brightness(1.1);
   }
 }
