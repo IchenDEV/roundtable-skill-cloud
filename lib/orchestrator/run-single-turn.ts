@@ -8,6 +8,7 @@ import { parseDispatchBlock, defaultDispatch } from "./parse-dispatch";
 import type { SkillManifest } from "../skills/types";
 import type { ResolvedLlm } from "../llm/types";
 import { getSkillDisplay } from "../skills/skill-display";
+import { buildUserInterjectionNote, hasPendingUserInterjection } from "./user-interjection-context";
 
 function buildSkillNames(ids: string[]): Record<string, string> {
   const names: Record<string, string> = {};
@@ -40,18 +41,20 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
     case "moderator_open": {
       const ctx = formatTranscript(state.transcript, skillNames);
       const roster = state.participantSkillIds.map((id) => `${skillNames[id]}（${id}）`).join("、");
+      const userInterjectionNote = buildUserInterjectionNote(state.transcript, "moderator_open");
+      const hasNewUserInterjection = hasPendingUserInterjection(state.transcript, "moderator_open");
 
       let openUser: string;
       if (isDebate) {
         openUser =
           state.transcript.length === 0
             ? `议题：${state.topic}\n列席代理：${roster}\n请开场：锚定核心争点，分析各席可能立场，然后输出本轮调度指令（JSON 格式，skillId 字段用括号中的 ID）。`
-            : `当前第 ${state.round + 1} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n主持人记忆：${state.moderatorMemory || "（无）"}\n请根据上轮交锋结果，提出本轮引导问题并输出新的调度指令。`;
+            : `当前第 ${state.round + 1} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n${userInterjectionNote}\n主持人记忆：${state.moderatorMemory || "（无）"}\n请根据上轮交锋结果，提出本轮引导问题并输出新的调度指令。${hasNewUserInterjection ? "本轮必须把最新席上插话纳入调度。" : "本轮没有新增席上插话，不得假定用户刚刚补充了观点。"} `;
       } else {
         openUser =
           state.transcript.length === 0
-            ? `议题：${state.topic}\n列席代理：${roster}\n请开场：统一核心概念、提出定义性问题，并说明本轮规则（每位须回应前文含「席上」用户插话，末句「简言之」）。`
-            : `当前第 ${state.round + 1} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n请根据「主持人记忆」推进：${state.moderatorMemory || "（无）"}\n提出本轮引导问题。`;
+            ? `议题：${state.topic}\n列席代理：${roster}\n请开场：统一核心概念、提出定义性问题，并说明本轮规则（每位末句都须有「简言之」）。`
+            : `当前第 ${state.round + 1} 轮。此前记录（含席上用户插话，标为【席上你我】）：\n${ctx}\n${userInterjectionNote}\n请根据「主持人记忆」推进：${state.moderatorMemory || "（无）"}\n提出本轮引导问题。${hasNewUserInterjection ? "若本轮确有新增席上插话，要明确提醒列席回应它。" : "本轮没有新增席上插话，不得暗示用户刚刚发过言。"} `;
       }
 
       let fullText = "";
@@ -85,6 +88,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
 
       const tctx = formatTranscriptForSeat(state.transcript, skillId, skillNames);
       const displayName = skillNames[skillId];
+      const userInterjectionNote = buildUserInterjectionNote(state.transcript, "participant");
 
       if (isDebate) {
         const targetDisplay = target ? skillNames[target] || target : undefined;
@@ -94,6 +98,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           sk,
           tctx,
           displayName,
+          userInterjectionNote,
           targetDisplay,
           directive,
           Object.values(skillNames),
@@ -108,6 +113,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           sk,
           tctx,
           displayName,
+          userInterjectionNote,
           Object.values(skillNames),
           signal
         )) {
@@ -121,9 +127,10 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
 
     case "moderator_wrap": {
       const wrapCtx = formatTranscript(state.transcript, skillNames);
+      const userInterjectionNote = buildUserInterjectionNote(state.transcript, "moderator_wrap");
       const wrapUser = isDebate
-        ? `本轮交锋已毕。请：1）指出论证最薄弱的一席及其逻辑漏洞；2）给「主持人记忆」一段话供下轮使用；3）提出下轮引导问题。记录中含席上用户插话须一并考虑。`
-        : `本轮发言已齐。请：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。记录中含席上用户插话须一并考虑。`;
+        ? `本轮交锋已毕。请：1）指出论证最薄弱的一席及其逻辑漏洞；2）给「主持人记忆」一段话供下轮使用；3）提出下轮引导问题。${userInterjectionNote}`
+        : `本轮发言已齐。请：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。${userInterjectionNote}`;
 
       let wrap = "";
       for await (const ev of streamModeratorTurn(

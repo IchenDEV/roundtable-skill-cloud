@@ -1,10 +1,14 @@
 import { runSingleTurn } from "@/lib/orchestrator/run-single-turn";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
 import { resolveLlm } from "@/lib/server/resolve-llm";
+import {
+  buildServerRequestContext,
+  jsonError,
+  normalizeUpstreamLlmError,
+  requireAuthenticatedUser,
+} from "@/lib/server/request-context";
 import { turnRequestSchema } from "@/lib/spec/schema";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { beginStreamSlot, endStreamSlot, takeStreamRateToken } from "@/lib/server/rate-limit-stream";
-import { clientIpFromRequest } from "@/lib/server/client-ip";
 import { parseJsonBody } from "@/lib/server/parse-json-body";
 
 export const runtime = "nodejs";
@@ -14,56 +18,28 @@ function encodeSSE(obj: unknown) {
   return `data: ${JSON.stringify(obj)}\n\n`;
 }
 
-function isDevLlmBypass() {
-  return process.env.NODE_ENV === "development" && !!process.env.DEV_LLM_API_KEY?.trim();
-}
-
 export async function POST(req: Request) {
   const body = await parseJsonBody(req, turnRequestSchema);
   if (!body.ok) {
-    return new Response(JSON.stringify({ error: body.error }), {
-      status: body.status,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    return jsonError(body.error, body.status);
   }
 
   const request = body.data;
+  const ctx = await buildServerRequestContext(req, { allowDevBypass: true });
+  const authError = requireAuthenticatedUser(ctx, {
+    noStoreMessage: "服务端未配置账户库。",
+    unauthenticatedMessage: "请先登入并在砚台钤印。",
+  });
+  if (authError) return authError;
 
-  let guardKey: string;
-  if (isDevLlmBypass()) {
-    guardKey = `dev:${clientIpFromRequest(req)}`;
-  } else {
-    const supabase = await createSupabaseServerClient();
-    if (!supabase) {
-      return new Response(JSON.stringify({ error: "服务端未配置账户库。" }), {
-        status: 503,
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-      });
-    }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: "请先登入并在砚台钤印。" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-      });
-    }
-    guardKey = `u:${user.id}`;
-  }
+  const guardKey = ctx.guardKey ?? "unknown";
 
   if (!beginStreamSlot(guardKey)) {
-    return new Response(JSON.stringify({ error: "同时进行中的讨论过多，请先完成当前一轮或稍候。" }), {
-      status: 429,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    return jsonError("同时进行中的讨论过多，请先完成当前一轮或稍候。", 429);
   }
   if (!takeStreamRateToken(guardKey)) {
     endStreamSlot(guardKey);
-    return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试。" }), {
-      status: 429,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    return jsonError("请求过于频繁，请稍后再试。", 429);
   }
 
   let manifest;
@@ -71,22 +47,16 @@ export async function POST(req: Request) {
     manifest = loadSkillManifest();
   } catch {
     endStreamSlot(guardKey);
-    return new Response(JSON.stringify({ error: "讨论席名录尚未备好，请稍后再试。" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    return jsonError("讨论席名录尚未备好，请稍后再试。", 500);
   }
 
   let resolved;
   try {
-    resolved = await resolveLlm();
+    resolved = await resolveLlm(ctx);
   } catch (e) {
     endStreamSlot(guardKey);
     const msg = e instanceof Error ? e.message : "执笔后端解析失败。";
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-    });
+    return jsonError(msg, 500);
   }
 
   const releaseKey = guardKey;
@@ -114,8 +84,9 @@ export async function POST(req: Request) {
         }
       } catch (err) {
         if (!abortSignal.aborted) {
-          const msg = err instanceof Error ? err.message : "unknown error";
+          const msg = normalizeUpstreamLlmError(err);
           controller.enqueue(enc.encode(encodeSSE({ type: "error", message: msg })));
+          controller.enqueue(enc.encode(encodeSSE({ type: "done" })));
         }
       } finally {
         abortSignal.removeEventListener("abort", onAbort);

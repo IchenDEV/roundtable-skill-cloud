@@ -35,7 +35,7 @@ export function SettingsClient() {
 
   const baseHint = useMemo(() => defaultApiBaseUrl(provider), [provider]);
   const showBaseField = provider !== "anthropic";
-  const hasKey = !!(status?.hasCredential ?? status?.hasOpenai);
+  const hasKey = !!status?.hasCredential;
 
   const save = async () => {
     setLoading(true);

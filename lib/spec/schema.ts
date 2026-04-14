@@ -40,7 +40,7 @@ export const roundtableStateSchema = z
     participantSkillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
     transcript: z.array(transcriptEntrySchema).max(MAX_TRANSCRIPT_ENTRIES),
     moderatorMemory: z.string().max(MAX_MODERATOR_MEMORY_CHARS),
-    userCommand: z.enum(["continue", "stop", "deepen", "add_speaker"]).optional(),
+    userCommand: z.enum(["stop"]).optional(),
     synthesis: z.string().max(MAX_SYNTHESIS_CHARS).optional(),
     error: z.string().max(MAX_ERROR_STRING_CHARS).optional(),
   })

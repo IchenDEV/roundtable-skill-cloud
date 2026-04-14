@@ -4,6 +4,7 @@ import type { RoundtableState } from "@/lib/spec/schema";
 
 function base(over: Partial<RoundtableState>): RoundtableState {
   return {
+    mode: "discussion",
     topic: "t",
     round: 1,
     maxRounds: 3,
@@ -21,7 +22,7 @@ describe("cloneStateForFork", () => {
       sessionId: "00000000-0000-4000-8000-000000000001",
       phase: "await_user",
       error: "e",
-      userCommand: "continue",
+      userCommand: "stop",
     });
     const c = cloneStateForFork(s);
     expect(c.sessionId).toBeDefined();

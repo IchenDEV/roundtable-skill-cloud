@@ -1,6 +1,7 @@
 import { CourtroomClient } from "@/components/court/courtroom-client";
 import { parseRoundtableSearchParams, type RoundtableSearchParams } from "@/lib/roundtable/roundtable-search";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
+import { toSkillSummaries } from "@/lib/skills/presentable-skills";
 
 export const dynamic = "force-dynamic";
 
@@ -11,13 +12,7 @@ export default async function CourtPage({ searchParams }: { searchParams: Promis
 
   let skills: { skillId: string; name: string; description: string; category: string }[] = [];
   try {
-    const m = loadSkillManifest();
-    skills = m.skills.map((s) => ({
-      skillId: s.skillId,
-      name: s.name,
-      description: s.description,
-      category: s.category,
-    }));
+    skills = toSkillSummaries(loadSkillManifest());
   } catch {
     skills = [];
   }

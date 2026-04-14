@@ -15,8 +15,6 @@ type ApiShape = {
   devBypass?: boolean;
   authenticated?: boolean;
   hasCredential?: boolean;
-  /** @deprecated 兼容旧 API */
-  hasOpenai?: boolean;
 };
 
 function parseReadiness(j: ApiShape | null): RoundtableReadiness {
@@ -27,8 +25,7 @@ function parseReadiness(j: ApiShape | null): RoundtableReadiness {
   if (j.configured === true) {
     if (j.authenticated === false) return { kind: "need_login" };
     if (j.authenticated === true) {
-      const hasKey = j.hasCredential ?? j.hasOpenai;
-      if (!hasKey) return { kind: "need_key" };
+      if (!j.hasCredential) return { kind: "need_key" };
       return { kind: "ready" };
     }
     return { kind: "loading" };

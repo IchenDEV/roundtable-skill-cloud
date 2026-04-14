@@ -98,13 +98,13 @@ describe("participant-agent", () => {
     createReactAgent.mockReturnValue({ stream });
 
     const signal = new AbortController().signal;
-    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", signal));
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", signal));
 
     expect(toLangChainModel).toHaveBeenCalledWith(runtime, "gpt");
     expect(createSkillTools).toHaveBeenCalled();
     expect(createReactAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        stateModifier: expect.stringContaining("你已提前获得本席的 SKILL.md 正文"),
+        stateModifier: expect.stringContaining("你必须先调用 `file_read` 读取 `SKILL.md`"),
       })
     );
     expect(stream).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ signal }));
@@ -137,7 +137,7 @@ describe("participant-agent", () => {
     });
     createReactAgent.mockReturnValue({ stream });
 
-    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲"));
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话"));
 
     expect(events.filter((e) => (e as { type?: string }).type === "token")).toEqual([
       { type: "token", role: "speaker", skillId: "sk1", text: "其实" },
@@ -165,7 +165,7 @@ describe("participant-agent", () => {
     });
     createReactAgent.mockReturnValue({ stream });
 
-    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲"));
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话"));
 
     expect(events.filter((e) => (e as { type?: string }).type === "token")).toEqual([
       { type: "token", role: "speaker", skillId: "sk1", text: "再落笔" },
@@ -195,7 +195,7 @@ describe("participant-agent", () => {
     });
     createReactAgent.mockReturnValue({ stream });
 
-    const { events } = await drain(streamParticipantTurn(runtime, "gpt", supermanSkill, "记录", "加缪"));
+    const { events } = await drain(streamParticipantTurn(runtime, "gpt", supermanSkill, "记录", "加缪", "无新增插话"));
 
     expect(createSkillTools).toHaveBeenCalledWith(
       expect.stringMatching(/skills-superman[\\/]+skills[\\/]+camus-perspective$/)
@@ -214,7 +214,7 @@ describe("participant-agent", () => {
     });
 
     await expect(
-      drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "乙", "驳其前提"))
+      drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", "乙", "驳其前提"))
     ).rejects.toThrow("[sk1] boom");
   });
 });

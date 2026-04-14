@@ -1,17 +1,11 @@
 import "server-only";
-import { createSupabaseServerClient } from "../supabase/server";
 import type { RoundtableState } from "../spec/schema";
+import type { ServerUserContext } from "../server/request-context";
 
-/** 将圆桌状态写入 Postgres（RLS）；无登录或 Supabase 未配置时静默跳过 */
-export async function persistRoundtableState(state: RoundtableState): Promise<void> {
+/** 将圆桌状态写入 Postgres（RLS）；调用方需已完成鉴权。 */
+export async function persistRoundtableState(state: RoundtableState, ctx: ServerUserContext): Promise<void> {
   if (!state.sessionId) return;
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  const { supabase } = ctx;
 
   const messages = state.transcript.map((t, position_idx) => ({
     role: t.role,

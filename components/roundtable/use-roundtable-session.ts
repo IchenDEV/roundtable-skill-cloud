@@ -6,6 +6,7 @@ import { useRoundtableOrchestrator } from "@/components/roundtable/use-roundtabl
 import { useTokenBuffer } from "@/components/roundtable/use-token-buffer";
 import { buildRoundtableMarkdown } from "@/lib/roundtable/export-markdown";
 import { fetchResumedSession, fetchSharedSession } from "@/lib/roundtable/session-loaders";
+import { normalizeRoundtableState } from "@/lib/roundtable/normalize-session-state";
 import {
   buildEmptyState,
   buildSessionErrorState,
@@ -122,8 +123,7 @@ export function useRoundtableSession({
         );
         return;
       }
-      const next = data.state.phase === "running" ? { ...data.state, phase: "idle" as const } : data.state;
-      hydrateImportedState(next);
+      hydrateImportedState(normalizeRoundtableState(data.state, "resume"));
     })();
     return () => {
       cancelled = true;
@@ -161,7 +161,7 @@ export function useRoundtableSession({
       onToken: (role: "moderator" | "speaker", text: string, skillId?: string) => pushToken(role, text, skillId),
       onTurnComplete: () => clearBuffer(),
       onRoundComplete: () => {},
-      onError: () => {},
+      onError: () => clearBuffer(),
     }),
     [applyModePolicy, pushToken, clearBuffer]
   );

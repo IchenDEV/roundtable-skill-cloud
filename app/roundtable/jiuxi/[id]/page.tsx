@@ -4,14 +4,15 @@ import { JiuxiDetailView } from "@/components/roundtable/jiuxi-detail-view";
 import { FadeIn, InkReveal } from "@/components/motion-root";
 import { getRoundtableSessionState } from "@/lib/db/roundtable-sessions";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { toSkillSummaries } from "@/lib/skills/presentable-skills";
+import { asServerUserContext, buildServerRequestContext } from "@/lib/server/request-context";
 
 export const dynamic = "force-dynamic";
 
 export default async function JiuxiDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
+  const ctx = await buildServerRequestContext();
+  if (!ctx.supabase) {
     return (
       <p className="text-sm text-ink-600">
         服务端未配置数据库，无法展卷。
@@ -21,10 +22,7 @@ export default async function JiuxiDetailPage({ params }: { params: Promise<{ id
       </p>
     );
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  if (!ctx.userId) {
     return (
       <FadeIn>
         <InkReveal>
@@ -40,17 +38,12 @@ export default async function JiuxiDetailPage({ params }: { params: Promise<{ id
     );
   }
 
-  const state = await getRoundtableSessionState(id);
+  const state = await getRoundtableSessionState(asServerUserContext(ctx)!, id);
   if (!state) notFound();
 
   let skills: { skillId: string; name: string; description: string }[] = [];
   try {
-    const m = loadSkillManifest();
-    skills = m.skills.map((s) => ({
-      skillId: s.skillId,
-      name: s.name,
-      description: s.description,
-    }));
+    skills = toSkillSummaries(loadSkillManifest());
   } catch {
     skills = [];
   }

@@ -1,5 +1,6 @@
 import { RoundtableClient } from "./roundtable-client";
 import { loadSkillManifest } from "@/lib/skills/load-manifest";
+import { toSkillSummaries } from "@/lib/skills/presentable-skills";
 import { parseRoundtableSearchParams, type RoundtableSearchParams } from "@/lib/roundtable/roundtable-search";
 
 export const dynamic = "force-dynamic";
@@ -11,13 +12,7 @@ export default async function RoundtablePage({ searchParams }: { searchParams: P
 
   let skills: { skillId: string; name: string; description: string; category: string }[] = [];
   try {
-    const m = loadSkillManifest();
-    skills = m.skills.map((s) => ({
-      skillId: s.skillId,
-      name: s.name,
-      description: s.description,
-      category: s.category,
-    }));
+    skills = toSkillSummaries(loadSkillManifest());
   } catch {
     skills = [];
   }

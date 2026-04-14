@@ -1,14 +1,16 @@
-import { createSupabaseServerClient } from "../supabase/server";
 import { decryptSecret } from "../crypto/byok-crypto";
 import { DEFAULT_MODEL_BY_PROVIDER, defaultApiBaseUrl, type ByokProvider } from "../spec/constants";
 import type { ResolvedLlm } from "../llm/types";
+import type { ServerRequestContext } from "./request-context";
 
 /**
  * 解析当前用户选用的执笔后端与模型（开发机可用 DEV_LLM_* 旁路）。
  */
-export async function resolveLlm(): Promise<ResolvedLlm> {
+export async function resolveLlm(
+  ctx: Pick<ServerRequestContext, "devBypass" | "supabase" | "userId">
+): Promise<ResolvedLlm> {
   const dev = process.env.DEV_LLM_API_KEY;
-  if (process.env.NODE_ENV === "development" && dev?.trim()) {
+  if (ctx.devBypass && dev?.trim()) {
     const prov = (process.env.DEV_LLM_PROVIDER as ByokProvider) || "openai";
     const customBase = process.env.DEV_LLM_BASE_URL?.trim();
     const model = process.env.DEV_LLM_MODEL?.trim() || DEFAULT_MODEL_BY_PROVIDER[prov];
@@ -25,17 +27,15 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
     };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = ctx.supabase;
+  const userId = ctx.userId;
   if (!supabase) throw new Error("本站尚未接通账户库，无法代你执笔。");
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("请先登入，并在砚台里保存你的执笔授权。");
+  if (!userId) throw new Error("请先登入，并在砚台里保存你的执笔授权。");
 
   const { data: settings } = await supabase
     .from("user_llm_settings")
     .select("active_provider, default_model")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   const active = (settings?.active_provider as ByokProvider) || "openai";
@@ -43,7 +43,7 @@ export async function resolveLlm(): Promise<ResolvedLlm> {
   const { data: row, error } = await supabase
     .from("user_provider_credentials")
     .select("ciphertext, api_base_url")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("provider", active)
     .maybeSingle();
 

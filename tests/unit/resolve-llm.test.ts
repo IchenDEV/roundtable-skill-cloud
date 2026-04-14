@@ -1,21 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: vi.fn(),
-}));
-
 vi.mock("@/lib/crypto/byok-crypto", () => ({
   decryptSecret: vi.fn(() => "plain-key"),
 }));
-
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 describe("resolveLlm", () => {
   const prev = { ...process.env };
 
   beforeEach(() => {
     vi.resetModules();
-    vi.mocked(createSupabaseServerClient).mockReset();
   });
 
   afterEach(() => {
@@ -23,11 +16,10 @@ describe("resolveLlm", () => {
   });
 
   it("uses DEV_LLM_API_KEY in development for openai_compat", async () => {
-    process.env.NODE_ENV = "development";
-    process.env.DEV_LLM_API_KEY = "dev-key-12345678";
+    process.env = { ...process.env, NODE_ENV: "development", DEV_LLM_API_KEY: "dev-key-12345678" };
     delete process.env.DEV_LLM_PROVIDER;
     const { resolveLlm } = await import("@/lib/server/resolve-llm");
-    const r = await resolveLlm();
+    const r = await resolveLlm({ devBypass: true, supabase: null, userId: null });
     expect(r.runtime.kind).toBe("openai_compat");
     if (r.runtime.kind === "openai_compat") {
       expect(r.runtime.apiKey).toBe("dev-key-12345678");
@@ -35,36 +27,26 @@ describe("resolveLlm", () => {
   });
 
   it("uses anthropic dev runtime when provider set", async () => {
-    process.env.NODE_ENV = "development";
-    process.env.DEV_LLM_API_KEY = "dev-key-12345678";
+    process.env = { ...process.env, NODE_ENV: "development", DEV_LLM_API_KEY: "dev-key-12345678" };
     process.env.DEV_LLM_PROVIDER = "anthropic";
     const { resolveLlm } = await import("@/lib/server/resolve-llm");
-    const r = await resolveLlm();
+    const r = await resolveLlm({ devBypass: true, supabase: null, userId: null });
     expect(r.runtime.kind).toBe("anthropic");
   });
 
   it("throws when supabase missing in production path", async () => {
-    process.env.NODE_ENV = "production";
+    process.env = { ...process.env, NODE_ENV: "production" };
     delete process.env.DEV_LLM_API_KEY;
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(null);
     const { resolveLlm } = await import("@/lib/server/resolve-llm");
-    await expect(resolveLlm()).rejects.toThrow(/账户库/);
+    await expect(resolveLlm({ devBypass: false, supabase: null, userId: null })).rejects.toThrow(/账户库/);
   });
 
-  it("resolves anthropic from supabase credentials", async () => {
-    process.env.NODE_ENV = "production";
+  it("resolves anthropic from supplied credentials context", async () => {
+    process.env = { ...process.env, NODE_ENV: "production" };
     delete process.env.DEV_LLM_API_KEY;
     process.env.KEY_ENCRYPTION_SECRET = "x".repeat(32);
 
-    const from = vi.fn();
-    vi.mocked(createSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
-      },
-      from,
-    } as never);
-
-    from.mockImplementation((table: string) => {
+    const from = vi.fn().mockImplementation((table: string) => {
       if (table === "user_llm_settings") {
         return {
           select: () => ({
@@ -97,24 +79,20 @@ describe("resolveLlm", () => {
     });
 
     const { resolveLlm } = await import("@/lib/server/resolve-llm");
-    const r = await resolveLlm();
+    const r = await resolveLlm({
+      devBypass: false,
+      userId: "u1",
+      supabase: { from } as never,
+    });
     expect(r.runtime.kind).toBe("anthropic");
   });
 
-  it("resolves from supabase row for openai_compat", async () => {
-    process.env.NODE_ENV = "production";
+  it("resolves from supplied row for openai_compat", async () => {
+    process.env = { ...process.env, NODE_ENV: "production" };
     delete process.env.DEV_LLM_API_KEY;
     process.env.KEY_ENCRYPTION_SECRET = "x".repeat(32);
 
-    const from = vi.fn();
-    vi.mocked(createSupabaseServerClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
-      },
-      from,
-    } as never);
-
-    from.mockImplementation((table: string) => {
+    const from = vi.fn().mockImplementation((table: string) => {
       if (table === "user_llm_settings") {
         return {
           select: () => ({
@@ -147,7 +125,11 @@ describe("resolveLlm", () => {
     });
 
     const { resolveLlm } = await import("@/lib/server/resolve-llm");
-    const r = await resolveLlm();
+    const r = await resolveLlm({
+      devBypass: false,
+      userId: "u1",
+      supabase: { from } as never,
+    });
     expect(r.runtime.kind).toBe("openai_compat");
   });
 });

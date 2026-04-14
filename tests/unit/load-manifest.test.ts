@@ -7,6 +7,8 @@ const manifestJson = JSON.stringify({
       skillId: "s1",
       name: "N",
       description: "",
+      displayName: "展示名",
+      displayBrief: "一句话",
       contentHash: "h",
       dirPath: "skills/s1",
       entryPath: "skills/s1/SKILL.md",
@@ -27,5 +29,6 @@ describe("loadSkillManifest", () => {
   it("parses manifest from .generated path", () => {
     const m = loadSkillManifest();
     expect(m.skills[0].skillId).toBe("s1");
+    expect(m.skills[0].displayName).toBe("展示名");
   });
 });

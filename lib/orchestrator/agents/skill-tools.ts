@@ -26,7 +26,7 @@ export function createSkillTools(skillDir: string) {
       return fs.readFileSync(abs, "utf8");
     },
     {
-      name: "read_file",
+      name: "file_read",
       description: "读取当前 skill 目录下的文件。传入相对路径，如 SKILL.md 或 references/research/01-writings.md",
       schema: z.object({
         filePath: z.string().describe("相对于 skill 根目录的文件路径"),

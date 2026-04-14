@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(),
+}));
+
 const resolveLlm = vi.hoisted(() =>
   vi.fn(async () => ({
     runtime: {
@@ -23,6 +27,7 @@ vi.mock("@/lib/llm/stream-chat", () => ({
   chatComplete,
 }));
 
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { POST } from "@/app/api/roundtable/recommend/route";
 
 function makeRequest() {
@@ -46,6 +51,11 @@ describe("POST /api/roundtable/recommend", () => {
     resolveLlm.mockClear();
     chatToolCall.mockReset();
     chatComplete.mockReset();
+    vi.mocked(createSupabaseServerClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }),
+      },
+    } as never);
   });
 
   it("prefers tool-call payloads and filters invalid ids", async () => {
@@ -105,5 +115,17 @@ describe("POST /api/roundtable/recommend", () => {
 
     expect(res.status).toBe(422);
     await expect(res.json()).resolves.toEqual({ error: "推荐引擎返回格式异常，请重试。" });
+  });
+
+  it("returns a manual-pick error when structure is valid but ids are unusable", async () => {
+    chatToolCall.mockResolvedValue({
+      input: { recommendedSkillIds: ["missing-skill"] },
+      text: "",
+    });
+
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(422);
+    await expect(res.json()).resolves.toEqual({ error: "推荐引擎未能找到合适人物，请手动选择。" });
   });
 });
