@@ -21,9 +21,9 @@
 }
 
 .court-vn-speaker {
-  left: 0.9rem;
-  bottom: 8.8rem;
-  width: min(296px, 29%);
+  left: 1.55rem;
+  bottom: 10.4rem;
+  width: min(282px, 27%);
   min-width: 188px;
   max-width: 340px;
   transform-origin: 24% 80%;
@@ -69,8 +69,8 @@
 
 .court-vn-attendees {
   position: absolute;
-  right: 2.6rem;
-  bottom: 16.2rem;
+  right: 1.35rem;
+  bottom: 17rem;
   display: flex;
   align-items: flex-end;
   gap: 0.65rem;
