@@ -60,7 +60,7 @@ export function CourtroomMainPanel({
   onRefresh,
 }: Props) {
   return (
-    <div className="space-y-5">
+    <div className="h-full space-y-5">
       <CourtroomStage
         transcript={state?.transcript ?? []}
         participantIds={state?.participantSkillIds ?? []}

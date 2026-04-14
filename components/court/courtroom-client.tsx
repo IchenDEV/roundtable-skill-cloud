@@ -36,7 +36,7 @@ export function CourtroomClient({
     <FadeIn>
       <InkReveal className="court-page space-y-5">
         <RoundtableReadinessBanner readiness={session.readiness} />
-        <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start xl:grid-cols-[400px_minmax(0,1fr)]">
+        <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-stretch xl:grid-cols-[400px_minmax(0,1fr)]">
           <CourtroomControlPanel
             skills={skills}
             topic={session.topic}
