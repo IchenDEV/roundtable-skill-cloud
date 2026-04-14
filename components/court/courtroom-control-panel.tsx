@@ -51,7 +51,7 @@ export function CourtroomControlPanel({
   onSeal,
 }: Props) {
   return (
-    <aside className="rounded-2xl bg-card p-5 text-ink-800 card-elevated lg:sticky lg:top-5">
+    <aside className="h-full rounded-2xl bg-card p-5 text-ink-800 card-elevated lg:sticky lg:top-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-sans text-xs tracking-[0.24em] text-ink-500">开庭设置</p>

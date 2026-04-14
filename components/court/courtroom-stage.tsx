@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import { cva } from "class-variance-authority";
 import { motion, useReducedMotion } from "framer-motion";
-import { CourtAdvocateSprite } from "@/components/court/court-advocate-sprite";
+import { CourtPortraitCard } from "@/components/court/court-portrait-card";
+import { buildCourtStageScene } from "@/components/court/court-stage-scene";
+import { useCourtDialogueAutoScroll } from "@/components/court/use-court-dialogue-autoscroll";
 import { useCourtStrikeEffect } from "@/components/court/use-court-strike-effect";
 import { MarkdownContent } from "@/components/roundtable/markdown-content";
 import type { RoundtableActiveTurn } from "@/lib/roundtable/active-turn";
@@ -22,18 +25,41 @@ type Props = {
   phaseLabel: string;
 };
 
-function roleLabel(entry: { role: string; skillId?: string }, skillTitle: (id: string) => string) {
-  if (entry.role === "moderator") return "审判长";
-  if (entry.role === "user") return "席上（你）";
-  return entry.skillId ? skillTitle(entry.skillId) : "列席";
-}
+const attendeeVariants = cva(null, {
+  variants: {
+    depth: {
+      front: null,
+      rear: "is-rear",
+    },
+  },
+  defaultVariants: {
+    depth: "front",
+  },
+});
 
-function latestSpeaker(transcript: TranscriptEntry[], liveTokens: LiveTokens, skillTitle: (id: string) => string) {
-  if (liveTokens) return { content: liveTokens.text, label: roleLabel(liveTokens, skillTitle), streaming: true };
-  const latest = transcript.at(-1);
-  if (!latest) return { content: "堂上无声。择定议题与列席，鸣槌开庭。", label: "候审", streaming: false };
-  return { content: latest.content, label: roleLabel(latest, skillTitle), streaming: false };
-}
+const castPillVariants = cva("court-vn-cast-pill", {
+  variants: {
+    active: {
+      false: null,
+      true: "is-active",
+    },
+  },
+  defaultVariants: {
+    active: false,
+  },
+});
+
+const dialogueCopyVariants = cva("court-dialogue-copy", {
+  variants: {
+    placeholder: {
+      false: null,
+      true: "is-placeholder",
+    },
+  },
+  defaultVariants: {
+    placeholder: false,
+  },
+});
 
 export function CourtroomStage({
   transcript,
@@ -47,17 +73,30 @@ export function CourtroomStage({
 }: Props) {
   const reduce = useReducedMotion();
   const stageRef = useRef<HTMLElement | null>(null);
+  const dialogueScrollRef = useRef<HTMLDivElement | null>(null);
+  const activeRole = activeTurn?.role;
   const activeSkillId = activeTurn?.role === "speaker" ? activeTurn.skillId : undefined;
   const targetSkillId = activeTurn?.target;
-  const latest = useMemo(() => latestSpeaker(transcript, liveTokens, skillTitle), [liveTokens, skillTitle, transcript]);
-  const spriteActive = !!liveTokens || activeTurn?.role === "speaker";
-  const roleState = {
-    moderator: activeTurn?.role === "moderator",
-    speaker: activeTurn?.role === "speaker" || !!liveTokens,
-    user: false,
-  };
+  // 将“谁站前景、谁是侧席、对白框展示什么”集中成纯数据，方便测试与后续换皮。
+  const scene = useMemo(
+    () =>
+      buildCourtStageScene({
+        transcript,
+        participantIds,
+        liveTokens,
+        activeRole,
+        activeSkillId,
+        targetSkillId,
+        skillTitle,
+      }),
+    [activeRole, activeSkillId, liveTokens, participantIds, skillTitle, targetSkillId, transcript]
+  );
+  // 前景陈词者只在真正的 speaker 回合或 speaker token 到来时激活，避免主持人口述时误亮主辩席。
+  const spriteActive = activeTurn?.role === "speaker" || liveTokens?.role === "speaker";
+  const dialogueScrollKey = `${transcript.length}:${scene.latest.label}:${scene.latest.streaming ? "1" : "0"}:${scene.latest.content.length}`;
 
   useCourtStrikeEffect(activeTurn, stageRef);
+  useCourtDialogueAutoScroll(dialogueScrollRef, dialogueScrollKey);
 
   return (
     <section
@@ -81,20 +120,48 @@ export function CourtroomStage({
         {targetSkillId ? <span>逼问：{skillTitle(targetSkillId)}</span> : null}
       </div>
       <div className="court-vn-cast" aria-label="公堂角色">
-        <span className={cn("court-vn-cast-pill", roleState.moderator && "is-active")}>审判长</span>
-        <span className={cn("court-vn-cast-pill", roleState.speaker && "is-active")}>
-          {activeSkillId ? skillTitle(activeSkillId) : "列席辩士"}
+        <span className={castPillVariants({ active: scene.roleState.moderator })}>审判长</span>
+        <span className={castPillVariants({ active: scene.roleState.speaker })}>
+          {activeSkillId ? skillTitle(activeSkillId) : "当前陈词者"}
         </span>
-        <span className={cn("court-vn-cast-pill", roleState.user && "is-active")}>席上（你）</span>
+        <span className={castPillVariants({ active: scene.roleState.user })}>席上（你）</span>
       </div>
       {activeTurn?.directive ? <div className="court-vn-directive">质询方向：{activeTurn.directive}</div> : null}
-      <motion.div
-        className="court-vn-sprite"
-        animate={spriteActive && !reduce ? { x: [0, 8, 0] } : { x: 0 }}
-        transition={{ duration: 0.22, repeat: spriteActive && !reduce ? 1 : 0 }}
-      >
-        <CourtAdvocateSprite active={spriteActive} />
-      </motion.div>
+      <div className="court-vn-portraits" aria-hidden>
+        <CourtPortraitCard
+          role="judge"
+          label="审判长"
+          seed="moderator-judge"
+          mood={scene.roleState.moderator ? "active" : "idle"}
+          className="court-vn-judge-wrap"
+        />
+        <motion.div
+          className="court-vn-speaker"
+          animate={spriteActive && !reduce ? { x: [0, 8, 0] } : { x: 0 }}
+          transition={{ duration: 0.22, repeat: spriteActive && !reduce ? 1 : 0 }}
+        >
+          <CourtPortraitCard
+            role="speaker"
+            label={scene.foregroundLabel}
+            seed={scene.foregroundSkillId ?? "speaker"}
+            mood={spriteActive ? "active" : "idle"}
+          />
+        </motion.div>
+        <div className="court-vn-attendees">
+          {scene.sidePortraitIds.map((id, index) => (
+            <CourtPortraitCard
+              key={id}
+              role="attendee"
+              label={skillTitle(id)}
+              seed={id}
+              mirror={index % 2 === 0}
+              mood={activeSkillId === id ? "active" : "idle"}
+              target={targetSkillId === id}
+              className={cn("court-vn-attendee", attendeeVariants({ depth: index === 1 ? "rear" : "front" }))}
+            />
+          ))}
+        </div>
+      </div>
       <div className="court-vn-roster" aria-label="列席席位">
         {participantIds.slice(0, 6).map((id) => (
           <span
@@ -110,12 +177,12 @@ export function CourtroomStage({
         ))}
       </div>
       <div className="court-dialogue">
-        <div className="court-dialogue-name">{latest.label}</div>
-        <div className="court-dialogue-copy">
-          <div className="court-dialogue-scroll">
-            <MarkdownContent content={latest.content} streaming={latest.streaming} />
+        <div className="court-dialogue-name">{scene.latest.label}</div>
+        <div className={dialogueCopyVariants({ placeholder: scene.latest.placeholder })}>
+          <div ref={dialogueScrollRef} className="court-dialogue-scroll">
+            <MarkdownContent content={scene.latest.content} streaming={scene.latest.streaming} />
           </div>
-          {latest.streaming ? <span className="court-dialogue-status">记录中</span> : null}
+          {scene.latest.streaming ? <span className="court-dialogue-status">记录中</span> : null}
           <span className="court-dialogue-next" aria-hidden />
         </div>
       </div>

@@ -12,10 +12,13 @@ type Props = {
   continueLabel: string;
   sealLabel: string;
   containerClassName?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
   textareaClassName?: string;
   submitClassName?: string;
   continueClassName?: string;
   sealClassName?: string;
+  actionsClassName?: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onContinue: () => void;
@@ -31,19 +34,23 @@ export function SessionUserPanel({
   continueLabel,
   sealLabel,
   containerClassName,
+  titleClassName,
+  descriptionClassName,
   textareaClassName,
   submitClassName,
   continueClassName,
   sealClassName,
+  actionsClassName,
   onChange,
   onSubmit,
   onContinue,
   onSeal,
 }: Props) {
+  // 允许场景页只覆盖文案块与按钮层的样式，保持面板结构与交互逻辑仍由这里统一维护。
   return (
     <section className={cn("rounded-2xl bg-card p-4 ring-ring lg:shrink-0", containerClassName)}>
-      <h3 className="text-sm font-medium text-ink-900">{title}</h3>
-      <p className="mt-1 text-xs text-ink-600">{description}</p>
+      <h3 className={cn("text-sm font-medium text-ink-900", titleClassName)}>{title}</h3>
+      <p className={cn("mt-1 text-xs text-ink-600", descriptionClassName)}>{description}</p>
       <textarea
         value={value}
         rows={2}
@@ -54,7 +61,7 @@ export function SessionUserPanel({
           textareaClassName
         )}
       />
-      <div className="mt-2 flex flex-wrap gap-2 font-sans">
+      <div className={cn("mt-2 flex flex-wrap gap-2 font-sans", actionsClassName)}>
         <Button
           type="button"
           onClick={onSubmit}

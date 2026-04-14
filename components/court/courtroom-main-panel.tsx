@@ -27,6 +27,21 @@ type Props = {
   onRefresh: () => void;
 };
 
+const courtUserPanelLayoutClassName = "relative z-10";
+
+const courtUserPanelStyles = {
+  container: "rounded-2xl bg-card p-5 text-ink-800 card-elevated",
+  title: "font-sans text-xs tracking-[0.24em] text-ink-500",
+  description: "mt-3 text-sm leading-7 text-ink-600",
+  textarea:
+    "mt-4 min-h-[4.8rem] border-ink-200/60 bg-paper-50 px-3 py-2 text-sm text-ink-900 shadow-[inset_0_1px_3px_rgba(28,25,20,0.04)] focus:border-cinnabar-600/30 focus:ring-1 focus:ring-gold-500",
+  actions: "mt-4 gap-2.5",
+  submit: "rounded-xl bg-cinnabar-600 text-card hover:bg-cinnabar-700 active:scale-[0.99]",
+  continue:
+    "rounded-xl border-ink-200/60 bg-card text-ink-800 hover:border-cinnabar-600/40 hover:bg-paper-50 active:scale-[0.99]",
+  seal: "rounded-xl border-cinnabar-600/50 bg-card text-cinnabar-800 hover:bg-cinnabar-600/10 active:scale-[0.99]",
+};
+
 export function CourtroomMainPanel({
   state,
   live,
@@ -43,7 +58,7 @@ export function CourtroomMainPanel({
   onRefresh,
 }: Props) {
   return (
-    <div className="space-y-5">
+    <div className="h-full space-y-5">
       <CourtroomStage
         transcript={state?.transcript ?? []}
         participantIds={state?.participantSkillIds ?? []}
@@ -55,23 +70,29 @@ export function CourtroomMainPanel({
         phaseLabel={state ? phaseInWords(state.phase) : "待开庭"}
       />
       {state?.phase === "await_user" && !streaming ? (
-        <SessionUserPanel
-          value={userDraft}
-          title="席间陈词"
-          description="本庭已收束。写下补充、质疑或证据，再续下一庭。"
-          placeholder="写下你的追问或判断..."
-          submitLabel="呈上并续庭"
-          continueLabel="直接续庭"
-          sealLabel="结案"
-          containerClassName="border border-gold-500/50 bg-ink-900/85 text-paper-50 card-dark-elevated"
-          textareaClassName="border-paper-50/20 bg-paper-50/95 focus:ring-2"
-          continueClassName="rounded-xl border-paper-50/20 bg-paper-50/8 text-paper-50 hover:bg-paper-50/14 hover:text-paper-50 active:scale-[0.99]"
-          sealClassName="rounded-xl border-gold-500/70 bg-gold-500/10 text-paper-50 hover:bg-gold-500/18 hover:text-paper-50 active:scale-[0.99]"
-          onChange={onUserDraftChange}
-          onSubmit={onSubmit}
-          onContinue={onContinue}
-          onSeal={onSeal}
-        />
+        <div className={courtUserPanelLayoutClassName}>
+          <SessionUserPanel
+            value={userDraft}
+            title="席间陈词"
+            description="本庭已暂收束。补一纸旁证、追问或异议，再续下一庭。"
+            placeholder="写下你的追问、判断，或准备递上的证据片段..."
+            submitLabel="呈上并续庭"
+            continueLabel="直接续庭"
+            sealLabel="结案"
+            containerClassName={courtUserPanelStyles.container}
+            titleClassName={courtUserPanelStyles.title}
+            descriptionClassName={courtUserPanelStyles.description}
+            textareaClassName={courtUserPanelStyles.textarea}
+            submitClassName={courtUserPanelStyles.submit}
+            continueClassName={courtUserPanelStyles.continue}
+            sealClassName={courtUserPanelStyles.seal}
+            actionsClassName={courtUserPanelStyles.actions}
+            onChange={onUserDraftChange}
+            onSubmit={onSubmit}
+            onContinue={onContinue}
+            onSeal={onSeal}
+          />
+        </div>
       ) : null}
       <SessionErrorCard
         error={error}
