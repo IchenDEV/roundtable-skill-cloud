@@ -57,4 +57,18 @@ describe("buildCourtStageScene", () => {
     expect(scene.roleState.moderator).toBe(true);
     expect(scene.latest.content).toBe("旧席发言");
   });
+
+  it("does not mark speaker state active when only moderator live tokens are streaming", () => {
+    const scene = buildCourtStageScene({
+      transcript: [],
+      participantIds: ["a", "b"],
+      liveTokens: { role: "moderator", text: "主持开场" },
+      activeRole: "moderator",
+      skillTitle,
+    });
+
+    expect(scene.roleState.moderator).toBe(true);
+    expect(scene.roleState.speaker).toBe(false);
+    expect(scene.latest.label).toBe("审判长");
+  });
 });

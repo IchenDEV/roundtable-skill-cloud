@@ -89,7 +89,8 @@ export function CourtroomStage({
       }),
     [activeRole, activeSkillId, liveTokens, participantIds, skillTitle, targetSkillId, transcript]
   );
-  const spriteActive = !!liveTokens || activeTurn?.role === "speaker";
+  // 前景陈词者只在真正的 speaker 回合或 speaker token 到来时激活，避免主持人口述时误亮主辩席。
+  const spriteActive = activeTurn?.role === "speaker" || liveTokens?.role === "speaker";
 
   useCourtStrikeEffect(activeTurn, stageRef);
 

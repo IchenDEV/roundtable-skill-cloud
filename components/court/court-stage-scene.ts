@@ -123,7 +123,7 @@ export function buildCourtStageScene(params: {
     sidePortraitIds: [...new Set(ordered)].slice(0, 2),
     roleState: {
       moderator: activeRole === "moderator",
-      speaker: !!activeSkillId || !!liveTokens,
+      speaker: !!activeSkillId || liveTokens?.role === "speaker",
       user: latest.role === "user",
     },
   };
