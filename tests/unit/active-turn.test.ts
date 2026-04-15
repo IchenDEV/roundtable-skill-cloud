@@ -6,20 +6,27 @@ describe("active turn helpers", () => {
     expect(buildModeratorActiveTurn("moderator_open")).toEqual({
       step: "moderator_open",
       role: "moderator",
+      target: undefined,
+      directive: undefined,
+      action: undefined,
     });
     expect(buildModeratorActiveTurn("synthesis")).toEqual({
       step: "synthesis",
       role: "moderator",
+      target: undefined,
+      directive: undefined,
+      action: undefined,
     });
   });
 
   it("builds participant turns with target and directive", () => {
-    expect(buildParticipantActiveTurn({ skillId: "a", target: "b", directive: "驳其前提" })).toEqual({
+    expect(buildParticipantActiveTurn({ skillId: "a", target: "b", directive: "驳其前提", action: "attack" })).toEqual({
       step: "participant",
       role: "speaker",
       skillId: "a",
       target: "b",
       directive: "驳其前提",
+      action: "attack",
     });
   });
 });

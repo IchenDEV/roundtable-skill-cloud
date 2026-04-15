@@ -94,6 +94,14 @@ export function CourtroomStage({
   // 前景陈词者只在真正的 speaker 回合或 speaker token 到来时激活，避免主持人口述时误亮主辩席。
   const spriteActive = activeTurn?.role === "speaker" || liveTokens?.role === "speaker";
   const dialogueScrollKey = `${transcript.length}:${scene.latest.label}:${scene.latest.streaming ? "1" : "0"}:${scene.latest.content.length}`;
+  const actionLabel =
+    activeTurn?.action === "attack"
+      ? "交叉质询"
+      : activeTurn?.action === "defend"
+        ? "当场应答"
+        : activeTurn?.step === "moderator_judge"
+          ? "主持插刀"
+          : null;
 
   useCourtStrikeEffect(activeTurn, stageRef);
   useCourtDialogueAutoScroll(dialogueScrollRef, dialogueScrollKey);
@@ -116,6 +124,7 @@ export function CourtroomStage({
         <span>
           第 {round} / {maxRounds} 庭 · {phaseLabel}
         </span>
+        {actionLabel ? <span>{actionLabel}</span> : null}
         {activeSkillId ? <span>发言：{skillTitle(activeSkillId)}</span> : null}
         {targetSkillId ? <span>逼问：{skillTitle(targetSkillId)}</span> : null}
       </div>
@@ -126,7 +135,7 @@ export function CourtroomStage({
         </span>
         <span className={castPillVariants({ active: scene.roleState.user })}>席上（你）</span>
       </div>
-      {activeTurn?.directive ? <div className="court-vn-directive">质询方向：{activeTurn.directive}</div> : null}
+      {activeTurn?.directive ? <div className="court-vn-directive">本手限定：{activeTurn.directive}</div> : null}
       <div className="court-vn-portraits" aria-hidden>
         <CourtPortraitCard
           role="judge"

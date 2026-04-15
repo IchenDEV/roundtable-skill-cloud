@@ -80,7 +80,17 @@ export const streamEventSchema = z.discriminatedUnion("type", [
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;
 
-export const turnStepSchema = z.enum(["moderator_open", "participant", "moderator_wrap", "synthesis"]);
+export const debateActionSchema = z.enum(["attack", "defend", "judge"]);
+
+export type DebateAction = z.infer<typeof debateActionSchema>;
+
+export const turnStepSchema = z.enum([
+  "moderator_open",
+  "participant",
+  "moderator_judge",
+  "moderator_wrap",
+  "synthesis",
+]);
 
 export type TurnStep = z.infer<typeof turnStepSchema>;
 
@@ -90,6 +100,7 @@ export const turnRequestSchema = z.object({
   skillId: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
   target: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
   directive: z.string().max(1000).optional(),
+  action: debateActionSchema.optional(),
 });
 
 export type TurnRequest = z.infer<typeof turnRequestSchema>;
@@ -111,6 +122,7 @@ export const turnResponseEventSchema = z.discriminatedUnion("type", [
     type: z.literal("dispatch"),
     steps: z.array(
       z.object({
+        action: debateActionSchema.optional(),
         skillId: z.string(),
         target: z.string().optional(),
         directive: z.string().optional(),

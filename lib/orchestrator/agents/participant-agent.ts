@@ -206,6 +206,7 @@ export async function* streamDebateParticipantTurn(
   formattedTranscript: string,
   displayName: string,
   userInterjectionNote: string,
+  action?: "attack" | "defend",
   target?: string,
   directive?: string,
   participantNamesOrSignal?: string[] | AbortSignal,
@@ -213,6 +214,13 @@ export async function* streamDebateParticipantTurn(
 ): AsyncGenerator<StreamEvent> {
   const participantNames = Array.isArray(participantNamesOrSignal) ? participantNamesOrSignal : [];
   const actualSignal = isAbortSignalLike(participantNamesOrSignal) ? participantNamesOrSignal : signal;
-  const userContent = buildDebateUserMessage(formattedTranscript, displayName, userInterjectionNote, target, directive);
+  const userContent = buildDebateUserMessage(
+    formattedTranscript,
+    displayName,
+    userInterjectionNote,
+    action,
+    target,
+    directive
+  );
   yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, actualSignal);
 }

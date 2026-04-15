@@ -1,4 +1,4 @@
-import type { TurnStep } from "@/lib/spec/schema";
+import type { DebateAction, TurnStep } from "@/lib/spec/schema";
 
 export type RoundtableActiveTurn = {
   step: TurnStep;
@@ -6,16 +6,27 @@ export type RoundtableActiveTurn = {
   skillId?: string;
   target?: string;
   directive?: string;
+  action?: DebateAction;
 } | null;
 
 export type ActiveTurnInput = {
   skillId?: string;
   target?: string;
   directive?: string;
+  action?: DebateAction;
 };
 
-export function buildModeratorActiveTurn(step: Extract<TurnStep, "moderator_open" | "moderator_wrap" | "synthesis">) {
-  return { step, role: "moderator" as const };
+export function buildModeratorActiveTurn(
+  step: Extract<TurnStep, "moderator_open" | "moderator_judge" | "moderator_wrap" | "synthesis">,
+  input?: Pick<ActiveTurnInput, "target" | "directive" | "action">
+) {
+  return {
+    step,
+    role: "moderator" as const,
+    target: input?.target,
+    directive: input?.directive,
+    action: input?.action,
+  };
 }
 
 export function buildParticipantActiveTurn(input: ActiveTurnInput) {
@@ -25,5 +36,6 @@ export function buildParticipantActiveTurn(input: ActiveTurnInput) {
     skillId: input.skillId,
     target: input.target,
     directive: input.directive,
+    action: input.action,
   };
 }

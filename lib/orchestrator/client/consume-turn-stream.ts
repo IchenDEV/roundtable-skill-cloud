@@ -1,6 +1,11 @@
-import type { RoundtableState, TurnResponseEvent, TurnStep } from "@/lib/spec/schema";
+import type { DebateAction, RoundtableState, TurnResponseEvent, TurnStep } from "@/lib/spec/schema";
 
-export type DispatchStep = { skillId: string; target?: string; directive?: string };
+export type DispatchStep = {
+  action?: DebateAction;
+  skillId: string;
+  target?: string;
+  directive?: string;
+};
 
 export type TurnStreamHandlers = {
   onToken: (role: "moderator" | "speaker", text: string, skillId?: string) => void;
@@ -13,12 +18,15 @@ export type TurnStreamHandlers = {
 
 function eventMatchesExpectedTurn(
   step: TurnStep,
-  opts: { skillId?: string; target?: string; directive?: string },
+  opts: { skillId?: string; target?: string; directive?: string; action?: DebateAction },
   event: TurnResponseEvent
 ) {
   if (event.type === "token" || event.type === "turn_complete") {
     if (step === "participant") {
       return event.role === "speaker" && event.skillId === opts.skillId;
+    }
+    if (step === "moderator_judge") {
+      return event.role === "moderator";
     }
     return event.role === "moderator";
   }
@@ -32,7 +40,7 @@ function eventMatchesExpectedTurn(
 export async function consumeTurnStream(
   state: RoundtableState,
   step: TurnStep,
-  opts: { skillId?: string; target?: string; directive?: string },
+  opts: { skillId?: string; target?: string; directive?: string; action?: DebateAction },
   handlers: TurnStreamHandlers,
   signal: AbortSignal
 ) {

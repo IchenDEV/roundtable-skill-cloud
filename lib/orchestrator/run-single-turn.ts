@@ -4,7 +4,7 @@ import type { TurnResponseEvent, TurnRequest } from "../spec/schema";
 import { getSkillById } from "../skills/lookup";
 import { loadModeratorPrompt, loadModeratorDebatePrompt } from "./moderator-load";
 import { formatTranscript, formatTranscriptForSeat } from "./format-context";
-import { parseDispatchBlock, defaultDispatch } from "./parse-dispatch";
+import { parseDispatchBlock, defaultDebateDispatch } from "./parse-dispatch";
 import type { SkillManifest } from "../skills/types";
 import type { ResolvedLlm } from "../llm/types";
 import { getSkillDisplay } from "../skills/skill-display";
@@ -24,6 +24,42 @@ export type SingleTurnParams = {
   resolved: ResolvedLlm;
   signal?: AbortSignal;
 };
+
+function buildDebateJudgeUserMessage(params: {
+  topic: string;
+  transcript: string;
+  attacker?: string;
+  defender?: string;
+  directive?: string;
+  userInterjectionNote: string;
+}) {
+  const { topic, transcript, attacker, defender, directive, userInterjectionNote } = params;
+  const duelLabel =
+    attacker && defender ? `刚才这轮交叉质询由【${attacker}】追打【${defender}】。` : "刚才这轮交叉质询已经结束。";
+  const focus = directive ? `争点限定：${directive}` : "请直接指出谁打空了，谁没回答。";
+
+  return `议题：${topic}
+
+${duelLabel}
+${focus}
+
+【席上插话状态】
+${userInterjectionNote}
+
+【当前全文记录】
+${transcript}
+
+请只输出一小段主持插刀，完成三件事：
+1. 判刚才谁占上风，谁在回避；
+2. 点出最该继续追的一处漏洞；
+3. 用一句狠话把下一手逼出来。
+
+限制：
+- 只许说主持人的话；
+- 不许替任何列席写台词；
+- 控制在 120 字内；
+- 不要输出 JSON。`;
+}
 
 /**
  * Run a single turn step (moderator_open, participant, moderator_wrap, or synthesis).
@@ -72,7 +108,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
 
       if (isDebate && fullText) {
         const dispatch =
-          parseDispatchBlock(fullText, state.participantSkillIds) ?? defaultDispatch(state.participantSkillIds);
+          parseDispatchBlock(fullText, state.participantSkillIds) ?? defaultDebateDispatch(state.participantSkillIds);
         yield { type: "dispatch", steps: dispatch };
       }
 
@@ -81,7 +117,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
     }
 
     case "participant": {
-      const { skillId, target, directive } = request;
+      const { skillId, target, directive, action } = request;
       if (!skillId) throw new Error("participant step requires skillId");
       const sk = getSkillById(manifest, skillId);
       if (!sk) throw new Error(`Unknown skill: ${skillId}`);
@@ -99,6 +135,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           tctx,
           displayName,
           userInterjectionNote,
+          action === "attack" || action === "defend" ? action : undefined,
           targetDisplay,
           directive,
           Object.values(skillNames),
@@ -119,6 +156,35 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
         )) {
           yield ev as TurnResponseEvent;
         }
+      }
+
+      yield { type: "done" };
+      return;
+    }
+
+    case "moderator_judge": {
+      const ctx = formatTranscript(state.transcript, skillNames);
+      const attacker = request.skillId ? skillNames[request.skillId] || request.skillId : undefined;
+      const defender = request.target ? skillNames[request.target] || request.target : undefined;
+      const userInterjectionNote = buildUserInterjectionNote(state.transcript, "moderator_wrap");
+      const judgeUser = buildDebateJudgeUserMessage({
+        topic: state.topic,
+        transcript: ctx,
+        attacker,
+        defender,
+        directive: request.directive,
+        userInterjectionNote,
+      });
+
+      for await (const ev of streamModeratorTurn(
+        runtime,
+        model,
+        modPrompt,
+        judgeUser,
+        Object.values(skillNames),
+        signal
+      )) {
+        yield ev as TurnResponseEvent;
       }
 
       yield { type: "done" };
