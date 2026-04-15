@@ -44,24 +44,38 @@ export function buildDebateUserMessage(
   formattedTranscript: string,
   displayName: string,
   userInterjectionNote: string,
+  action?: "attack" | "defend",
   target?: string,
   directive?: string
 ) {
-  const rebuttal = target
-    ? `\n\n你本轮的首要任务：**点名反驳【${target}】${directive ? `关于「${directive}」` : ""}的核心论点**，指出其逻辑漏洞或事实错误，然后再阐述你自己的立场。`
-    : directive
-      ? `\n\n你本轮的发言方向：${directive}。`
-      : "";
+  const roleTask =
+    action === "attack"
+      ? `你本轮是主动质询方。必须咬住【${target ?? "对手"}】刚才最薄弱的一点，先打穿，再给出你的判断。`
+      : action === "defend"
+        ? `你本轮是被质询方。必须先正面回答【${target ?? "对手"}】的攻击，再补一记反击，不准转移。`
+        : target
+          ? `你本轮的首要任务：点名回应【${target}】${directive ? `关于「${directive}」` : ""}的核心论点。`
+          : "你本轮需围绕当前争点作答。";
 
-  const prompt = target
-    ? `请先反驳【${target}】的论点，再阐述你的立场（承接上文与席上插话）。`
-    : "请就当前争点发表你的独立论述（承接上文与席上插话）。";
+  const extra = directive ? `\n\n本轮限定：${directive}。` : "";
+
+  const prompt =
+    action === "attack"
+      ? `请直接向【${target ?? "对手"}】发起质询，指出一处具体漏洞，承接上文与席上插话。`
+      : action === "defend"
+        ? `请先回答【${target ?? "对手"}】的质询，再做短促反击，承接上文与席上插话。`
+        : target
+          ? `请先回应【${target}】的论点，再阐述你的立场（承接上文与席上插话）。`
+          : "请就当前争点发表你的独立论述（承接上文与席上插话）。";
 
   return `【本轮席上插话状态】
 ${userInterjectionNote}
 
 【当前全文记录】
-${formattedTranscript}${rebuttal}
+${formattedTranscript}
+
+【本轮任务】
+${roleTask}${extra}
 
 你是「${displayName}」。以「${displayName}」的第一人称视角，${prompt}记住：你只能是「${displayName}」。`;
 }

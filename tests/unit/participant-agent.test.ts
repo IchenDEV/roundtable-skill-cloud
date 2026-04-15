@@ -238,7 +238,7 @@ describe("participant-agent", () => {
     });
 
     await expect(
-      drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", "乙", "驳其前提"))
+      drain(streamDebateParticipantTurn(runtime, "gpt", skill, "记录", "甲", "无新增插话", "attack", "乙", "驳其前提"))
     ).rejects.toThrow("[sk1] boom");
   });
 });

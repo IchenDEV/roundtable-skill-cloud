@@ -11,12 +11,27 @@ import {
   buildParticipantActiveTurn,
   type RoundtableActiveTurn,
 } from "@/lib/roundtable/active-turn";
-import type { RoundtableState } from "@/lib/spec/schema";
+import type { DebateAction, RoundtableState } from "@/lib/spec/schema";
 
 function isAbortError(err: unknown): boolean {
   if (err instanceof DOMException) return err.name === "AbortError";
   if (!(err instanceof Error)) return false;
   return err.name === "AbortError" || /abort/i.test(err.message);
+}
+
+function isDebateSpeakerAction(action: DebateAction | undefined): action is "attack" | "defend" {
+  return action === "attack" || action === "defend";
+}
+
+function formatDebateStepLabel(step: DispatchStep) {
+  const actor = step.skillId;
+  const target = step.target;
+  const action = step.action;
+
+  if (action === "attack") return target ? `${actor} 追打 ${target}` : `${actor} 发起质询`;
+  if (action === "defend") return target ? `${actor} 回应 ${target}` : `${actor} 当场应答`;
+  if (action === "judge") return target ? `主持插刀：判 ${actor} vs ${target}` : "主持插刀";
+  return actor;
 }
 
 export type OrchestratorCallbacks = {
@@ -89,19 +104,55 @@ export function useRoundtableOrchestrator() {
       cbs.onStateChange(s);
 
       const isDebate = s.mode === "debate";
-      const participantSteps: { skillId: string; target?: string; directive?: string }[] =
+      const steps: DispatchStep[] =
         isDebate && dispatch ? dispatch : s.participantSkillIds.map((skillId) => ({ skillId }));
 
-      for (const ps of participantSteps) {
+      for (const ps of steps) {
         if (signal.aborted) return;
-        setCurrentStep(ps.skillId);
+
+        if (isDebate && ps.action === "judge") {
+          setCurrentStep(formatDebateStepLabel(ps));
+          setActiveTurn(buildModeratorActiveTurn("moderator_judge", ps));
+          let judgeText = "";
+
+          await consumeTurnStream(
+            s,
+            "moderator_judge",
+            ps,
+            {
+              onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
+              onTurnComplete: (_role, fullText) => {
+                judgeText = fullText;
+              },
+              onDispatch: () => {},
+              onMemory: () => {},
+              onSynthesis: () => {},
+              onError: (msg) => {
+                throw new Error(msg);
+              },
+            },
+            signal
+          );
+
+          if (signal.aborted) return;
+          cbs.onTurnComplete();
+
+          s = {
+            ...s,
+            transcript: [...s.transcript, { role: "moderator", content: judgeText, ts: new Date().toISOString() }],
+          };
+          cbs.onStateChange(s);
+          continue;
+        }
+
+        setCurrentStep(isDebate ? formatDebateStepLabel(ps) : ps.skillId);
         setActiveTurn(buildParticipantActiveTurn(ps));
         let spokeText = "";
 
         await consumeTurnStream(
           s,
           "participant",
-          ps,
+          { ...ps, action: isDebateSpeakerAction(ps.action) ? ps.action : undefined },
           {
             onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
             onTurnComplete: (_role, fullText) => {

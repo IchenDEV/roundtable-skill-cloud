@@ -42,7 +42,7 @@ describe("consume-turn-stream", () => {
     fetchMock.mockResolvedValue(
       createSseResponse([
         'data: {"type":"token","role":"moderator","text":"甲"}\n\n',
-        'data: {"type":"dispatch","steps":[{"skillId":"skill-a","directive":"追问"}]}\n\n',
+        'data: {"type":"dispatch","steps":[{"action":"attack","skillId":"skill-a","directive":"追问"}]}\n\n',
         'data: {"type":"turn_complete","role":"moderator","fullText":"甲乙"}\n\n',
         'data: {"type":"done"}\n\n',
       ])
@@ -60,8 +60,38 @@ describe("consume-turn-stream", () => {
     await consumeTurnStream(state, "moderator_open", {}, handlers, new AbortController().signal);
 
     expect(handlers.onToken).toHaveBeenCalledWith("moderator", "甲", undefined);
-    expect(handlers.onDispatch).toHaveBeenCalledWith([{ skillId: "skill-a", directive: "追问" }]);
+    expect(handlers.onDispatch).toHaveBeenCalledWith([{ action: "attack", skillId: "skill-a", directive: "追问" }]);
     expect(handlers.onTurnComplete).toHaveBeenCalledWith("moderator", "甲乙", undefined);
+  });
+
+  it("accepts moderator judge turn events", async () => {
+    fetchMock.mockResolvedValue(
+      createSseResponse([
+        'data: {"type":"token","role":"moderator","text":"别躲"}\n\n',
+        'data: {"type":"turn_complete","role":"moderator","fullText":"别躲，正面答。"}\n\n',
+        'data: {"type":"done"}\n\n',
+      ])
+    );
+
+    const handlers = {
+      onToken: vi.fn(),
+      onTurnComplete: vi.fn(),
+      onDispatch: vi.fn(),
+      onMemory: vi.fn(),
+      onSynthesis: vi.fn(),
+      onError: vi.fn(),
+    };
+
+    await consumeTurnStream(
+      state,
+      "moderator_judge",
+      { action: "judge", skillId: "skill-a", target: "skill-b", directive: "继续打定义" },
+      handlers,
+      new AbortController().signal
+    );
+
+    expect(handlers.onToken).toHaveBeenCalledWith("moderator", "别躲", undefined);
+    expect(handlers.onTurnComplete).toHaveBeenCalledWith("moderator", "别躲，正面答。", undefined);
   });
 
   it("accepts wrap memory events on moderator_wrap", async () => {
