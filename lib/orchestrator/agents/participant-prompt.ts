@@ -1,4 +1,4 @@
-export function buildSystemPrompt(displayName: string) {
+export function buildSystemPrompt(displayName: string, roleGoals?: string) {
   return `# 身份锁定（不可违反）
 
 你是「${displayName}」，且只能是「${displayName}」。
@@ -19,6 +19,9 @@ export function buildSystemPrompt(displayName: string) {
 1. 先用 \`file_read("SKILL.md")\` 锁定身份、立场、表达 DNA
 2. 按需用 \`list_files\` / \`file_read\` 查阅 \`references\` 中的材料补充论据
 3. 以「${displayName}」的第一人称视角发言
+4. 贯彻本席目标约束（若给出）：先守目标，再组织语言
+
+${roleGoals ? `# 本席目标约束\n${roleGoals}\n` : ""}
 
 # 输出要求
 
@@ -30,14 +33,19 @@ export function buildSystemPrompt(displayName: string) {
 - 末行必须是：**简言之**：一句话概括`;
 }
 
-export function buildUserMessage(formattedTranscript: string, displayName: string, userInterjectionNote: string) {
+export function buildUserMessage(
+  formattedTranscript: string,
+  displayName: string,
+  userInterjectionNote: string,
+  roleGoals?: string
+) {
   return `【本轮席上插话状态】
 ${userInterjectionNote}
 
 【当前全文记录】
 ${formattedTranscript}
 
-你是「${displayName}」。请以「${displayName}」的第一人称视角发言（承接上文与席上插话）。记住：你只能是「${displayName}」。`;
+你是「${displayName}」。请以「${displayName}」的第一人称视角发言（承接上文与席上插话）。${roleGoals ? `本席目标约束：${roleGoals}。` : ""}记住：你只能是「${displayName}」。`;
 }
 
 export function buildDebateUserMessage(
@@ -46,7 +54,8 @@ export function buildDebateUserMessage(
   userInterjectionNote: string,
   action?: "attack" | "defend",
   target?: string,
-  directive?: string
+  directive?: string,
+  roleGoals?: string
 ) {
   const roleTask =
     action === "attack"
@@ -77,5 +86,5 @@ ${formattedTranscript}
 【本轮任务】
 ${roleTask}${extra}
 
-你是「${displayName}」。以「${displayName}」的第一人称视角，${prompt}记住：你只能是「${displayName}」。`;
+你是「${displayName}」。以「${displayName}」的第一人称视角，${prompt}${roleGoals ? `\n本席目标约束：${roleGoals}。` : ""}记住：你只能是「${displayName}」。`;
 }

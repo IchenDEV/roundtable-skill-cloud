@@ -11,6 +11,19 @@ export type TurnStreamHandlers = {
   onToken: (role: "moderator" | "speaker", text: string, skillId?: string) => void;
   onTurnComplete: (role: "moderator" | "speaker", fullText: string, skillId?: string) => void;
   onDispatch: (steps: DispatchStep[]) => void;
+  onTurnStructured: (payload: {
+    skillId: string;
+    stance?: string;
+    confidence?: "low" | "medium" | "high";
+    evidenceTendency?: string;
+    styleCard?: string;
+    conflictPoints?: string[];
+  }) => void;
+  onRoundStructured: (payload: {
+    consensus?: { text: string; skillIds: string[] };
+    disagreements?: { text: string; skillIds: string[] };
+    evidenceNeeded?: { text: string; skillIds: string[] };
+  }) => void;
   onMemory: (text: string) => void;
   onSynthesis: (text: string) => void;
   onError: (msg: string) => void;
@@ -32,6 +45,8 @@ function eventMatchesExpectedTurn(
   }
 
   if (event.type === "dispatch") return step === "moderator_open";
+  if (event.type === "turn_structured") return step === "participant";
+  if (event.type === "round_structured") return step === "moderator_wrap";
   if (event.type === "memory") return step === "moderator_wrap";
   if (event.type === "synthesis_complete") return step === "synthesis";
   return true;
@@ -99,6 +114,8 @@ export async function consumeTurnStream(
         handlers.onTurnComplete(event.role, event.fullText, event.skillId);
       }
       if (event.type === "dispatch") handlers.onDispatch(event.steps);
+      if (event.type === "turn_structured") handlers.onTurnStructured(event);
+      if (event.type === "round_structured") handlers.onRoundStructured(event);
       if (event.type === "memory") handlers.onMemory(event.text);
       if (event.type === "synthesis_complete") {
         sawCompletion = true;

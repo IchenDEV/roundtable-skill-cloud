@@ -9,6 +9,7 @@ import type { SkillManifest } from "../skills/types";
 import type { ResolvedLlm } from "../llm/types";
 import { getSkillDisplay } from "../skills/skill-display";
 import { buildUserInterjectionNote, hasPendingUserInterjection } from "./user-interjection-context";
+import { deriveRoundSection, deriveSpeakerStructured } from "./turn-structured";
 
 function buildSkillNames(ids: string[]): Record<string, string> {
   const names: Record<string, string> = {};
@@ -126,6 +127,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
       const displayName = skillNames[skillId];
       const userInterjectionNote = buildUserInterjectionNote(state.transcript, "participant");
 
+      let participantFullText = "";
       if (isDebate) {
         const targetDisplay = target ? skillNames[target] || target : undefined;
         for await (const ev of streamDebateParticipantTurn(
@@ -141,6 +143,7 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           Object.values(skillNames),
           signal
         )) {
+          if (ev.type === "turn_complete") participantFullText = ev.fullText;
           yield ev as TurnResponseEvent;
         }
       } else {
@@ -154,8 +157,18 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
           Object.values(skillNames),
           signal
         )) {
+          if (ev.type === "turn_complete") participantFullText = ev.fullText;
           yield ev as TurnResponseEvent;
         }
+      }
+
+      if (participantFullText && !signal?.aborted) {
+        const structured = deriveSpeakerStructured(participantFullText);
+        yield {
+          type: "turn_structured",
+          skillId,
+          ...structured,
+        };
       }
 
       yield { type: "done" };
@@ -195,8 +208,8 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
       const wrapCtx = formatTranscript(state.transcript, skillNames);
       const userInterjectionNote = buildUserInterjectionNote(state.transcript, "moderator_wrap");
       const wrapUser = isDebate
-        ? `本轮交锋已毕。请：1）指出论证最薄弱的一席及其逻辑漏洞；2）给「主持人记忆」一段话供下轮使用；3）提出下轮引导问题。${userInterjectionNote}`
-        : `本轮发言已齐。请：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。${userInterjectionNote}`;
+        ? `本轮交锋已毕。请输出三段结构并点名席位：\n# 共识\n- 内容（席位：skillId 列表）\n# 分歧\n- 内容（席位：skillId 列表）\n# 待证据补强\n- 内容（席位：skillId 列表）\n然后再给出：1）指出论证最薄弱的一席及其逻辑漏洞；2）给「主持人记忆」一段话供下轮使用；3）提出下轮引导问题。${userInterjectionNote}`
+        : `本轮发言已齐。请输出三段结构并点名席位：\n# 共识\n- 内容（席位：skillId 列表）\n# 分歧\n- 内容（席位：skillId 列表）\n# 待证据补强\n- 内容（席位：skillId 列表）\n然后再给出：1）提炼最深争点；2）给「主持人记忆」一段话供下轮使用；3）提出下一层引导问题。${userInterjectionNote}`;
 
       let wrap = "";
       for await (const ev of streamModeratorTurn(
@@ -212,6 +225,12 @@ export async function* runSingleTurn(params: SingleTurnParams): AsyncGenerator<T
       }
 
       if (wrap && !signal?.aborted) {
+        yield {
+          type: "round_structured",
+          consensus: deriveRoundSection(wrap, "共识", state.participantSkillIds),
+          disagreements: deriveRoundSection(wrap, "分歧", state.participantSkillIds),
+          evidenceNeeded: deriveRoundSection(wrap, "待证据补强", state.participantSkillIds),
+        };
         const memory = await summarizeModeratorMemory(runtime, model, wrap, signal);
         yield { type: "memory", text: memory };
       }

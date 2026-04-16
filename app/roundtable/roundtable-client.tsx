@@ -112,6 +112,11 @@ export function RoundtableClient({
             onSeal={session.sealEnd}
           />
         </div>
+        {session.state ? (
+          <p className="mt-3 text-xs text-ink-500">
+            席位卡片现展示：立场标签、证据倾向、风格卡片；轮末附「共识 / 分歧 / 待证据补强」来源席位。
+          </p>
+        ) : null}
       </InkReveal>
     </FadeIn>
   );

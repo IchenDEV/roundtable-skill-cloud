@@ -85,6 +85,8 @@ export function useRoundtableOrchestrator() {
           onDispatch: (steps) => {
             dispatch = steps;
           },
+          onTurnStructured: () => {},
+          onRoundStructured: () => {},
           onMemory: () => {},
           onSynthesis: () => {},
           onError: (msg) => {
@@ -125,6 +127,8 @@ export function useRoundtableOrchestrator() {
                 judgeText = fullText;
               },
               onDispatch: () => {},
+              onTurnStructured: () => {},
+              onRoundStructured: () => {},
               onMemory: () => {},
               onSynthesis: () => {},
               onError: (msg) => {
@@ -148,6 +152,15 @@ export function useRoundtableOrchestrator() {
         setCurrentStep(isDebate ? formatDebateStepLabel(ps) : ps.skillId);
         setActiveTurn(buildParticipantActiveTurn(ps));
         let spokeText = "";
+        let structured:
+          | {
+              stance?: string;
+              confidence?: "low" | "medium" | "high";
+              evidenceTendency?: string;
+              styleCard?: string;
+              conflictPoints?: string[];
+            }
+          | undefined;
 
         await consumeTurnStream(
           s,
@@ -159,6 +172,16 @@ export function useRoundtableOrchestrator() {
               spokeText = fullText;
             },
             onDispatch: () => {},
+            onTurnStructured: (payload) => {
+              structured = {
+                stance: payload.stance,
+                confidence: payload.confidence,
+                evidenceTendency: payload.evidenceTendency,
+                styleCard: payload.styleCard,
+                conflictPoints: payload.conflictPoints,
+              };
+            },
+            onRoundStructured: () => {},
             onMemory: () => {},
             onSynthesis: () => {},
             onError: (msg) => {
@@ -175,7 +198,13 @@ export function useRoundtableOrchestrator() {
           ...s,
           transcript: [
             ...s.transcript,
-            { role: "speaker" as const, skillId: ps.skillId, content: spokeText, ts: new Date().toISOString() },
+            {
+              role: "speaker" as const,
+              skillId: ps.skillId,
+              content: spokeText,
+              analysis: structured,
+              ts: new Date().toISOString(),
+            },
           ],
         };
         cbs.onStateChange(s);
@@ -186,6 +215,13 @@ export function useRoundtableOrchestrator() {
       setActiveTurn(buildModeratorActiveTurn("moderator_wrap"));
       let wrapText = "";
       let memory = "";
+      let roundStructured:
+        | {
+            consensus?: { text: string; skillIds: string[] };
+            disagreements?: { text: string; skillIds: string[] };
+            evidenceNeeded?: { text: string; skillIds: string[] };
+          }
+        | undefined;
 
       await consumeTurnStream(
         s,
@@ -197,6 +233,10 @@ export function useRoundtableOrchestrator() {
             wrapText = fullText;
           },
           onDispatch: () => {},
+          onTurnStructured: () => {},
+          onRoundStructured: (payload) => {
+            roundStructured = payload;
+          },
           onMemory: (text) => {
             memory = text;
           },
@@ -216,7 +256,15 @@ export function useRoundtableOrchestrator() {
         round: s.round + 1,
         phase: "await_user" as const,
         moderatorMemory: memory || s.moderatorMemory,
-        transcript: [...s.transcript, { role: "moderator", content: wrapText, ts: new Date().toISOString() }],
+        transcript: [
+          ...s.transcript,
+          {
+            role: "moderator",
+            content: wrapText,
+            analysis: { roundSummary: roundStructured },
+            ts: new Date().toISOString(),
+          },
+        ],
       };
       cbs.onStateChange(s);
 
@@ -261,6 +309,8 @@ export function useRoundtableOrchestrator() {
           onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
           onTurnComplete: () => {},
           onDispatch: () => {},
+          onTurnStructured: () => {},
+          onRoundStructured: () => {},
           onMemory: () => {},
           onSynthesis: (text) => {
             synText = text;

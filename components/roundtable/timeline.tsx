@@ -93,7 +93,7 @@ const TimelineEntry = memo(function TimelineEntry({
   index,
   reduce,
 }: {
-  entry: { content: string; role: string };
+  entry: TranscriptEntry;
   label: string;
   style: { bg: string; ring: string; badge: string };
   isLive: boolean;
@@ -127,9 +127,47 @@ const TimelineEntry = memo(function TimelineEntry({
       <div className="prose-roundtable">
         <MarkdownContent content={entry.content} streaming={isLive} />
       </div>
+      {entry.role === "speaker" && entry.analysis ? (
+        <div className="mt-3 grid gap-2 text-xs text-ink-700 md:grid-cols-3">
+          <div className="rounded-lg bg-white/60 px-2 py-1 ring-1 ring-ink-200/60">
+            <div className="text-[11px] text-ink-500">立场标签</div>
+            <div>{entry.analysis.stance || "待提炼"}</div>
+          </div>
+          <div className="rounded-lg bg-white/60 px-2 py-1 ring-1 ring-ink-200/60">
+            <div className="text-[11px] text-ink-500">证据倾向</div>
+            <div>{entry.analysis.evidenceTendency || "综合论证"}</div>
+          </div>
+          <div className="rounded-lg bg-white/60 px-2 py-1 ring-1 ring-ink-200/60">
+            <div className="text-[11px] text-ink-500">风格卡片</div>
+            <div>
+              {entry.analysis.styleCard || "稳健陈述"} · {entry.analysis.confidence || "medium"}
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {entry.role === "moderator" && entry.analysis?.roundSummary ? (
+        <div className="mt-3 space-y-2 rounded-lg bg-white/60 p-2 text-xs ring-1 ring-ink-200/60">
+          <RoundSummaryBlock title="共识" section={entry.analysis.roundSummary.consensus} />
+          <RoundSummaryBlock title="分歧" section={entry.analysis.roundSummary.disagreements} />
+          <RoundSummaryBlock title="待证据补强" section={entry.analysis.roundSummary.evidenceNeeded} />
+        </div>
+      ) : null}
     </motion.div>
   );
 });
+
+function RoundSummaryBlock({ title, section }: { title: string; section?: { text: string; skillIds: string[] } }) {
+  if (!section) return null;
+  return (
+    <div>
+      <div className="font-medium text-ink-700">{title}</div>
+      <div className="text-ink-600">{section.text}</div>
+      {section.skillIds.length > 0 ? (
+        <div className="mt-1 text-[11px] text-ink-500">席位：{section.skillIds.join("、")}</div>
+      ) : null}
+    </div>
+  );
+}
 
 export function Timeline({ transcript, participantIds, skillTitle, liveTokens, maxRounds, className }: Props) {
   const reduce = useReducedMotion();
@@ -222,7 +260,7 @@ export function Timeline({ transcript, participantIds, skillTitle, liveTokens, m
           }
           return (
             <TimelineEntry
-              entry={{ content: liveTokens.text, role: liveTokens.role }}
+              entry={{ content: liveTokens.text, role: liveTokens.role, ts: "" }}
               label={label}
               style={style}
               isLive={true}
