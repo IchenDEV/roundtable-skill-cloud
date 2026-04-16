@@ -98,6 +98,18 @@ function extractVisibleAssistantText(message: unknown): string {
   return "";
 }
 
+function buildRoleGoals(skill: SkillRow, displayName: string): string {
+  const desc = skill.description?.trim() || "";
+  const category = skill.category?.trim() || "通识";
+  const focus = desc ? `核心立场线索：${desc}` : `核心立场线索：围绕「${displayName}」的既有观点框架发言。`;
+  return [
+    `身份任务：保持「${displayName}」的独立口径，不与他席复读同句式。`,
+    `论证任务：优先从「${category}」视角切题，至少给出一条可检验判断。`,
+    `交锋任务：明确指出至少一处你与他席不同的前提或证据选择。`,
+    focus,
+  ].join("\n");
+}
+
 /* ------------------------------------------------------------------ */
 /*  Streaming bridge: LangChain ReAct agent → StreamEvent              */
 /* ------------------------------------------------------------------ */
@@ -109,6 +121,7 @@ async function* streamReactAgent(
   userContent: string,
   displayName: string,
   participantNames: string[],
+  roleGoals: string,
   signal?: AbortSignal
 ): AsyncGenerator<StreamEvent> {
   const llm = toLangChainModel(runtime, model);
@@ -118,7 +131,7 @@ async function* streamReactAgent(
   const agent = createReactAgent({
     llm,
     tools: [...tools],
-    stateModifier: buildSystemPrompt(displayName),
+    stateModifier: buildSystemPrompt(displayName, roleGoals),
   });
 
   let fullText = "";
@@ -153,7 +166,7 @@ async function* streamReactAgent(
         [
           {
             role: "system",
-            content: `${buildSystemPrompt(displayName)}\n\n补充硬约束：绝不允许输出任何「【...】」或「某人：」式标签；绝不允许代主持人或其他列席发言。`,
+            content: `${buildSystemPrompt(displayName, roleGoals)}\n\n补充硬约束：绝不允许输出任何「【...】」或「某人：」式标签；绝不允许代主持人或其他列席发言。`,
           },
           {
             role: "user",
@@ -194,8 +207,9 @@ export async function* streamParticipantTurn(
 ): AsyncGenerator<StreamEvent> {
   const participantNames = Array.isArray(participantNamesOrSignal) ? participantNamesOrSignal : [];
   const actualSignal = isAbortSignalLike(participantNamesOrSignal) ? participantNamesOrSignal : signal;
-  const userContent = buildUserMessage(formattedTranscript, displayName, userInterjectionNote);
-  yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, actualSignal);
+  const roleGoals = buildRoleGoals(skill, displayName);
+  const userContent = buildUserMessage(formattedTranscript, displayName, userInterjectionNote, roleGoals);
+  yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, roleGoals, actualSignal);
 }
 
 /** 辩论模式列席代理 */
@@ -214,13 +228,15 @@ export async function* streamDebateParticipantTurn(
 ): AsyncGenerator<StreamEvent> {
   const participantNames = Array.isArray(participantNamesOrSignal) ? participantNamesOrSignal : [];
   const actualSignal = isAbortSignalLike(participantNamesOrSignal) ? participantNamesOrSignal : signal;
+  const roleGoals = buildRoleGoals(skill, displayName);
   const userContent = buildDebateUserMessage(
     formattedTranscript,
     displayName,
     userInterjectionNote,
     action,
     target,
-    directive
+    directive,
+    roleGoals
   );
-  yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, actualSignal);
+  yield* streamReactAgent(runtime, model, skill, userContent, displayName, participantNames, roleGoals, actualSignal);
 }

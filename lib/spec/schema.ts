@@ -19,6 +19,37 @@ export const transcriptEntrySchema = z.object({
   role: z.enum(["moderator", "speaker", "system", "user"]),
   skillId: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
   content: z.string().max(MAX_TRANSCRIPT_ENTRY_CHARS),
+  analysis: z
+    .object({
+      stance: z.string().max(240).optional(),
+      confidence: z.enum(["low", "medium", "high"]).optional(),
+      evidenceTendency: z.string().max(120).optional(),
+      styleCard: z.string().max(120).optional(),
+      conflictPoints: z.array(z.string().max(240)).max(8).optional(),
+      roundSummary: z
+        .object({
+          consensus: z
+            .object({
+              text: z.string().max(600),
+              skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+            })
+            .optional(),
+          disagreements: z
+            .object({
+              text: z.string().max(600),
+              skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+            })
+            .optional(),
+          evidenceNeeded: z
+            .object({
+              text: z.string().max(600),
+              skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+            })
+            .optional(),
+        })
+        .optional(),
+    })
+    .optional(),
   contentHashSnapshot: z.string().max(MAX_CONTENT_HASH_SNAPSHOT_CHARS).optional(),
   ts: z.string().max(64),
 });
@@ -128,6 +159,36 @@ export const turnResponseEventSchema = z.discriminatedUnion("type", [
         directive: z.string().optional(),
       })
     ),
+  }),
+  z.object({
+    type: z.literal("turn_structured"),
+    skillId: z.string().max(MAX_SKILL_ID_LENGTH),
+    stance: z.string().max(240).optional(),
+    confidence: z.enum(["low", "medium", "high"]).optional(),
+    evidenceTendency: z.string().max(120).optional(),
+    styleCard: z.string().max(120).optional(),
+    conflictPoints: z.array(z.string().max(240)).max(8).optional(),
+  }),
+  z.object({
+    type: z.literal("round_structured"),
+    consensus: z
+      .object({
+        text: z.string().max(600),
+        skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+      })
+      .optional(),
+    disagreements: z
+      .object({
+        text: z.string().max(600),
+        skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+      })
+      .optional(),
+    evidenceNeeded: z
+      .object({
+        text: z.string().max(600),
+        skillIds: z.array(z.string().max(MAX_SKILL_ID_LENGTH)).max(MAX_PARTICIPANT_SKILL_IDS),
+      })
+      .optional(),
   }),
   z.object({ type: z.literal("memory"), text: z.string() }),
   z.object({ type: z.literal("synthesis_complete"), text: z.string() }),
