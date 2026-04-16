@@ -58,6 +58,11 @@ export function RoundtableClient({
     <FadeIn className="lg:flex lg:h-full lg:min-h-0 lg:flex-col">
       <InkReveal className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <RoundtableReadinessBanner readiness={session.readiness} />
+        {fromShareToken && session.fromShareReady ? (
+          <div className="mb-4 rounded-xl bg-cinnabar-600/8 px-4 py-3 text-sm text-ink-800 ring-cinnabar-600/25">
+            已带入分享席位与议题。你可先微调列席/轮数，再点「开席」复刻新局。
+          </div>
+        ) : null}
         {skills.length === 0 ? (
           <div className="mb-4 rounded-xl bg-destructive/5 px-4 py-3 text-sm text-ink-800 ring-destructive">
             讨论席名录尚未备好，无法点选视角。请待维护者处理后再来，或返回
