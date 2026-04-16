@@ -6,6 +6,7 @@ import { useRoundtableOrchestrator } from "@/components/roundtable/use-roundtabl
 import { useTokenBuffer } from "@/components/roundtable/use-token-buffer";
 import { buildRoundtableMarkdown } from "@/lib/roundtable/export-markdown";
 import { fetchResumedSession, fetchSharedSession } from "@/lib/roundtable/session-loaders";
+import { trackShareEvent } from "@/lib/roundtable/share-events";
 import { normalizeRoundtableState } from "@/lib/roundtable/normalize-session-state";
 import {
   buildEmptyState,
@@ -61,6 +62,7 @@ export function useRoundtableSession({
   const [mode, setModeState] = useState<RoundtableMode>(effectiveInitialMode);
   const [userDraft, setUserDraft] = useState("");
   const [state, setState] = useState<RoundtableState | null>(null);
+  const [fromShareReady, setFromShareReady] = useState(false);
 
   const skillsRef = useRef(skills);
   const skillKey = useMemo(() => skills.map((k) => k.skillId).join("|"), [skills]);
@@ -148,12 +150,18 @@ export function useRoundtableSession({
         );
         return;
       }
-      hydrateImportedState(data.state);
+      setTopic(data.state.topic);
+      setSelected(() => pickSelectedSkillIds(data.state.participantSkillIds, skillsRef.current));
+      setMaxRounds(clampMaxRounds(data.state.maxRounds));
+      setModeState(forcedMode ?? data.state.mode);
+      setState(null);
+      setFromShareReady(true);
+      void trackShareEvent(fromShareToken, "fork_success", { stage: "prefill_ready" });
     })();
     return () => {
       cancelled = true;
     };
-  }, [forcedMode, fromShareToken, hydrateImportedState, resetStreamingState, skillKey]);
+  }, [forcedMode, fromShareToken, resetStreamingState, skillKey]);
 
   const buildCallbacks = useCallback(
     () => ({
@@ -248,5 +256,6 @@ export function useRoundtableSession({
     topic,
     toggle,
     userDraft,
+    fromShareReady,
   };
 }
