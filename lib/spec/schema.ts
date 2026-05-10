@@ -29,6 +29,40 @@ export const roundtableModeSchema = z.enum(["discussion", "debate"]);
 
 export const roundtablePhaseSchema = z.enum(["idle", "running", "await_user", "synthesis", "done", "error"]);
 
+export const debateActionSchema = z.enum(["attack", "defend", "judge"]);
+
+export type DebateAction = z.infer<typeof debateActionSchema>;
+
+export const turnStepSchema = z.enum([
+  "moderator_open",
+  "participant",
+  "moderator_judge",
+  "moderator_wrap",
+  "synthesis",
+]);
+
+export type TurnStep = z.infer<typeof turnStepSchema>;
+
+export const dispatchStepSchema = z.object({
+  action: debateActionSchema.optional(),
+  skillId: z.string().max(MAX_SKILL_ID_LENGTH),
+  target: z.string().max(MAX_SKILL_ID_LENGTH).optional(),
+  directive: z.string().max(1000).optional(),
+});
+
+export type DispatchStep = z.infer<typeof dispatchStepSchema>;
+
+export const roundtableRunCheckpointSchema = z.object({
+  kind: z.enum(["round", "synthesis"]),
+  nextStep: turnStepSchema,
+  steps: z.array(dispatchStepSchema).max(64).optional(),
+  stepIndex: z.number().int().nonnegative().max(200).optional(),
+  message: z.string().max(MAX_ERROR_STRING_CHARS).optional(),
+  updatedAt: z.string().max(64),
+});
+
+export type RoundtableRunCheckpoint = z.infer<typeof roundtableRunCheckpointSchema>;
+
 export const roundtableStateSchema = z
   .object({
     sessionId: z.string().uuid().optional(),
@@ -43,6 +77,7 @@ export const roundtableStateSchema = z
     userCommand: z.enum(["stop"]).optional(),
     synthesis: z.string().max(MAX_SYNTHESIS_CHARS).optional(),
     error: z.string().max(MAX_ERROR_STRING_CHARS).optional(),
+    runCheckpoint: roundtableRunCheckpointSchema.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.maxRounds > MAX_ROUND_ROUNDS) {
@@ -80,20 +115,6 @@ export const streamEventSchema = z.discriminatedUnion("type", [
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;
 
-export const debateActionSchema = z.enum(["attack", "defend", "judge"]);
-
-export type DebateAction = z.infer<typeof debateActionSchema>;
-
-export const turnStepSchema = z.enum([
-  "moderator_open",
-  "participant",
-  "moderator_judge",
-  "moderator_wrap",
-  "synthesis",
-]);
-
-export type TurnStep = z.infer<typeof turnStepSchema>;
-
 export const turnRequestSchema = z.object({
   state: roundtableStateSchema,
   step: turnStepSchema,
@@ -120,14 +141,7 @@ export const turnResponseEventSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("dispatch"),
-    steps: z.array(
-      z.object({
-        action: debateActionSchema.optional(),
-        skillId: z.string(),
-        target: z.string().optional(),
-        directive: z.string().optional(),
-      })
-    ),
+    steps: z.array(dispatchStepSchema),
   }),
   z.object({ type: z.literal("memory"), text: z.string() }),
   z.object({ type: z.literal("synthesis_complete"), text: z.string() }),

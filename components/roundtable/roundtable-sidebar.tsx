@@ -209,7 +209,7 @@ export function RoundtableSidebar({
       />
       <SessionErrorCard
         error={error}
-        canResume={!!state && state.transcript.length > 0}
+        canResume={!!state && (!!state.runCheckpoint || state.transcript.length > 0)}
         resumeLabel="从中断处续轮"
         onResume={onResume}
         onRefresh={onRefresh}

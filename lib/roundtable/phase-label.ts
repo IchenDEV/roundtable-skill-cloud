@@ -4,7 +4,7 @@ export function phaseInWords(phase: string): string {
     idle: "静候",
     running: "正在铺陈",
     await_user: "候你一言",
-    synthesis: "收束定论",
+    synthesis: "定论中",
     done: "已毕",
     error: "有所滞碍",
   };

@@ -80,7 +80,7 @@ export function RoundtableMainPanel({
         <SessionUserPanel
           value={userDraft}
           title="席间插话"
-          description="本轮已收束。写下观点后「记入并续轮」，或直接续轮跳过。"
+          description="本轮已完。写下观点后「记入并续轮」，或直接续轮跳过。"
           placeholder="写你想补充的判断、质疑或例子…"
           submitLabel="记入并续轮"
           continueLabel="直接续轮"

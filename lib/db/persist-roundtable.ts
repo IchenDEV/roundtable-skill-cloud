@@ -25,11 +25,12 @@ export async function persistRoundtableState(state: RoundtableState, ctx: Server
     p_phase: state.phase,
     p_moderator_memory: state.moderatorMemory,
     p_synthesis: state.synthesis ?? null,
+    p_run_checkpoint: state.runCheckpoint ?? null,
     p_messages: messages,
   });
 
   if (error) {
     console.error("persist session", error.message);
-    throw new Error("旧席未能落库，请稍后再试。");
+    throw new Error("旧席写入失败，请稍后再试。");
   }
 }

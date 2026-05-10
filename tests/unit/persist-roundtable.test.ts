@@ -39,11 +39,11 @@ describe("persistRoundtableState", () => {
       transcript: [{ role: "moderator", content: "c", ts: "1" }],
       moderatorMemory: "",
     };
-    await expect(persistRoundtableState(state, ctx(rpc))).rejects.toThrow(/落库/);
+    await expect(persistRoundtableState(state, ctx(rpc))).rejects.toThrow(/写入/);
     expect(rpc).toHaveBeenCalled();
   });
 
-  it("persists mode and transcript via rpc", async () => {
+  it("persists mode, checkpoint, and transcript via rpc", async () => {
     const rpc = vi.fn().mockResolvedValue({ error: null });
     const state: RoundtableState = {
       sessionId: "00000000-0000-4000-8000-000000000001",
@@ -55,6 +55,15 @@ describe("persistRoundtableState", () => {
       participantSkillIds: ["sk1"],
       transcript: [{ role: "moderator", content: "c", ts: "1" }],
       moderatorMemory: "",
+      ...({
+        runCheckpoint: {
+          kind: "round",
+          nextStep: "participant",
+          steps: [{ skillId: "sk1" }],
+          stepIndex: 0,
+          updatedAt: "2026-05-04T00:00:00.000Z",
+        },
+      } as Partial<RoundtableState>),
     };
     await persistRoundtableState(state, ctx(rpc));
     expect(rpc).toHaveBeenCalledWith(
@@ -63,6 +72,7 @@ describe("persistRoundtableState", () => {
         p_session_id: state.sessionId,
         p_mode: "debate",
         p_participant_skill_ids: ["sk1"],
+        p_run_checkpoint: state.runCheckpoint,
         p_messages: [{ role: "moderator", skill_id: null, content: "c", content_hash: null, position_idx: 0 }],
       })
     );

@@ -58,11 +58,13 @@ pnpm dev
 3. `003_roundtable_share_snapshots.sql`
 4. `004_remove_jm_jiminai_providers.sql`
 5. `005_roundtable_mode_and_atomic_persist.sql`
+6. `006_roundtable_run_checkpoint.sql`
 
 至少需要完成到：
 
 - `003` 才能使用分享快照
 - `005` 才能保证 `mode` 与原子持久化逻辑一致
+- `006` 才能在流式中断后恢复下一步
 
 ## 5. Vercel 部署要点
 
