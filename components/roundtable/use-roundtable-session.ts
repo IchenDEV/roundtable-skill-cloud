@@ -6,6 +6,7 @@ import { useRoundtableOrchestrator } from "@/components/roundtable/use-roundtabl
 import { useTokenBuffer } from "@/components/roundtable/use-token-buffer";
 import { buildRoundtableMarkdown } from "@/lib/roundtable/export-markdown";
 import { fetchResumedSession, fetchSharedSession } from "@/lib/roundtable/session-loaders";
+import { loadRoundtableLocalSnapshot } from "@/lib/roundtable/session-storage";
 import { normalizeRoundtableState } from "@/lib/roundtable/normalize-session-state";
 import {
   buildEmptyState,
@@ -63,6 +64,7 @@ export function useRoundtableSession({
   const [state, setState] = useState<RoundtableState | null>(null);
 
   const skillsRef = useRef(skills);
+  const hydratedLocalSnapshotRef = useRef(false);
   const skillKey = useMemo(() => skills.map((k) => k.skillId).join("|"), [skills]);
 
   useEffect(() => {
@@ -104,6 +106,21 @@ export function useRoundtableSession({
     },
     [cancelStream]
   );
+
+  useEffect(() => {
+    if (hydratedLocalSnapshotRef.current) return;
+    if (resumeSessionId?.trim() || fromShareToken?.trim() || initialTopic?.trim() || initialSkillIds?.length) return;
+    hydratedLocalSnapshotRef.current = true;
+    const snapshot = loadRoundtableLocalSnapshot();
+    if (!snapshot || (!snapshot.runCheckpoint && snapshot.transcript.length === 0 && snapshot.phase === "done")) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) hydrateImportedState(normalizeRoundtableState(snapshot, "resume"));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fromShareToken, hydrateImportedState, initialSkillIds, initialTopic, resumeSessionId]);
 
   useEffect(() => {
     if (!resumeSessionId?.trim()) return;
@@ -166,6 +183,11 @@ export function useRoundtableSession({
     [applyModePolicy, pushToken, clearBuffer]
   );
 
+  const clearSessionError = useCallback(() => {
+    clearError();
+    setState((current) => (current?.error ? { ...current, error: undefined } : current));
+  }, [clearError]);
+
   const toggle = useCallback(
     (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])),
     []
@@ -184,8 +206,12 @@ export function useRoundtableSession({
     const s = applyModePolicy({ ...state, phase: "running", userCommand: undefined });
     setState(s);
     clearBuffer();
+    if (s.runCheckpoint?.kind === "synthesis") {
+      void runSynthesis(s, buildCallbacks());
+      return;
+    }
     void runRound(s, buildCallbacks());
-  }, [applyModePolicy, buildCallbacks, clearBuffer, runRound, state]);
+  }, [applyModePolicy, buildCallbacks, clearBuffer, runRound, runSynthesis, state]);
 
   const sealEnd = useCallback(() => {
     if (!state) return;
@@ -222,10 +248,10 @@ export function useRoundtableSession({
   return {
     activeTurn,
     canStartRoundtable,
-    clearError,
+    clearError: clearSessionError,
     continueRound,
     currentStep,
-    error,
+    error: error ?? state?.error ?? null,
     exportMd,
     hasSession: !!state,
     live,

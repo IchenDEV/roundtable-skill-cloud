@@ -1,4 +1,5 @@
 import type { RoundtableState } from "@/lib/spec/schema";
+import { RESUME_CHECKPOINT_MESSAGE } from "@/lib/roundtable/run-checkpoint";
 
 export type RoundtableStateNormalizationMode = "resume" | "fork";
 
@@ -7,6 +8,13 @@ export function normalizeRoundtableState(
   mode: RoundtableStateNormalizationMode
 ): RoundtableState {
   if (mode === "resume") {
+    if (state.runCheckpoint) {
+      return {
+        ...state,
+        phase: "error",
+        error: state.error ?? state.runCheckpoint.message ?? RESUME_CHECKPOINT_MESSAGE,
+      };
+    }
     return state.phase === "running" ? { ...state, phase: "idle" } : state;
   }
 
@@ -25,6 +33,7 @@ export function normalizeRoundtableState(
     phase,
     maxRounds,
     error: undefined,
+    runCheckpoint: undefined,
     userCommand: undefined,
   };
 }

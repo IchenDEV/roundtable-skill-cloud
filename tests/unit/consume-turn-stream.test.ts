@@ -97,7 +97,7 @@ describe("consume-turn-stream", () => {
   it("accepts wrap memory events on moderator_wrap", async () => {
     fetchMock.mockResolvedValue(
       createSseResponse([
-        'data: {"type":"turn_complete","role":"moderator","fullText":"收束"}\n\n',
+        'data: {"type":"turn_complete","role":"moderator","fullText":"归纳"}\n\n',
         'data: {"type":"memory","text":"手记"}\n\n',
         'data: {"type":"done"}\n\n',
       ])
@@ -114,8 +114,29 @@ describe("consume-turn-stream", () => {
 
     await consumeTurnStream(state, "moderator_wrap", {}, handlers, new AbortController().signal);
 
-    expect(handlers.onTurnComplete).toHaveBeenCalledWith("moderator", "收束", undefined);
+    expect(handlers.onTurnComplete).toHaveBeenCalledWith("moderator", "归纳", undefined);
     expect(handlers.onMemory).toHaveBeenCalledWith("手记");
+  });
+
+  it("keeps a completed turn when the final done event is missing", async () => {
+    fetchMock.mockResolvedValue(
+      createSseResponse([
+        'data: {"type":"turn_complete","role":"speaker","skillId":"skill-a","fullText":"完整发言"}\n\n',
+      ])
+    );
+
+    const handlers = {
+      onToken: vi.fn(),
+      onTurnComplete: vi.fn(),
+      onDispatch: vi.fn(),
+      onMemory: vi.fn(),
+      onSynthesis: vi.fn(),
+      onError: vi.fn(),
+    };
+
+    await consumeTurnStream(state, "participant", { skillId: "skill-a" }, handlers, new AbortController().signal);
+
+    expect(handlers.onTurnComplete).toHaveBeenCalledWith("speaker", "完整发言", "skill-a");
   });
 
   it("extracts server errors from non-ok responses", async () => {
@@ -156,7 +177,7 @@ describe("consume-turn-stream", () => {
         },
         new AbortController().signal
       )
-    ).rejects.toThrow("执笔中途断开");
+    ).rejects.toThrow("连接中断");
   });
 
   it("fails fast on mismatched streamed role", async () => {

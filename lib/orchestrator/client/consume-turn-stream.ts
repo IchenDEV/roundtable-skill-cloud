@@ -1,4 +1,6 @@
 import type { DebateAction, RoundtableState, TurnResponseEvent, TurnStep } from "@/lib/spec/schema";
+import { saveRoundtableLocalSnapshot } from "@/lib/roundtable/session-storage";
+import { STREAM_INTERRUPTED_MESSAGE } from "@/lib/roundtable/run-checkpoint";
 
 export type DispatchStep = {
   action?: DebateAction;
@@ -66,7 +68,6 @@ export async function consumeTurnStream(
   if (!reader) throw new Error("连接未能建立，请重试。");
   const decoder = new TextDecoder();
   let carry = "";
-  let sawDone = false;
   let sawCompletion = false;
   let sawStructuredError = false;
 
@@ -110,7 +111,6 @@ export async function consumeTurnStream(
         return;
       }
       if (event.type === "done") {
-        sawDone = true;
         return;
       }
     }
@@ -118,14 +118,12 @@ export async function consumeTurnStream(
 
   if (signal.aborted || sawStructuredError) return;
   if (!sawCompletion) {
-    throw new Error("执笔中途断开，未收到完整结果，请重试。");
-  }
-  if (!sawDone) {
-    throw new Error("连接在收束前中断，请重试。");
+    throw new Error(STREAM_INTERRUPTED_MESSAGE);
   }
 }
 
 export async function persistRoundtableState(state: RoundtableState) {
+  saveRoundtableLocalSnapshot(state);
   try {
     await fetch("/api/roundtable/persist", {
       method: "POST",

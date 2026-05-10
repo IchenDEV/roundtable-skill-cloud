@@ -1,6 +1,6 @@
 import "server-only";
 import type { RoundtableState, TranscriptEntry } from "../spec/schema";
-import { roundtablePhaseSchema } from "../spec/schema";
+import { roundtablePhaseSchema, roundtableRunCheckpointSchema } from "../spec/schema";
 import type { SessionListItem } from "../roundtable/session-types";
 import type { ServerUserContext } from "../server/request-context";
 
@@ -31,6 +31,11 @@ function rowToTranscript(
       ts: r.created_at,
     };
   });
+}
+
+function parseRunCheckpoint(raw: unknown): RoundtableState["runCheckpoint"] {
+  const parsed = roundtableRunCheckpointSchema.safeParse(raw);
+  return parsed.success ? parsed.data : undefined;
 }
 
 export type ListSessionsResult = { ok: true; sessions: SessionListItem[] } | { ok: false; reason: "query_failed" };
@@ -70,7 +75,9 @@ export async function getRoundtableSessionState(
   const { supabase, userId } = ctx;
   const { data: sess, error: sErr } = await supabase
     .from("roundtable_sessions")
-    .select("id, topic, mode, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis")
+    .select(
+      "id, topic, mode, participant_skill_ids, max_rounds, current_round, phase, moderator_memory, synthesis, run_checkpoint"
+    )
     .eq("id", sessionId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -102,6 +109,7 @@ export async function getRoundtableSessionState(
     transcript: rowToTranscript(msgs ?? []),
     moderatorMemory: sess.moderator_memory ?? "",
     synthesis: sess.synthesis ?? undefined,
+    runCheckpoint: parseRunCheckpoint(sess.run_checkpoint),
   };
 }
 

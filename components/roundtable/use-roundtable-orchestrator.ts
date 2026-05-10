@@ -11,6 +11,14 @@ import {
   buildParticipantActiveTurn,
   type RoundtableActiveTurn,
 } from "@/lib/roundtable/active-turn";
+import {
+  checkpointForStep,
+  createRoundCheckpoint,
+  createSynthesisCheckpoint,
+  markStateInterrupted,
+  markStateRunning,
+  STREAM_INTERRUPTED_MESSAGE,
+} from "@/lib/roundtable/run-checkpoint";
 import type { DebateAction, RoundtableState } from "@/lib/spec/schema";
 
 function isAbortError(err: unknown): boolean {
@@ -32,6 +40,15 @@ function formatDebateStepLabel(step: DispatchStep) {
   if (action === "defend") return target ? `${actor} 回应 ${target}` : `${actor} 当场应答`;
   if (action === "judge") return target ? `主持插刀：判 ${actor} vs ${target}` : "主持插刀";
   return actor;
+}
+
+async function publishProgress(state: RoundtableState, cbs: OrchestratorCallbacks) {
+  cbs.onStateChange(state);
+  await persistRoundtableState(state);
+}
+
+function defaultRoundSteps(state: RoundtableState): DispatchStep[] {
+  return state.participantSkillIds.map((skillId) => ({ skillId }));
 }
 
 export type OrchestratorCallbacks = {
@@ -65,50 +82,64 @@ export function useRoundtableOrchestrator() {
 
     setStreaming(true);
     setError(null);
-    let s = { ...state };
+
+    const initialCheckpoint =
+      state.runCheckpoint?.kind === "round" ? state.runCheckpoint : createRoundCheckpoint("moderator_open");
+    let s = markStateRunning(state, initialCheckpoint);
+    let completed = false;
 
     try {
-      setCurrentStep("主持开场");
-      setActiveTurn(buildModeratorActiveTurn("moderator_open"));
-      let modOpenText = "";
-      let dispatch: DispatchStep[] | null = null;
+      await publishProgress(s, cbs);
 
-      await consumeTurnStream(
-        s,
-        "moderator_open",
-        {},
-        {
-          onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
-          onTurnComplete: (_role, fullText) => {
-            modOpenText = fullText;
+      if (s.runCheckpoint?.nextStep === "moderator_open") {
+        setCurrentStep("主持开场");
+        setActiveTurn(buildModeratorActiveTurn("moderator_open"));
+        let modOpenText = "";
+        let dispatch: DispatchStep[] | null = null;
+
+        await consumeTurnStream(
+          s,
+          "moderator_open",
+          {},
+          {
+            onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
+            onTurnComplete: (_role, fullText) => {
+              modOpenText = fullText;
+            },
+            onDispatch: (steps) => {
+              dispatch = steps;
+            },
+            onMemory: () => {},
+            onSynthesis: () => {},
+            onError: (msg) => {
+              throw new Error(msg);
+            },
           },
-          onDispatch: (steps) => {
-            dispatch = steps;
-          },
-          onMemory: () => {},
-          onSynthesis: () => {},
-          onError: (msg) => {
-            throw new Error(msg);
-          },
-        },
-        signal
-      );
+          signal
+        );
 
-      if (signal.aborted) return;
-      cbs.onTurnComplete();
-
-      s = {
-        ...s,
-        transcript: [...s.transcript, { role: "moderator", content: modOpenText, ts: new Date().toISOString() }],
-      };
-      cbs.onStateChange(s);
-
-      const isDebate = s.mode === "debate";
-      const steps: DispatchStep[] =
-        isDebate && dispatch ? dispatch : s.participantSkillIds.map((skillId) => ({ skillId }));
-
-      for (const ps of steps) {
         if (signal.aborted) return;
+        cbs.onTurnComplete();
+
+        const steps = s.mode === "debate" && dispatch ? dispatch : defaultRoundSteps(s);
+        s = {
+          ...s,
+          transcript: [...s.transcript, { role: "moderator", content: modOpenText, ts: new Date().toISOString() }],
+          runCheckpoint: checkpointForStep(steps, 0),
+        };
+        await publishProgress(s, cbs);
+      }
+
+      let steps = s.runCheckpoint?.steps ?? defaultRoundSteps(s);
+      let stepIndex = s.runCheckpoint?.stepIndex ?? 0;
+
+      while (s.runCheckpoint?.nextStep === "participant" || s.runCheckpoint?.nextStep === "moderator_judge") {
+        if (signal.aborted) return;
+        steps = s.runCheckpoint.steps ?? steps;
+        stepIndex = s.runCheckpoint.stepIndex ?? stepIndex;
+        const ps = steps[stepIndex];
+        if (!ps) break;
+        const isDebate = s.mode === "debate";
 
         if (isDebate && ps.action === "judge") {
           setCurrentStep(formatDebateStepLabel(ps));
@@ -137,11 +168,13 @@ export function useRoundtableOrchestrator() {
           if (signal.aborted) return;
           cbs.onTurnComplete();
 
+          const nextIndex = stepIndex + 1;
           s = {
             ...s,
             transcript: [...s.transcript, { role: "moderator", content: judgeText, ts: new Date().toISOString() }],
+            runCheckpoint: checkpointForStep(steps, nextIndex),
           };
-          cbs.onStateChange(s);
+          await publishProgress(s, cbs);
           continue;
         }
 
@@ -171,62 +204,70 @@ export function useRoundtableOrchestrator() {
         if (signal.aborted) return;
         cbs.onTurnComplete();
 
+        const nextIndex = stepIndex + 1;
         s = {
           ...s,
           transcript: [
             ...s.transcript,
             { role: "speaker" as const, skillId: ps.skillId, content: spokeText, ts: new Date().toISOString() },
           ],
+          runCheckpoint: checkpointForStep(steps, nextIndex),
         };
-        cbs.onStateChange(s);
+        await publishProgress(s, cbs);
       }
 
       if (signal.aborted) return;
-      setCurrentStep("主持收束");
-      setActiveTurn(buildModeratorActiveTurn("moderator_wrap"));
-      let wrapText = "";
-      let memory = "";
+      if (s.runCheckpoint?.nextStep === "moderator_wrap") {
+        setCurrentStep("主持整理");
+        setActiveTurn(buildModeratorActiveTurn("moderator_wrap"));
+        let wrapText = "";
+        let memory = "";
 
-      await consumeTurnStream(
-        s,
-        "moderator_wrap",
-        {},
-        {
-          onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
-          onTurnComplete: (_role, fullText) => {
-            wrapText = fullText;
+        await consumeTurnStream(
+          s,
+          "moderator_wrap",
+          {},
+          {
+            onToken: (role, text, skillId) => cbs.onToken(role, text, skillId),
+            onTurnComplete: (_role, fullText) => {
+              wrapText = fullText;
+            },
+            onDispatch: () => {},
+            onMemory: (text) => {
+              memory = text;
+            },
+            onSynthesis: () => {},
+            onError: (msg) => {
+              throw new Error(msg);
+            },
           },
-          onDispatch: () => {},
-          onMemory: (text) => {
-            memory = text;
-          },
-          onSynthesis: () => {},
-          onError: (msg) => {
-            throw new Error(msg);
-          },
-        },
-        signal
-      );
+          signal
+        );
 
-      if (signal.aborted) return;
-      cbs.onTurnComplete();
+        if (signal.aborted) return;
+        cbs.onTurnComplete();
 
-      s = {
-        ...s,
-        round: s.round + 1,
-        phase: "await_user" as const,
-        moderatorMemory: memory || s.moderatorMemory,
-        transcript: [...s.transcript, { role: "moderator", content: wrapText, ts: new Date().toISOString() }],
-      };
-      cbs.onStateChange(s);
+        s = {
+          ...s,
+          round: s.round + 1,
+          phase: "await_user" as const,
+          error: undefined,
+          moderatorMemory: memory || s.moderatorMemory,
+          transcript: [...s.transcript, { role: "moderator", content: wrapText, ts: new Date().toISOString() }],
+          runCheckpoint: undefined,
+        };
+        await publishProgress(s, cbs);
+      }
 
-      await persistRoundtableState(s);
-
+      completed = true;
       cbs.onRoundComplete();
     } catch (e) {
       if (signal.aborted || isAbortError(e)) return;
-      const msg = e instanceof Error ? e.message : "讨论中断，请重试。";
+      const msg = e instanceof Error ? e.message : STREAM_INTERRUPTED_MESSAGE;
+      const interrupted = markStateInterrupted(s, msg);
+      s = interrupted;
       setError(msg);
+      await publishProgress(interrupted, cbs);
       cbs.onError(msg);
     } finally {
       if (controllerRef.current === controller) {
@@ -234,6 +275,9 @@ export function useRoundtableOrchestrator() {
         setStreaming(false);
         setCurrentStep(null);
         setActiveTurn(null);
+      }
+      if (!completed && signal.aborted) {
+        void persistRoundtableState(s);
       }
     }
   }, []);
@@ -246,11 +290,15 @@ export function useRoundtableOrchestrator() {
 
     setStreaming(true);
     setError(null);
-    setCurrentStep("合成结案");
+    setCurrentStep("整理结案");
     setActiveTurn(buildModeratorActiveTurn("synthesis"));
-    let s = { ...state };
+    let s = markStateRunning(
+      state,
+      state.runCheckpoint?.kind === "synthesis" ? state.runCheckpoint : createSynthesisCheckpoint()
+    );
 
     try {
+      await publishProgress(s, cbs);
       let synText = "";
 
       await consumeTurnStream(
@@ -275,16 +323,17 @@ export function useRoundtableOrchestrator() {
       if (signal.aborted) return;
       cbs.onTurnComplete();
 
-      s = { ...s, phase: "done" as const, synthesis: synText };
-      cbs.onStateChange(s);
-
-      await persistRoundtableState(s);
+      s = { ...s, phase: "done" as const, error: undefined, synthesis: synText, runCheckpoint: undefined };
+      await publishProgress(s, cbs);
 
       cbs.onRoundComplete();
     } catch (e) {
       if (signal.aborted || isAbortError(e)) return;
-      const msg = e instanceof Error ? e.message : "合成中断，请重试。";
+      const msg = e instanceof Error ? e.message : STREAM_INTERRUPTED_MESSAGE;
+      const interrupted = markStateInterrupted(s, msg);
+      s = interrupted;
       setError(msg);
+      await publishProgress(interrupted, cbs);
       cbs.onError(msg);
     } finally {
       if (controllerRef.current === controller) {
@@ -292,6 +341,9 @@ export function useRoundtableOrchestrator() {
         setStreaming(false);
         setCurrentStep(null);
         setActiveTurn(null);
+      }
+      if (signal.aborted) {
+        void persistRoundtableState(s);
       }
     }
   }, []);

@@ -18,8 +18,28 @@ function base(overrides: Partial<RoundtableState> = {}): RoundtableState {
 }
 
 describe("normalizeRoundtableState", () => {
-  it("maps running sessions to idle on resume", () => {
+  it("maps running sessions without checkpoint to idle on resume", () => {
     expect(normalizeRoundtableState(base({ phase: "running" }), "resume").phase).toBe("idle");
+  });
+
+  it("keeps checkpoint sessions resumable on resume", () => {
+    const next = normalizeRoundtableState(
+      base({
+        phase: "running",
+        ...({
+          runCheckpoint: {
+            kind: "round",
+            nextStep: "participant",
+            steps: [{ skillId: "skill-a" }],
+            stepIndex: 0,
+            updatedAt: "2026-05-04T00:00:00.000Z",
+          },
+        } as Partial<RoundtableState>),
+      }),
+      "resume"
+    );
+    expect(next.phase).toBe("error");
+    expect(next.error).toMatch(/继续/);
   });
 
   it("leaves non-running sessions unchanged on resume", () => {
@@ -33,8 +53,25 @@ describe("normalizeRoundtableState", () => {
   });
 
   it("clears fork-only transient state", () => {
-    const next = normalizeRoundtableState(base({ phase: "error", error: "e", userCommand: "stop" }), "fork");
+    const next = normalizeRoundtableState(
+      base({
+        phase: "error",
+        error: "e",
+        userCommand: "stop",
+        ...({
+          runCheckpoint: {
+            kind: "round",
+            nextStep: "participant",
+            steps: [{ skillId: "skill-a" }],
+            stepIndex: 0,
+            updatedAt: "2026-05-04T00:00:00.000Z",
+          },
+        } as Partial<RoundtableState>),
+      }),
+      "fork"
+    );
     expect(next.error).toBeUndefined();
     expect(next.userCommand).toBeUndefined();
+    expect(next.runCheckpoint).toBeUndefined();
   });
 });

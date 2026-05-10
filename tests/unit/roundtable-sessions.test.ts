@@ -94,6 +94,13 @@ describe("roundtable-sessions", () => {
   });
 
   it("getRoundtableSessionState maps transcript and phase", async () => {
+    const runCheckpoint = {
+      kind: "round",
+      nextStep: "participant",
+      steps: [{ skillId: "a" }],
+      stepIndex: 0,
+      updatedAt: "2026-05-04T00:00:00.000Z",
+    };
     const s = await getRoundtableSessionState(
       mockCtx({
         sessionRow: {
@@ -106,6 +113,7 @@ describe("roundtable-sessions", () => {
           phase: "bad-phase",
           moderator_memory: "m",
           synthesis: null,
+          run_checkpoint: runCheckpoint,
         },
         msgs: [
           {
@@ -128,6 +136,7 @@ describe("roundtable-sessions", () => {
     );
     expect(s?.phase).toBe("done");
     expect(s?.mode).toBe("debate");
+    expect(s?.runCheckpoint).toEqual(runCheckpoint);
     expect(s?.transcript[1].role).toBe("system");
   });
 
